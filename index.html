@@ -44,21 +44,149 @@
     <!-- DOM FPS Counter (visible in non-VR mode) -->
     <div id="fps-counter">FPS: 0</div>
     
-    <a-scene mindar-image="uiScanning:no; uiLoading:no; imageTargetSrc: minds/1.mind; maxTrack: 1"
+    <a-scene mindar-image="uiScanning:no; uiLoading:no; imageTargetSrc: minds/targets(1).mind"
         vr-mode-ui="enabled: true" xr-mode-ui="enabled: true" device-orientation-permission-ui="enabled: false"
         renderer="sortObjects: true">
 
         <a-assets>
             <a-asset-item id="avatarModel" src="ship_example.glb"></a-asset-item>
+            
+           <img id="fullagar" src="fullagar.jpg">
+           <img id="welding" src="welding.jpg">
+
+           <img id="fullagar2" src="fullagar2.jpg">
+           <img id="cement" src="cement.jpg">
+
+           <img id="sandbank" src="sandbank.jpg">
+           <img id="damage" src="damage.png">
+
+           <img id="sinking" src="sinking.png">
+
         </a-assets>
 
         <a-camera rotation="0 0 0" position="0 0 0" look-controls="enabled: false">
-            <a-video opacity="1" id="MindAR_feed" position="0 0 -11000" width="20000" height="20000"></a-video>
+            <a-video opacity="1" id="MindAR_feed" position="0 0 -15000" width="20000" height="20000"></a-video>
 
             <a-entity mindar-image-target="targetIndex: 0">
-                <a-gltf-model rotation="0 90 0 " position="0 0 0.1" scale="0.02 0.02 0.02" src="#avatarModel" animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate">
+                    <a-entity
+                        position="0 1.2 0"
+                        rotation="0 -50 0"
+                        geometry="primitive: plane; width: 0; height: 0"
+                        material="color: black"
+                        text="width: 4; value: Fullagar - 1920 \n The world's first fully welded ship; color:white; align:center;">
+                    </a-entity>
+
+                     <a-image 
+                    id="weldingimg"
+                    position="0 -1.2 0"
+                    rotation="0 -50 5"
+                    src="#welding"
+                    material="transparent: true; opacity: 1"
+                    animation__fadein="property: components.material.material.opacity; to: 1; dur: 1000; startEvents: show"
+                    animation__fadeout="property: components.material.material.opacity; to: 0; dur: 1000; startEvents: hide">
+                    </a-image>
+
+                    <a-image 
+                    id="fullagarimg"
+                    position="0 -1.2 0"
+                    rotation="0 -50 5"
+                    src="#fullagar"
+                    material="transparent: true; opacity: 0"
+                    animation__fadein="property: components.material.material.opacity; to: 1; dur: 1000; startEvents: show"
+                    animation__fadeout="property: components.material.material.opacity; to: 0; dur: 1000; startEvents: hide">
+                    </a-image>
+
             </a-entity>
+            
+            
+            <a-entity mindar-image-target="targetIndex: 6">
+
+                <a-entity
+                        position="0 1.2 0"
+                        rotation="0 10 0"
+                        geometry="primitive: plane; width: 0; height: 0"
+                        material="color: black"
+                        text="width: 4; value: The cargo ship transported cement \n for most of its life; color:white; align:center;">
+                </a-entity>
+
+                <a-image 
+                    id="cementimg"
+                    position="0 -1 0"
+                    rotation="0 40 0"
+                    src="#cement"
+                    material="transparent: true; opacity: 0"
+                    animation__fadein="property: components.material.material.opacity; to: 1; dur: 1000; startEvents: show"
+                    animation__fadeout="property: components.material.material.opacity; to: 0; dur: 1000; startEvents: hide">
+                    </a-image>
+
+                <a-image 
+                    id="fullagar2img"
+                    position="0 -1 0"
+                    rotation="0 40 0"
+                    src="#fullagar2"
+                    material="transparent: true; opacity: 1"
+                    animation__fadein="property: components.material.material.opacity; to: 1; dur: 1000; startEvents: show"
+                    animation__fadeout="property: components.material.material.opacity; to: 0; dur: 1000; startEvents: hide">
+                    </a-image>
+
+            </a-entity>
+
+            <a-entity mindar-image-target="targetIndex: 18">
+
+                    <a-entity
+                        position="0 1.2 0"
+                        rotation="0 10 0"
+                        geometry="primitive: plane; width: 0; height: 0"
+                        material="color: black"
+                        text="width: 4; value: In 1925 it crashed into a sand bank, \n obtaining damage; color:white; align:center;">
+                    </a-entity>
+
+                    <a-image 
+                    id="damageimg"
+                    position="0 -1 0"
+                    rotation="0 40 0"
+                    src="#damage"
+                    material="transparent: true; opacity: 0"
+                    animation__fadein="property: components.material.material.opacity; to: 1; dur: 1000; startEvents: show"
+                    animation__fadeout="property: components.material.material.opacity; to: 0; dur: 1000; startEvents: hide">
+                    </a-image>
+
+                <a-image 
+                    id="sandbankimg"
+                    position="0 -1 0"
+                    rotation="0 40 0"
+                    src="#sandbank"
+                    material="transparent: true; opacity: 1"
+                    animation__fadein="property: components.material.material.opacity; to: 1; dur: 1000; startEvents: show"
+                    animation__fadeout="property: components.material.material.opacity; to: 0; dur: 1000; startEvents: hide">
+                    </a-image>
+            </a-entity>
+            
+            
+            
+            <a-entity mindar-image-target="targetIndex: 21">
+                <a-entity
+                        position="0 1.2 0"
+                        rotation="0 20 0"
+                        geometry="primitive: plane; width: 0; height: 0"
+                        material="color: black"
+                        text="width: 4; value: In 1935 it crashed into another ship, \n and sank; color:white; align:center;">
+                    </a-entity>
+
+                <a-image 
+                    id="sinking"
+                    position="0 -1 0"
+                    rotation="0 40 0"
+                    src="#sinking"
+                    material="transparent: true; opacity: 1">
+                    </a-image>
+            </a-entity>
+            
+       
+            
         </a-camera>
+
+        
 
         <!-- In-scene FPS counter for VR mode -->
         <a-entity id="vr-fps-counter" text="value: FPS: 0; align: left; width: 4; color: white; side: double" 
@@ -66,6 +194,73 @@
         </a-entity>
 
         <script>
+
+                const welding = document.querySelector('#weldingimg');
+                const fullagar = document.querySelector('#fullagarimg');
+                let showWelding = true;
+
+             
+                welding.emit('show');
+                fullagar.emit('hide');
+
+                setInterval(() => {
+                if (showWelding) {
+                    welding.emit('hide');    
+                    fullagar.emit('show');    
+                } else {
+                    fullagar.emit('hide');   
+                    welding.emit('show');     
+                }
+                showWelding = !showWelding; 
+                }, 4000); 
+
+
+                const cement = document.querySelector('#cementimg');
+                    const fullagar2 = document.querySelector('#fullagar2img');
+                    let showCement = true;
+
+                    
+                    cement.emit('show');
+                    fullagar2.emit('hide');
+
+                    setInterval(() => {
+                        if (showCement) {
+                            cement.emit('hide');       
+                            fullagar2.emit('show');    
+                        } else {
+                            fullagar2.emit('hide');    
+                            cement.emit('show');        
+                        }
+                        showCement = !showCement;
+                    }, 4000);
+
+
+                    const damage = document.querySelector('#damageimg');
+                    const sandbank = document.querySelector('#sandbankimg');
+                    let showDamage = true;
+
+                    
+                    damage.emit('show');
+                    sandbank.emit('hide');
+
+                    setInterval(() => {
+                        if (showCement) {
+                            damage.emit('hide');        
+                            sandbank.emit('show');    
+                        } else {
+                            sandbank.emit('hide');       
+                            damage.emit('show');        
+                        }
+                        showDamage = !showDamage;
+                    }, 4000);
+
+    
+
+
+
+
+
+
             function getColorByIndex(index) {
                 const hue = (index * 137.508) % 360;
                 return `hsl(${hue}, 70%, 60%)`;
@@ -73,7 +268,7 @@
 
             document.addEventListener("DOMContentLoaded", () => {
                 setTimeout(() => {
-                    const mindarVideo = document.querySelector('video');
+                    const mindarVideo = document.querySelectorAll('video')[0];
                     mindarVideo.id = "mindar";
                     if (mindarVideo && mindarVideo.srcObject) {
                         mindarVideo.style.visibility = 'hidden';
@@ -124,6 +319,10 @@
                 
                 updateFPS();
             })();
+
+
+
+      
         </script>
     </a-scene>
 </body>
