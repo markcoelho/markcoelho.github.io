@@ -1,19 +1,85 @@
-
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <!-- AR engine that updates the visibility and positions of a-entity -->
+
+    <link rel="shortcut icon" href="#">
+
+    <!--  mindar and aframe library hosted in cdn to build a web AR application! -->
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.5/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <!-- detect click event -->
+    <script> 
+      document.addEventListener("DOMContentLoaded", function() {
+        const clickCat = document.querySelector('#catsModel');
+        // detect click event
+        clickCat.addEventListener("click", event => {
+          console.log("catsModel click");
+        });
+      });
+    </script>
+
   </head>
   <body>
-    <a-scene mindar-image="imageTargetSrc: target.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+
+    <a-scene 
+      mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 2" 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false"
+    >
+    <!-- Property  mindar-image :  where is the compiled .mind file -->
+    <!-- Property maxTrack:  maximum number of target that will be tracked simultaneously. Default is 1. -->
+    <!-- Impact on performance! Avoid tracking many targets at the same time. -->
+
+      <a-camera 
+        position="0 0 0"
+        look-controls="enabled: false"
+        cursor="fuse: false; rayOrigin: mouse;" 
+        raycaster="far: ${customFields.libVersion}; objects: .clickable"
+      ></a-camera>
+      <!-- cursor and raycaster to detect is when the user click/touch a certain elements -->
+
       <a-assets>
-        <a-asset-item id="avatarModel" src="LR3d.glb"></a-asset-item>
+        <a-asset-item 
+          id="catsModel"
+          src="./assets/pop_cat/scene.gltf"
+        ></a-asset-item>
+        <a-asset-item 
+          id="avocadoModel"
+          src="assets/avacado/"
+        ></a-asset-item>
       </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      <a-entity mindar-image-target="targetIndex: 0" >
-        <a-gltf-model animation="property: rotation; to: 180 0 360; loop: true; dur: 10000" rotation="180 0 45 " position="0 0 0" scale="1 1 1" src="#avatarModel" animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate">
+      <!-- a-entity is a object that shows on top of the target image. -->
+      <!-- Property mindar-image-target: tells the engine to detect and track a particular image target.  -->
+
+      <!-- The targetIndex is always 0, if your targets.mind contains only a single image. -->
+      <!-- Multi-Targets -->
+      <!-- two <a-entity>, with different targetIndex. -->
+
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-gltf-model
+          class="clickable"
+          rotation="0 0 0 "
+          position="0 -0.25 0"
+          scale="0.05 0.05 0.05"
+          src="#catsModel"
+          animation-mixer
+        >
+      </a-entity>
+      <a-entity mindar-image-target="targetIndex: 1">
+        <a-gltf-model
+          rotation="0 0 0 "
+          position="0 -0.25 0"
+          scale="0.05 0.05 0.05"
+          src="#avocadoModel"
+          animation-mixer
+          >
       </a-entity>
     </a-scene>
   </body>
