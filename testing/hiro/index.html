@@ -1,0 +1,25 @@
+<!doctype HTML>
+<html>
+<script src="js/aframe.min.js"></script>
+<script src="js/aframe-ar.js"></script>
+<body style="margin: 0px; overflow: hidden;">
+
+<a-scene embedded vr-mode-ui="enabled: false;" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+
+    <a-assets>
+        <a-asset-item id="tree" src="models/lrbox.gltf"></a-asset-item>
+	</a-assets>
+    
+    <a-marker type="barcode" value="2">
+        <a-gltf-model   position="0 0 0" 
+                        rotation="-90 0 0"
+                        scale="0.1 0.1 0.1"
+                        gltf-model="#tree" >
+        </a-gltf-model>
+    </a-marker>
+    
+    <a-entity camera></a-entity>
+    
+</a-scene>
+</body>
+</html>
