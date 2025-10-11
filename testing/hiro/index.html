@@ -1,25 +1,75 @@
 <!doctype HTML>
 <html>
-<script src="js/aframe.min.js"></script>
-<script src="js/aframe-ar.js"></script>
+
+<head>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+
+    <script src="js/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
+    <script src="js/aframe-ar.js"></script>
+
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            font-family: monospace;
+        }
+
+  
+        .a-canvas {
+            z-index: 1 !important;
+            position: absolute !important;
+        }
+        
+        .a-enter-vr{
+            z-index: 2 !important;
+        }
+        
+    </style>
+    
+
+</head>
+
 <body style="margin: 0px; overflow: hidden;">
 
-<a-scene embedded vr-mode-ui="enabled: false;" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+<a-scene renderer="sortObjects: true"  vr-mode-ui="enabled: true;" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
 
     <a-assets>
-        <a-asset-item id="tree" src="models/lrbox.gltf"></a-asset-item>
+        <a-asset-item id="lrbox" src="models/lrbox.gltf"></a-asset-item>
 	</a-assets>
-    
-    <a-marker type="barcode" value="2">
-        <a-gltf-model   position="0 0 0" 
-                        rotation="-90 0 0"
-                        scale="0.1 0.1 0.1"
-                        gltf-model="#tree" >
-        </a-gltf-model>
-    </a-marker>
-    
-    <a-entity camera></a-entity>
-    
+
+    <a-camera position="0 0 0" look-controls="enabled: false">
+
+        <a-video opacity="1" id="arjs_feed" position="0 0 -20" width="22" height="22"></a-video>
+
+        <a-marker type="barcode" value="2">
+            <a-gltf-model rotation="-90 0 0 " position="0 0 0" scale="0.15 0.15 0.15" src="#lrbox">
+        </a-marker>
+
+    </a-camera>
+
+    <script>
+
+           document.addEventListener("DOMContentLoaded", () => {
+                setTimeout(() => {
+                    const arjsVideo = document.getElementById("arjs-video");
+                    if (arjsVideo && arjsVideo.srcObject) {
+                        /*arjsVideo.style.visibility = 'hidden';*/
+                        const arFeed = document.getElementById('arjs_feed');
+                        arFeed.srcObject = arjsVideo.srcObject;
+                        arFeed.setAttribute('src', '#arjs-video');
+                    }
+                }, 3000);
+            });
+
+        </script>
+
 </a-scene>
 </body>
 </html>
