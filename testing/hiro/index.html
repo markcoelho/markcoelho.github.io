@@ -2,15 +2,12 @@
 <html>
 
 <head>
-    
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    
 
     <script src="js/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
     <script src="js/aframe-ar.js"></script>
 
-    
     <style>
         body {
             margin: 0;
@@ -21,54 +18,114 @@
             font-family: monospace;
         }
 
-  
         .a-canvas {
             z-index: 1 !important;
             position: absolute !important;
         }
         
-        .a-enter-vr{
+        .a-enter-vr {
             z-index: 2 !important;
         }
-        
     </style>
-    
-
 </head>
 
 <body style="margin: 0px; overflow: hidden;">
 
-<a-scene renderer="sortObjects: true"  vr-mode-ui="enabled: true;" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+<a-scene renderer="sortObjects: true" vr-mode-ui="enabled: true;" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
 
     <a-assets>
         <a-asset-item id="lrbox" src="models/lrbox.gltf"></a-asset-item>
 	</a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false">
-
+        <a-sphere color="yellow" position="0 0 -0.1" radius="0.001"></a-sphere>
+        <!-- Raycaster entity attached to camera -->
+        <a-entity id="raycaster" 
+                  raycaster="objects: .interactive; showLine: true; lineColor: red; far: 5"
+                  position="0 0 0"
+                  visible-in-vr-only></a-entity>
+                  
         <a-video opacity="1" id="arjs_feed" position="0 0 -20" width="22" height="22"></a-video>
 
         <a-marker type="barcode" value="2">
-            <a-gltf-model rotation="-90 0 0 " position="0 0 0" scale="0.15 0.15 0.15" src="#lrbox">
+            <a-image position="0 -0.1 0"  id="boiler-image" src="boiler.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
+            <a-image class="interactive" 
+                    id="minus-button"
+                    src="minus.png" 
+                    position="-1 0 1" 
+                    rotation="-90 0 0" 
+                    scale="0.3 0.3 0.3"></a-image>
+            <a-image class="interactive" 
+                    id="plus-button"
+                    src="plus.png" 
+                    position="1 0 1"  
+                    rotation="-90 0 0" 
+                    scale="0.3 0.3 0.3"></a-image>
         </a-marker>
 
     </a-camera>
 
     <script>
+        // Component to make the raycaster visible only in VR mode
+        AFRAME.registerComponent('visible-in-vr-only', {
+            init: function() {
+                this.el.sceneEl.addEventListener('enter-vr', () => {
+                    this.el.setAttribute('raycaster', 'enabled', true);
+                });
+                
+                this.el.sceneEl.addEventListener('exit-vr', () => {
+                    this.el.setAttribute('raycaster', 'enabled', false);
+                });
+            }
+        });
 
-           document.addEventListener("DOMContentLoaded", () => {
-                setTimeout(() => {
-                    const arjsVideo = document.getElementById("arjs-video");
-                    if (arjsVideo && arjsVideo.srcObject) {
-                        /*arjsVideo.style.visibility = 'hidden';*/
-                        const arFeed = document.getElementById('arjs_feed');
-                        arFeed.srcObject = arjsVideo.srcObject;
-                        arFeed.setAttribute('src', '#arjs-video');
-                    }
-                }, 3000);
-            });
+        // Component to handle boiler image scaling
+        AFRAME.registerComponent('boiler-scale-control', {
+            init: function() {
+                this.boilerImage = document.getElementById('boiler-image');
+                this.currentScale = {x: 3, y: 3, z: 3};
+                this.scaleFactor = 0.5;
+                
+                // Listen for intersections with minus button
+                const minusButton = document.getElementById('minus-button');
+                minusButton.addEventListener('raycaster-intersected', (evt) => {
+                    console.log('Minus button intersected - scaling boiler down');
+                    this.scaleBoiler(-this.scaleFactor);
+                });
+                
+                // Listen for intersections with plus button
+                const plusButton = document.getElementById('plus-button');
+                plusButton.addEventListener('raycaster-intersected', (evt) => {
+                    console.log('Plus button intersected - scaling boiler up');
+                    this.scaleBoiler(this.scaleFactor);
+                });
+            },
+            
+            scaleBoiler: function(scaleChange) {
+                this.currentScale.x += scaleChange;
+                this.currentScale.y += scaleChange;
+                this.currentScale.z += scaleChange;
+                
+                this.boilerImage.setAttribute('scale', this.currentScale);
+                console.log('Boiler scale updated to:', this.currentScale);
+            }
+        });
 
-        </script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Add boiler scale control component to the scene
+            const scene = document.querySelector('a-scene');
+            scene.setAttribute('boiler-scale-control', '');
+            
+            setTimeout(() => {
+                const arjsVideo = document.getElementById("arjs-video");
+                if (arjsVideo && arjsVideo.srcObject) {
+                    const arFeed = document.getElementById('arjs_feed');
+                    arFeed.srcObject = arjsVideo.srcObject;
+                    arFeed.setAttribute('src', '#arjs-video');
+                }
+            }, 3000);
+        });
+    </script>
 
 </a-scene>
 </body>
