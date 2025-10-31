@@ -41,26 +41,27 @@
         <a-sphere color="yellow" position="0 0 -0.1" radius="0.001"></a-sphere>
         <!-- Raycaster entity attached to camera -->
         <a-entity id="raycaster" 
-                  raycaster="objects: .interactive; showLine: true; lineColor: red; far: 5"
+                  raycaster="objects: .interactive, .scroll-plane; showLine: true; lineColor: red; far: 20"
                   position="0 0 0"
                   visible-in-vr-only></a-entity>
                   
         <a-video opacity="1" id="arjs_feed" position="0 0 -20" width="22" height="22"></a-video>
 
+        <!-- Markers with just the main image - controls will be added automatically -->
+        <a-marker type="barcode" value="1">
+            <a-image position="0 -0.1 0" id="boiler" src="boiler.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
+        </a-marker>
+
         <a-marker type="barcode" value="2">
-            <a-image position="0 -0.1 0"  id="boiler-image" src="boiler.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
-            <a-image class="interactive" 
-                    id="minus-button"
-                    src="minus.png" 
-                    position="-1 0 1" 
-                    rotation="-90 0 0" 
-                    scale="0.3 0.3 0.3"></a-image>
-            <a-image class="interactive" 
-                    id="plus-button"
-                    src="plus.png" 
-                    position="1 0 1"  
-                    rotation="-90 0 0" 
-                    scale="0.3 0.3 0.3"></a-image>
+            <a-image position="0 -0.1 0" id="frame_plan" src="frame_plan.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
+        </a-marker>
+
+        <a-marker type="barcode" value="3">
+            <a-image position="0 -0.1 0" id="main_forecastle_deck" src="main_forecastle_deck.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
+        </a-marker>
+
+        <a-marker type="barcode" value="4">
+            <a-image position="0 -0.1 0" id="profile" src="profile.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
         </a-marker>
 
     </a-camera>
@@ -79,42 +80,210 @@
             }
         });
 
-        // Component to handle boiler image scaling
-        AFRAME.registerComponent('boiler-scale-control', {
+        // Function to add controls to a marker
+        function addControlsToMarker(marker, imageId) {
+            // Add scroll planes
+            const scrollPlanes = [
+                { position: '0 0.4 1', width: '2', height: '0.6', direction: 'up' },
+                { position: '0 0.4 -1', width: '2', height: '0.6', direction: 'down' },
+                { position: '1 0.4 0', width: '0.6', height: '2', direction: 'right' },
+                { position: '-1 0.4 0', width: '0.6', height: '2', direction: 'left' }
+            ];
+
+            scrollPlanes.forEach(plane => {
+                const planeEl = document.createElement('a-plane');
+                planeEl.setAttribute('class', 'scroll-plane');
+                planeEl.setAttribute('position', plane.position);
+                planeEl.setAttribute('rotation', '-90 0 0');
+                planeEl.setAttribute('width', plane.width);
+                planeEl.setAttribute('height', plane.height);
+                planeEl.setAttribute('color', 'red');
+                planeEl.setAttribute('opacity', '0.1');
+                planeEl.setAttribute('data-target', imageId);
+                planeEl.setAttribute('data-direction', plane.direction);
+                marker.appendChild(planeEl);
+            });
+
+            // Add scale buttons 
+            const scaleButtons = [
+                { id: `minus-${imageId}`, position: '-1 0.5 1.3', action: 'decrease' },
+                { id: `plus-${imageId}`, position: '1 0.5 1.3', action: 'increase' }
+            ];
+
+            scaleButtons.forEach(button => {
+                const buttonEl = document.createElement('a-image');
+                buttonEl.setAttribute('class', 'interactive');
+                buttonEl.setAttribute('id', button.id);
+                buttonEl.setAttribute('src', button.action === 'increase' ? 'plus.png' : 'minus.png');
+                buttonEl.setAttribute('position', button.position);
+                buttonEl.setAttribute('rotation', '-90 0 0');
+                buttonEl.setAttribute('scale', '0.3 0.3 0.3');
+                buttonEl.setAttribute('data-target', imageId);
+                buttonEl.setAttribute('data-action', button.action);
+                marker.appendChild(buttonEl);
+            });
+        }
+
+        // Component to handle image scaling and scrolling for all interactive elements
+        AFRAME.registerComponent('image-control', {
             init: function() {
-                this.boilerImage = document.getElementById('boiler-image');
-                this.currentScale = {x: 3, y: 3, z: 3};
                 this.scaleFactor = 0.5;
+                this.scrollFactor = 0.1;
+                this.scrollInterval = 100; // ms between scroll updates
+                this.activeScrollDirections = new Map(); // Track active scroll directions per image
+                this.scrollIntervals = new Map(); // Store interval IDs
                 
-                // Listen for intersections with minus button
-                const minusButton = document.getElementById('minus-button');
-                minusButton.addEventListener('raycaster-intersected', (evt) => {
-                    console.log('Minus button intersected - scaling boiler down');
-                    this.scaleBoiler(-this.scaleFactor);
-                });
+                // Find all interactive buttons and scroll planes
+                const interactiveElements = document.querySelectorAll('.interactive, .scroll-plane');
                 
-                // Listen for intersections with plus button
-                const plusButton = document.getElementById('plus-button');
-                plusButton.addEventListener('raycaster-intersected', (evt) => {
-                    console.log('Plus button intersected - scaling boiler up');
-                    this.scaleBoiler(this.scaleFactor);
+                // Add event listeners to each element
+                interactiveElements.forEach(element => {
+                    // For scale buttons (one-time action)
+                    if (element.classList.contains('interactive')) {
+                        element.addEventListener('raycaster-intersected', (evt) => {
+                            const targetId = element.getAttribute('data-target');
+                            const action = element.getAttribute('data-action');
+                            
+                            if (targetId && action) {
+                                this.scaleImage(targetId, action);
+                            }
+                        });
+                    }
+                    
+                    // For scroll planes (continuous action)
+                    if (element.classList.contains('scroll-plane')) {
+                        element.addEventListener('raycaster-intersected', (evt) => {
+                            const targetId = element.getAttribute('data-target');
+                            const direction = element.getAttribute('data-direction');
+                            
+                            if (targetId && direction) {
+                                this.startScrolling(targetId, direction);
+                            }
+                        });
+                        
+                        element.addEventListener('raycaster-intersected-cleared', (evt) => {
+                            const targetId = element.getAttribute('data-target');
+                            const direction = element.getAttribute('data-direction');
+                            
+                            if (targetId && direction) {
+                                this.stopScrolling(targetId, direction);
+                            }
+                        });
+                    }
                 });
             },
             
-            scaleBoiler: function(scaleChange) {
-                this.currentScale.x += scaleChange;
-                this.currentScale.y += scaleChange;
-                this.currentScale.z += scaleChange;
+            scaleImage: function(targetId, action) {
+                const targetImage = document.getElementById(targetId);
                 
-                this.boilerImage.setAttribute('scale', this.currentScale);
-                console.log('Boiler scale updated to:', this.currentScale);
+                if (!targetImage) {
+                    console.error(`Target image with id '${targetId}' not found`);
+                    return;
+                }
+                
+                const currentScale = targetImage.getAttribute('scale');
+                const scaleChange = action === 'increase' ? this.scaleFactor : -this.scaleFactor;
+                
+                const newScaleValue = Math.max(0.1, currentScale.x + scaleChange);
+                
+                const newScale = {
+                    x: newScaleValue,
+                    y: newScaleValue, 
+                    z: newScaleValue
+                };
+                
+                targetImage.setAttribute('scale', newScale);
+                console.log(`Image '${targetId}' scale updated to:`, newScale);
+            },
+            
+            startScrolling: function(targetId, direction) {
+                const key = `${targetId}-${direction}`;
+                
+                // If already scrolling in this direction, do nothing
+                if (this.activeScrollDirections.has(key)) {
+                    return;
+                }
+                
+                console.log(`Starting continuous scroll for ${targetId} in direction ${direction}`);
+                this.activeScrollDirections.set(key, true);
+                
+                // Start interval for continuous scrolling
+                const intervalId = setInterval(() => {
+                    this.scrollImage(targetId, direction);
+                }, this.scrollInterval);
+                
+                this.scrollIntervals.set(key, intervalId);
+            },
+            
+            stopScrolling: function(targetId, direction) {
+                const key = `${targetId}-${direction}`;
+                
+                if (this.activeScrollDirections.has(key)) {
+                    console.log(`Stopping continuous scroll for ${targetId} in direction ${direction}`);
+                    this.activeScrollDirections.delete(key);
+                    
+                    // Clear the interval
+                    const intervalId = this.scrollIntervals.get(key);
+                    if (intervalId) {
+                        clearInterval(intervalId);
+                        this.scrollIntervals.delete(key);
+                    }
+                }
+            },
+            
+            scrollImage: function(targetId, direction) {
+                const targetImage = document.getElementById(targetId);
+                
+                if (!targetImage) {
+                    console.error(`Target image with id '${targetId}' not found`);
+                    return;
+                }
+                
+                const currentPosition = targetImage.getAttribute('position');
+                let newPosition = { ...currentPosition };
+                
+                switch(direction) {
+                    case 'up':
+                        newPosition.z -= this.scrollFactor;
+                        break;
+                    case 'down':
+                        newPosition.z += this.scrollFactor;
+                        break;
+                    case 'right':
+                        newPosition.x -= this.scrollFactor; // X decreases to move right
+                        break;
+                    case 'left':
+                        newPosition.x += this.scrollFactor; // X increases to move left
+                        break;
+                }
+                
+                targetImage.setAttribute('position', newPosition);
+                console.log(`Image '${targetId}' scrolled ${direction} to:`, newPosition);
+            },
+            
+            // Clean up intervals when component is removed
+            remove: function() {
+                this.scrollIntervals.forEach((intervalId, key) => {
+                    clearInterval(intervalId);
+                });
+                this.activeScrollDirections.clear();
+                this.scrollIntervals.clear();
             }
         });
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Add boiler scale control component to the scene
+            // Add controls to all markers
+            const markers = document.querySelectorAll('a-marker');
+            markers.forEach(marker => {
+                const image = marker.querySelector('a-image');
+                if (image) {
+                    addControlsToMarker(marker, image.id);
+                }
+            });
+            
+            // Add image control component to the scene
             const scene = document.querySelector('a-scene');
-            scene.setAttribute('boiler-scale-control', '');
+            scene.setAttribute('image-control', '');
             
             setTimeout(() => {
                 const arjsVideo = document.getElementById("arjs-video");
