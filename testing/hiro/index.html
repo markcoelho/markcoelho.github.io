@@ -67,18 +67,7 @@
     </a-camera>
 
     <script>
-        // Component to make the raycaster visible only in VR mode
-        AFRAME.registerComponent('visible-in-vr-only', {
-            init: function() {
-                this.el.sceneEl.addEventListener('enter-vr', () => {
-                    this.el.setAttribute('raycaster', 'enabled', true);
-                });
-                
-                this.el.sceneEl.addEventListener('exit-vr', () => {
-                    this.el.setAttribute('raycaster', 'enabled', false);
-                });
-            }
-        });
+        
 
         // Function to add controls to a marker
         function addControlsToMarker(marker, imageId) {
