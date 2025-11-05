@@ -173,7 +173,7 @@
                 const currentScale = targetImage.getAttribute('scale');
                 const scaleChange = action === 'increase' ? this.scaleFactor : -this.scaleFactor;
                 
-                const newScaleValue = Math.max(0.1, currentScale.x + scaleChange);
+                const newScaleValue = Math.max(0.1, currentScale.x * scaleChange);
                 
                 const newScale = {
                     x: newScaleValue,
