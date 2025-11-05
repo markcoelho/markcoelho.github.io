@@ -116,7 +116,7 @@
         // Component to handle image scaling and scrolling for all interactive elements
         AFRAME.registerComponent('image-control', {
             init: function() {
-                this.scaleFactor = 0.5;
+                this.scaleFactor = 1;
                 this.scrollFactor = 0.1;
                 this.scrollInterval = 100; // ms between scroll updates
                 this.activeScrollDirections = new Map(); // Track active scroll directions per image
@@ -173,7 +173,7 @@
                 const currentScale = targetImage.getAttribute('scale');
                 const scaleChange = action === 'increase' ? this.scaleFactor : -this.scaleFactor;
                 
-                const newScaleValue = Math.max(0.1, currentScale.x * scaleChange);
+                const newScaleValue = Math.max(0.1, currentScale.x + scaleChange);
                 
                 const newScale = {
                     x: newScaleValue,
