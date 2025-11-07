@@ -67,18 +67,7 @@
     </a-camera>
 
     <script>
-        // Component to make the raycaster visible only in VR mode
-        AFRAME.registerComponent('visible-in-vr-only', {
-            init: function() {
-                this.el.sceneEl.addEventListener('enter-vr', () => {
-                    this.el.setAttribute('raycaster', 'enabled', true);
-                });
-                
-                this.el.sceneEl.addEventListener('exit-vr', () => {
-                    this.el.setAttribute('raycaster', 'enabled', false);
-                });
-            }
-        });
+        
 
         // Function to add controls to a marker
         function addControlsToMarker(marker, imageId) {
@@ -98,7 +87,7 @@
                 planeEl.setAttribute('width', plane.width);
                 planeEl.setAttribute('height', plane.height);
                 planeEl.setAttribute('color', 'red');
-                planeEl.setAttribute('opacity', '0.1');
+                planeEl.setAttribute('opacity', '0');
                 planeEl.setAttribute('data-target', imageId);
                 planeEl.setAttribute('data-direction', plane.direction);
                 marker.appendChild(planeEl);
@@ -127,7 +116,7 @@
         // Component to handle image scaling and scrolling for all interactive elements
         AFRAME.registerComponent('image-control', {
             init: function() {
-                this.scaleFactor = 0.5;
+                this.scaleFactor = 1;
                 this.scrollFactor = 0.1;
                 this.scrollInterval = 100; // ms between scroll updates
                 this.activeScrollDirections = new Map(); // Track active scroll directions per image
