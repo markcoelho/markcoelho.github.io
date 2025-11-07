@@ -2,5 +2,4 @@
 /key.pem
 /node_modules
 /package-lock.json
-/package.json
 /server.js
