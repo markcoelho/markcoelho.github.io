@@ -38,10 +38,16 @@
 	</a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false">
-        <a-sphere color="yellow" position="0 0 -0.1" radius="0.001"></a-sphere>
+
+        <a-entity cursor="fuse: true; fuseTimeout: 500"
+            position="0 0 -1"
+            geometry="primitive: ring; radiusInner: 0.002; radiusOuter: 0.004"
+            material="color: red; shader: flat">
+        </a-entity>
+        
         <!-- Raycaster entity attached to camera -->
         <a-entity id="raycaster" 
-                  raycaster="objects: .interactive, .scroll-plane; showLine: true; lineColor: red; far: 20"
+                  raycaster="objects: .interactive, .scroll-plane; showLine: false; lineColor: red; far: 20"
                   position="0 0 0"
                   visible-in-vr-only></a-entity>
                   
@@ -49,241 +55,220 @@
 
         <!-- Markers with just the main image - controls will be added automatically -->
         <a-marker type="barcode" value="1">
-            <a-image position="0 -0.1 0" id="boiler" src="boiler.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
+            <a-image position="0 0 0" id="boiler" src="boiler.jpg" rotation="-90 0 0" scale="0.001"></a-image>
         </a-marker>
 
         <a-marker type="barcode" value="2">
-            <a-image position="0 -0.1 0" id="frame_plan" src="frame_plan.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
+            <a-image position="0 0 0" id="frame_plan" src="frame_plan.jpg" rotation="-90 0 0" scale="0.001"></a-image>
         </a-marker>
 
         <a-marker type="barcode" value="3">
-            <a-image position="0 -0.1 0" id="main_forecastle_deck" src="main_forecastle_deck.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
+            <a-image position="0 0 0" id="main_forecastle_deck" src="main_forecastle_deck.jpg" rotation="-90 0 0" scale="0.001"></a-image>
         </a-marker>
 
         <a-marker type="barcode" value="4">
-            <a-image position="0 -0.1 0" id="profile" src="profile.jpg" rotation="-90 0 0" scale="3 3 3"></a-image>
+            <a-image position="0 0 0" id="profile" src="profile.jpg" rotation="-90 0 0" scale="0.001"></a-image>
         </a-marker>
 
     </a-camera>
 
+    <a-image position="0 0 -5" id="outsidecamera" src="boiler.jpg" rotation="0 0 0" scale="3 3 3">
+        <a-ring id="scrollring" opacity="0.3" position="0 0 0.01"  color="teal" radius-inner="0.5" radius-outer="100" scale="1"> </a-ring>
+    </a-image>
+
     <script>
-        
+    // Function to add controls to a marker
+    function addControlsToMarker(marker, imageId) {
+        // Add scale buttons only (scroll planes removed)
+        const scaleButtons = [
+            { id: `minus-${imageId}`, position: '-1 0.5 1.3', action: 'decrease' },
+            { id: `plus-${imageId}`, position: '1 0.5 1.3', action: 'increase' }
+        ];
 
-        // Function to add controls to a marker
-        function addControlsToMarker(marker, imageId) {
-            // Add scroll planes
-            const scrollPlanes = [
-                { position: '0 0.4 1', width: '2', height: '0.6', direction: 'up' },
-                { position: '0 0.4 -1', width: '2', height: '0.6', direction: 'down' },
-                { position: '1 0.4 0', width: '0.6', height: '2', direction: 'right' },
-                { position: '-1 0.4 0', width: '0.6', height: '2', direction: 'left' }
-            ];
+        scaleButtons.forEach(button => {
+            const buttonEl = document.createElement('a-image');
+            buttonEl.setAttribute('class', 'interactive');
+            buttonEl.setAttribute('id', button.id);
+            buttonEl.setAttribute('src', button.action === 'increase' ? 'plus.png' : 'minus.png');
+            buttonEl.setAttribute('position', button.position);
+            buttonEl.setAttribute('rotation', '-90 0 0');
+            buttonEl.setAttribute('scale', '0.3 0.3 0.3');
+            buttonEl.setAttribute('data-target', "outsidecamera");
+            buttonEl.setAttribute('data-action', button.action);
+            marker.appendChild(buttonEl);
+        });
+    }
 
-            scrollPlanes.forEach(plane => {
-                const planeEl = document.createElement('a-plane');
-                planeEl.setAttribute('class', 'scroll-plane');
-                planeEl.setAttribute('position', plane.position);
-                planeEl.setAttribute('rotation', '-90 0 0');
-                planeEl.setAttribute('width', plane.width);
-                planeEl.setAttribute('height', plane.height);
-                planeEl.setAttribute('color', 'red');
-                planeEl.setAttribute('opacity', '0');
-                planeEl.setAttribute('data-target', imageId);
-                planeEl.setAttribute('data-direction', plane.direction);
-                marker.appendChild(planeEl);
-            });
-
-            // Add scale buttons 
-            const scaleButtons = [
-                { id: `minus-${imageId}`, position: '-1 0.5 1.3', action: 'decrease' },
-                { id: `plus-${imageId}`, position: '1 0.5 1.3', action: 'increase' }
-            ];
-
-            scaleButtons.forEach(button => {
-                const buttonEl = document.createElement('a-image');
-                buttonEl.setAttribute('class', 'interactive');
-                buttonEl.setAttribute('id', button.id);
-                buttonEl.setAttribute('src', button.action === 'increase' ? 'plus.png' : 'minus.png');
-                buttonEl.setAttribute('position', button.position);
-                buttonEl.setAttribute('rotation', '-90 0 0');
-                buttonEl.setAttribute('scale', '0.3 0.3 0.3');
-                buttonEl.setAttribute('data-target', imageId);
-                buttonEl.setAttribute('data-action', button.action);
-                marker.appendChild(buttonEl);
-            });
-        }
-
-        // Component to handle image scaling and scrolling for all interactive elements
-        AFRAME.registerComponent('image-control', {
-            init: function() {
-                this.scaleFactor = 1;
-                this.scrollFactor = 0.1;
-                this.scrollInterval = 100; // ms between scroll updates
-                this.activeScrollDirections = new Map(); // Track active scroll directions per image
-                this.scrollIntervals = new Map(); // Store interval IDs
-                
-                // Find all interactive buttons and scroll planes
-                const interactiveElements = document.querySelectorAll('.interactive, .scroll-plane');
-                
-                // Add event listeners to each element
-                interactiveElements.forEach(element => {
-                    // For scale buttons (one-time action)
-                    if (element.classList.contains('interactive')) {
-                        element.addEventListener('raycaster-intersected', (evt) => {
-                            const targetId = element.getAttribute('data-target');
-                            const action = element.getAttribute('data-action');
-                            
-                            if (targetId && action) {
-                                this.scaleImage(targetId, action);
-                            }
-                        });
-                    }
-                    
-                    // For scroll planes (continuous action)
-                    if (element.classList.contains('scroll-plane')) {
-                        element.addEventListener('raycaster-intersected', (evt) => {
-                            const targetId = element.getAttribute('data-target');
-                            const direction = element.getAttribute('data-direction');
-                            
-                            if (targetId && direction) {
-                                this.startScrolling(targetId, direction);
-                            }
-                        });
+    // Component to handle image scaling only (scrolling removed)
+    AFRAME.registerComponent('image-control', {
+        init: function() {
+            this.scaleFactor = 2;
+            
+            // Find all interactive buttons
+            const interactiveElements = document.querySelectorAll('.interactive');
+            
+            // Add event listeners to each element
+            interactiveElements.forEach(element => {
+                // For scale buttons (one-time action)
+                if (element.classList.contains('interactive')) {
+                    element.addEventListener('raycaster-intersected', (evt) => {
+                        const targetId = element.getAttribute('data-target');
+                        const action = element.getAttribute('data-action');
                         
-                        element.addEventListener('raycaster-intersected-cleared', (evt) => {
-                            const targetId = element.getAttribute('data-target');
-                            const direction = element.getAttribute('data-direction');
-                            
-                            if (targetId && direction) {
-                                this.stopScrolling(targetId, direction);
-                            }
-                        });
-                    }
-                });
-            },
-            
-            scaleImage: function(targetId, action) {
-                const targetImage = document.getElementById(targetId);
-                
-                if (!targetImage) {
-                    console.error(`Target image with id '${targetId}' not found`);
-                    return;
+                        if (targetId && action) {
+                            this.scaleImage(targetId, action);
+                        }
+                    });
                 }
-                
-                const currentScale = targetImage.getAttribute('scale');
-                const scaleChange = action === 'increase' ? this.scaleFactor : -this.scaleFactor;
-                
-                const newScaleValue = Math.max(0.1, currentScale.x + scaleChange);
-                
-                const newScale = {
-                    x: newScaleValue,
-                    y: newScaleValue, 
-                    z: newScaleValue
-                };
-                
-                targetImage.setAttribute('scale', newScale);
-                console.log(`Image '${targetId}' scale updated to:`, newScale);
-            },
+            });
+        },
+        
+        scaleImage: function(targetId, action) {
+            const targetImage = document.getElementById(targetId);
             
-            startScrolling: function(targetId, direction) {
-                const key = `${targetId}-${direction}`;
-                
-                // If already scrolling in this direction, do nothing
-                if (this.activeScrollDirections.has(key)) {
-                    return;
-                }
-                
-                console.log(`Starting continuous scroll for ${targetId} in direction ${direction}`);
-                this.activeScrollDirections.set(key, true);
-                
-                // Start interval for continuous scrolling
-                const intervalId = setInterval(() => {
-                    this.scrollImage(targetId, direction);
-                }, this.scrollInterval);
-                
-                this.scrollIntervals.set(key, intervalId);
-            },
-            
-            stopScrolling: function(targetId, direction) {
-                const key = `${targetId}-${direction}`;
-                
-                if (this.activeScrollDirections.has(key)) {
-                    console.log(`Stopping continuous scroll for ${targetId} in direction ${direction}`);
-                    this.activeScrollDirections.delete(key);
-                    
-                    // Clear the interval
-                    const intervalId = this.scrollIntervals.get(key);
-                    if (intervalId) {
-                        clearInterval(intervalId);
-                        this.scrollIntervals.delete(key);
-                    }
-                }
-            },
-            
-            scrollImage: function(targetId, direction) {
-                const targetImage = document.getElementById(targetId);
-                
-                if (!targetImage) {
-                    console.error(`Target image with id '${targetId}' not found`);
-                    return;
-                }
-                
-                const currentPosition = targetImage.getAttribute('position');
-                let newPosition = { ...currentPosition };
-                
-                switch(direction) {
-                    case 'up':
-                        newPosition.z -= this.scrollFactor;
-                        break;
-                    case 'down':
-                        newPosition.z += this.scrollFactor;
-                        break;
-                    case 'right':
-                        newPosition.x -= this.scrollFactor; // X decreases to move right
-                        break;
-                    case 'left':
-                        newPosition.x += this.scrollFactor; // X increases to move left
-                        break;
-                }
-                
-                targetImage.setAttribute('position', newPosition);
-                console.log(`Image '${targetId}' scrolled ${direction} to:`, newPosition);
-            },
-            
-            // Clean up intervals when component is removed
-            remove: function() {
-                this.scrollIntervals.forEach((intervalId, key) => {
-                    clearInterval(intervalId);
-                });
-                this.activeScrollDirections.clear();
-                this.scrollIntervals.clear();
+            if (!targetImage) {
+                console.error(`Target image with id '${targetId}' not found`);
+                return;
             }
-        });
+            
+            const currentScale = targetImage.getAttribute('scale');
+            const scaleChange = action === 'increase' ? this.scaleFactor : -this.scaleFactor;
+            
+            const newScaleValue = Math.max(0.1, currentScale.x + scaleChange);
+            
+            const newScale = {
+                x: newScaleValue,
+                y: newScaleValue, 
+                z: newScaleValue
+            };
+            
+            targetImage.setAttribute('scale', newScale);
+        }
+    });
 
-        document.addEventListener("DOMContentLoaded", () => {
-            // Add controls to all markers
-            const markers = document.querySelectorAll('a-marker');
-            markers.forEach(marker => {
-                const image = marker.querySelector('a-image');
-                if (image) {
-                    addControlsToMarker(marker, image.id);
+    document.addEventListener("DOMContentLoaded", () => {
+        const camera = document.querySelector('a-camera');
+
+        // Add controls to all markers
+        const markers = document.querySelectorAll('a-marker');
+        markers.forEach(marker => {
+            const image = marker.querySelector('a-image');
+            if (image) {
+                addControlsToMarker(marker, image.id);
+            }
+
+            marker.addEventListener('markerFound', (e) => {
+                const markerValue = marker.getAttribute('value');
+                console.log(`marker ${markerValue} visible`);
+                
+                // Get marker's world position and rotation
+                const markerWorldPos = getWorldPosition(marker);
+                const markerWorldRot = getWorldRotation(marker);
+                const cameraWorldPos = getWorldPosition(camera);
+                
+                console.log(`Marker ${markerValue} world position:`, markerWorldPos);
+                console.log(`Marker ${markerValue} world rotation:`, markerWorldRot);
+                console.log(`Camera world position:`, cameraWorldPos);
+                
+                // Create vectors for XZ plane only (ignore Y)
+                const markerXZ = new THREE.Vector3(markerWorldPos.x, 0, markerWorldPos.z);
+                const cameraXZ = new THREE.Vector3(cameraWorldPos.x, 0, cameraWorldPos.z);
+                
+                // Calculate direction vector from camera to marker on XZ plane only
+                const direction = new THREE.Vector3();
+                direction.subVectors(markerXZ, cameraXZ).normalize();
+                
+                // Calculate position 2 units beyond the marker in the same XZ direction
+                const imagePosition = new THREE.Vector3();
+                imagePosition.copy(markerXZ);
+                imagePosition.add(direction.multiplyScalar(2));
+                
+                console.log(`Calculated image position:`, imagePosition);
+                
+                // Move and rotate the outsidecamera image to the calculated position
+                const outsideCamera = document.getElementById('outsidecamera');
+                if (outsideCamera) {
+                    // Change image source based on marker value
+                    let imageSrc = '';
+                    switch(markerValue) {
+                        case '1':
+                            imageSrc = 'boiler.jpg';
+                            break;
+                        case '2':
+                            imageSrc = 'frame_plan.jpg';
+                            break;
+                        case '3':
+                            imageSrc = 'main_forecastle_deck.jpg';
+                            break;
+                        case '4':
+                            imageSrc = 'profile.jpg';
+                            break;
+                    }
+                    if (imageSrc) {
+                        outsideCamera.setAttribute('src', imageSrc);
+                        console.log(`Changed outsidecamera image to: ${imageSrc}`);
+                    }
+                    // Reset scale to 3 3 3
+                    //outsideCamera.setAttribute('scale', { x: 3, y: 3, z: 3 });
+                    
+
+                    // Set position (2 units beyond marker along camera-marker line on XZ plane, Y=0)
+                    outsideCamera.setAttribute('position', {
+                        x: imagePosition.x,
+                        y: 0, // Force Y to 0
+                        z: imagePosition.z
+                    });
+
+                    // Keep the marker's rotation
+                    outsideCamera.setAttribute('rotation', {
+                        x: 0,
+                        y: markerWorldRot.y,
+                        z: 0
+                    });
+            
+                    console.log(`Placed image 2 units beyond marker along camera-marker line on XZ plane`);
                 }
             });
             
-            // Add image control component to the scene
-            const scene = document.querySelector('a-scene');
-            scene.setAttribute('image-control', '');
-            
-            setTimeout(() => {
-                const arjsVideo = document.getElementById("arjs-video");
-                if (arjsVideo && arjsVideo.srcObject) {
-                    const arFeed = document.getElementById('arjs_feed');
-                    arFeed.srcObject = arjsVideo.srcObject;
-                    arFeed.setAttribute('src', '#arjs-video');
-                }
-            }, 3000);
+            marker.addEventListener('markerLost', (e) => {
+                console.log(`marker ${marker.getAttribute('value')} lost`);
+            });
         });
-    </script>
+        
+        // Add image control component to the scene
+        const scene = document.querySelector('a-scene');
+        scene.setAttribute('image-control', '');
+        
+        setTimeout(() => {
+            const arjsVideo = document.getElementById("arjs-video");
+            if (arjsVideo && arjsVideo.srcObject) {
+                const arFeed = document.getElementById('arjs_feed');
+                arFeed.srcObject = arjsVideo.srcObject;
+                arFeed.setAttribute('src', '#arjs-video');
+            }
+        }, 3000);
+    });
+
+    function getWorldPosition(entity) {
+        const position = new THREE.Vector3();
+        entity.object3D.getWorldPosition(position);
+        return position;
+    }
+
+    function getWorldRotation(entity) {
+        const rotation = new THREE.Euler();
+        const quaternion = new THREE.Quaternion();
+        entity.object3D.getWorldQuaternion(quaternion);
+        rotation.setFromQuaternion(quaternion);
+        
+        // Convert to degrees for A-Frame
+        return {
+            x: THREE.Math.radToDeg(rotation.x),
+            y: THREE.Math.radToDeg(rotation.y),
+            z: THREE.Math.radToDeg(rotation.z)
+        };
+    }
+</script>
 
 </a-scene>
 </body>
