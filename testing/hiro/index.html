@@ -47,7 +47,7 @@
         
         <!-- Raycaster entity attached to camera -->
         <a-entity id="raycaster" 
-                  raycaster="objects: .zoom-button, #outsidecamera, #scrollring; showLine: false; lineColor: red; far: 20"
+                  raycaster="objects: .zoom-button, #outsidecamera, .scroller; showLine: false; lineColor: red; far: 20"
                   position="0 0 0"
                   visible-in-vr-only></a-entity>
                   
@@ -55,192 +55,315 @@
 
         <!-- Markers with zoom controls -->
         <a-marker type="barcode" value="1">
-            <a-image class="zoom-button" src="plus.png" position="1 0.5 1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
-            <a-image class="zoom-button" src="minus.png" position="-1 0.5 1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
+            <a-image class="zoom-button" src="plus.png" position="1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
+            <a-image class="zoom-button" src="minus.png" position="-1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
         </a-marker>
 
         <a-marker type="barcode" value="2">
-            <a-image class="zoom-button" src="plus.png" position="1 0.5 1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
-            <a-image class="zoom-button" src="minus.png" position="-1 0.5 1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
+            <a-image class="zoom-button" src="plus.png" position="1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
+            <a-image class="zoom-button" src="minus.png" position="-1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
         </a-marker>
 
         <a-marker type="barcode" value="3">
-            <a-image class="zoom-button" src="plus.png" position="1 0.5 1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
-            <a-image class="zoom-button" src="minus.png" position="-1 0.5 1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
+            <a-image class="zoom-button" src="plus.png" position="1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
+            <a-image class="zoom-button" src="minus.png" position="-1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
         </a-marker>
 
         <a-marker type="barcode" value="4">
-            <a-image class="zoom-button" src="plus.png" position="1 0.5 1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
-            <a-image class="zoom-button" src="minus.png" position="-1 0.5 1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
+            <a-image class="zoom-button" src="plus.png" position="1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
+            <a-image class="zoom-button" src="minus.png" position="-1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
         </a-marker>
 
     </a-camera>
 
-    <a-image position="0 0 -5" id="outsidecamera" src="boiler.jpg" rotation="0 0 0" scale="3 3 3">
-    </a-image>
-    
-    <!-- Scroll ring now outside of outsidecamera but will sync with it -->
-    <a-ring id="scrollring" opacity="0.3" position="0 0 -5" color="teal" radius-inner="0.3" radius-outer="1" scale="3 3 3"> </a-ring>
+    <!-- CENTERPIECE - Parent entity containing both image and scrollers -->
+    <a-entity id="centerpiece" position="0 0 -5" rotation="0 0 0">
+        <!-- Image as child -->
+        <a-image id="outsidecamera" src="boiler.jpg" position="0 0 0" scale="3 3 3">
+        </a-image>
+        
+        <!-- Scrollers as children -->
+        <a-entity id="scrollers">
+            <!-- Top scroller -->
+            <a-plane class="scroller" id="scroller-top" 
+                     position="0 5 -0.2" 
+                     rotation="0 0 0" 
+                     width="15" height="5" 
+                     color="#1E90FF" 
+                     opacity="0"
+                     data-direction="down">
+            </a-plane>
+            
+            <!-- Right scroller -->
+            <a-plane class="scroller" id="scroller-right" 
+                     position="5 0 -0.2" 
+                     rotation="0 0 0" 
+                     width="5" height="15" 
+                     color="#1E90FF" 
+                     opacity="0"
+                     data-direction="left">
+            </a-plane>
+            
+            <!-- Bottom scroller -->
+            <a-plane class="scroller" id="scroller-bottom" 
+                     position="0 -5 -0.2" 
+                     rotation="0 0 0" 
+                     width="15" height="5" 
+                     color="#1E90FF" 
+                     opacity="0"
+                     data-direction="up">
+            </a-plane>
+            
+            <!-- Left scroller -->
+            <a-plane class="scroller" id="scroller-left" 
+                     position="-5 0 -0.2" 
+                     rotation="0 0 0" 
+                     width="5" height="15" 
+                     color="#1E90FF" 
+                     opacity="0"
+                     data-direction="right">
+            </a-plane>
+        </a-entity>
+    </a-entity>
 
     <script>
-    // Component to sync scrollring with outsidecamera
-    AFRAME.registerComponent('sync-with-image', {
-        schema: {
-            target: {type: 'selector'}
-        },
-        
+    // DOUBLE INTERSECTION CONTINUOUS MOVEMENT COMPONENT
+    AFRAME.registerComponent('double-intersection-controls', {
         init: function() {
-            this.target = this.data.target;
-            if (!this.target) return;
-            
-            // Initial sync
-            this.syncTransform();
-            
-            // Listen for changes to the target
-            this.target.addEventListener('componentchanged', (evt) => {
-                if (evt.detail.name === 'position' || 
-                    evt.detail.name === 'rotation' || 
-                    evt.detail.name === 'scale') {
-                    this.syncTransform();
-                }
-            });
-        },
-        
-        syncTransform: function() {
-            const position = this.target.getAttribute('position');
-            const rotation = this.target.getAttribute('rotation');
-            const scale = this.target.getAttribute('scale');
-            
-            this.el.setAttribute('position', position);
-            this.el.setAttribute('rotation', rotation);
-            this.el.setAttribute('scale', scale);
-        }
-    });
-
-    // Simple zoom component for the outsidecamera image
-    AFRAME.registerComponent('zoom-controls', {
-        init: function() {
-            this.scaleFactor = 2;
+            this.centerpiece = document.getElementById('centerpiece');
             this.outsideCamera = document.getElementById('outsidecamera');
-            this.scrollring = document.getElementById('scrollring');
+            this.scrollerElements = document.querySelectorAll('.scroller');
             
-            // Add click event to all zoom buttons
-            const zoomButtons = document.querySelectorAll('.zoom-button');
-            zoomButtons.forEach(button => {
-                button.addEventListener('raycaster-intersected', (evt) => {
-                    const action = button.getAttribute('data-action');
-                    this.zoomImage(action);
+            this.isImageIntersected = false;
+            this.activeScrollers = new Set(); // Track multiple active scrollers
+            this.moveInterval = null;
+            this.moveDistance = 0.1;
+            this.moveSpeed = 50; // milliseconds between movements
+            
+            console.log('Double intersection controls initialized');
+            
+            // Listen for image intersection
+            this.outsideCamera.addEventListener('raycaster-intersected', () => {
+                this.isImageIntersected = true;
+                console.log('Image intersected');
+                this.checkForDoubleIntersection();
+            });
+            
+            this.outsideCamera.addEventListener('raycaster-intersected-cleared', () => {
+                this.isImageIntersected = false;
+                console.log('Image intersection cleared');
+                this.stopMovement();
+            });
+            
+            // Add intersection listeners to all scrollers
+            this.scrollerElements.forEach(scroller => {
+                scroller.addEventListener('raycaster-intersected', (evt) => {
+                    this.handleScrollerIntersected(evt.target);
+                });
+                
+                scroller.addEventListener('raycaster-intersected-cleared', (evt) => {
+                    this.handleScrollerCleared(evt.target);
                 });
             });
         },
         
-        zoomImage: function(action) {
-            if (!this.outsideCamera) return;
+        handleScrollerIntersected: function(scroller) {
+            this.activeScrollers.add(scroller.id);
+            console.log(`Scroller ${scroller.id} intersected. Active scrollers:`, Array.from(this.activeScrollers));
+            this.checkForDoubleIntersection();
+        },
+        
+        handleScrollerCleared: function(scroller) {
+            this.activeScrollers.delete(scroller.id);
+            console.log(`Scroller ${scroller.id} cleared. Active scrollers:`, Array.from(this.activeScrollers));
+            
+            if (this.activeScrollers.size === 0) {
+                this.stopMovement();
+            }
+        },
+        
+        checkForDoubleIntersection: function() {
+            // Only start movement if BOTH image and at least one scroller are intersected
+            if (this.isImageIntersected && this.activeScrollers.size > 0 && !this.moveInterval) {
+                console.log(`DOUBLE INTERSECTION: Image and ${Array.from(this.activeScrollers)} - starting continuous movement`);
+                this.startMovement();
+            }
+        },
+        
+        startMovement: function() {
+            this.moveInterval = setInterval(() => {
+                this.continuousMove();
+            }, this.moveSpeed);
+        },
+        
+        stopMovement: function() {
+            if (this.moveInterval) {
+                console.log('Stopping movement');
+                clearInterval(this.moveInterval);
+                this.moveInterval = null;
+            }
+        },
+        
+        continuousMove: function() {
+            if (!this.outsideCamera || this.activeScrollers.size === 0 || !this.isImageIntersected) {
+                this.stopMovement();
+                return;
+            }
+            
+            const currentImagePosition = this.outsideCamera.getAttribute('position');
+            let newImagePosition = {...currentImagePosition};
+            
+            // Calculate movement for each active scroller
+            let moveX = 0;
+            let moveY = 0;
+            
+            // Check each possible scroller and accumulate movement
+            if (this.activeScrollers.has('scroller-top')) {
+                moveY -= this.moveDistance; // DOWN
+            }
+            if (this.activeScrollers.has('scroller-right')) {
+                moveX -= this.moveDistance; // LEFT
+            }
+            if (this.activeScrollers.has('scroller-bottom')) {
+                moveY += this.moveDistance; // UP
+            }
+            if (this.activeScrollers.has('scroller-left')) {
+                moveX += this.moveDistance; // RIGHT
+            }
+            
+            // Apply combined movement
+            newImagePosition.x = currentImagePosition.x + moveX;
+            newImagePosition.y = currentImagePosition.y + moveY;
+            
+            // Update ONLY the image position (scrollers stay fixed relative to centerpiece)
+            this.outsideCamera.setAttribute('position', newImagePosition);
+            
+            // Log diagonal movement if applicable
+            if (moveX !== 0 && moveY !== 0) {
+                const direction = this.getDiagonalDirection(moveX, moveY);
+                console.log(`Diagonal movement: ${direction}`);
+            }
+        },
+        
+        getDiagonalDirection: function(moveX, moveY) {
+            if (moveX > 0 && moveY > 0) return "UP-RIGHT";
+            if (moveX > 0 && moveY < 0) return "DOWN-RIGHT";
+            if (moveX < 0 && moveY > 0) return "UP-LEFT";
+            if (moveX < 0 && moveY < 0) return "DOWN-LEFT";
+            return "UNKNOWN";
+        },
+        
+        remove: function() {
+            // Clean up interval when component is removed
+            if (this.moveInterval) {
+                clearInterval(this.moveInterval);
+            }
+        }
+    });
+
+    // SMOOTH CONTINUOUS ZOOM COMPONENT
+    AFRAME.registerComponent('smooth-zoom-controls', {
+        init: function() {
+            this.outsideCamera = document.getElementById('outsidecamera');
+            this.zoomButtons = document.querySelectorAll('.zoom-button');
+            
+            this.activeZoomButton = null;
+            this.zoomInterval = null;
+            this.zoomSpeed = 100; // milliseconds between zoom steps
+            this.zoomIncrement = 1; // Smaller increment for smoother zoom
+            
+            console.log('Smooth zoom controls initialized');
+            
+            // Add intersection listeners to all zoom buttons
+            this.zoomButtons.forEach(button => {
+                button.addEventListener('raycaster-intersected', (evt) => {
+                    this.handleZoomButtonIntersected(evt.target);
+                });
+                
+                button.addEventListener('raycaster-intersected-cleared', (evt) => {
+                    this.handleZoomButtonCleared(evt.target);
+                });
+            });
+        },
+        
+        handleZoomButtonIntersected: function(button) {
+            // Stop any existing zoom
+            if (this.zoomInterval) {
+                clearInterval(this.zoomInterval);
+                this.zoomInterval = null;
+            }
+            
+            this.activeZoomButton = button;
+            const action = button.getAttribute('data-action');
+            console.log(`Zoom button ${action} intersected - starting continuous zoom`);
+            this.startZoom(action);
+        },
+        
+        handleZoomButtonCleared: function(button) {
+            if (this.activeZoomButton === button) {
+                console.log(`Zoom button cleared - stopping zoom`);
+                this.activeZoomButton = null;
+                this.stopZoom();
+            }
+        },
+        
+        startZoom: function(action) {
+            this.zoomInterval = setInterval(() => {
+                this.continuousZoom(action);
+            }, this.zoomSpeed);
+        },
+        
+        stopZoom: function() {
+            if (this.zoomInterval) {
+                console.log('Stopping zoom');
+                clearInterval(this.zoomInterval);
+                this.zoomInterval = null;
+            }
+        },
+        
+        continuousZoom: function(action) {
+            if (!this.outsideCamera || !this.activeZoomButton) {
+                this.stopZoom();
+                return;
+            }
             
             const currentScale = this.outsideCamera.getAttribute('scale');
-            const scaleChange = action === 'increase' ? this.scaleFactor : -this.scaleFactor;
+            const currentScaleValue = currentScale.x;
             
-            const newScaleValue = Math.max(0.1, currentScale.x + scaleChange);
+            let newScaleValue;
+            if (action === 'increase') {
+                newScaleValue = currentScaleValue + this.zoomIncrement;
+            } else {
+                newScaleValue = Math.max(0.1, currentScaleValue - this.zoomIncrement);
+            }
             
+            // Apply new scale
             this.outsideCamera.setAttribute('scale', {
                 x: newScaleValue,
                 y: newScaleValue, 
                 z: newScaleValue
             });
-            
-        }
-    });
-
-    // Component to handle movement when both outsidecamera and scrollring are intersected
-    AFRAME.registerComponent('double-intersection-move', {
-        init: function() {
-            this.outsideCamera = document.getElementById('outsidecamera');
-            this.scrollring = document.getElementById('scrollring');
-            this.raycaster = document.getElementById('raycaster');
-            
-            this.intersectedObjects = new Set();
-            this.hasMoved = false;
-            
-            // Listen for intersection events
-            this.outsideCamera.addEventListener('raycaster-intersected', this.handleIntersection.bind(this));
-            this.scrollring.addEventListener('raycaster-intersected', this.handleIntersection.bind(this));
-            
-            // Listen for intersection cleared events
-            this.outsideCamera.addEventListener('raycaster-intersected-cleared', this.handleIntersectionCleared.bind(this));
-            this.scrollring.addEventListener('raycaster-intersected-cleared', this.handleIntersectionCleared.bind(this));
         },
         
-        handleIntersection: function(evt) {
-            this.intersectedObjects.add(evt.target.id);
-            this.checkForDoubleIntersection();
-        },
-        
-        handleIntersectionCleared: function(evt) {
-            this.intersectedObjects.delete(evt.target.id);
-            this.hasMoved = false; // Reset so we can move again next time
-        },
-        
-        checkForDoubleIntersection: function() {
-            // Check if both outsidecamera and scrollring are intersected
-            if (this.intersectedObjects.has('outsidecamera') && 
-                this.intersectedObjects.has('scrollring') && 
-                !this.hasMoved) {
-                
-                this.moveCameraLeft();
-                this.hasMoved = true;
+        remove: function() {
+            // Clean up interval when component is removed
+            if (this.zoomInterval) {
+                clearInterval(this.zoomInterval);
             }
-        },
-        
-        moveCameraLeft: function() {
-            if (!this.outsideCamera) return;
-            
-            const currentPosition = this.outsideCamera.getAttribute('position');
-            const currentRotation = this.outsideCamera.getAttribute('rotation');
-            
-            // Get the image's Y rotation in radians
-            const yRotationRad = THREE.Math.degToRad(currentRotation.y);
-            
-            // Calculate the left direction vector relative to the image's orientation
-            // For an image facing the camera, left is -90 degrees from its forward direction
-            const leftDirection = new THREE.Vector3(
-                -Math.cos(yRotationRad),  // X component
-                0,                        // Y component (no vertical movement)
-                Math.sin(yRotationRad)    // Z component
-            );
-            
-            // Normalize and scale by 0.5 units
-            leftDirection.normalize().multiplyScalar(0.5);
-            
-            // Calculate new position
-            const newPosition = {
-                x: currentPosition.x + leftDirection.x,
-                y: currentPosition.y,
-                z: currentPosition.z + leftDirection.z
-            };
-            
-            this.outsideCamera.setAttribute('position', newPosition);
-            
-            console.log('Moved outsidecamera left by 0.5 units relative to its orientation');
-            console.log('Image rotation Y:', currentRotation.y, 'degrees');
-            console.log('Left direction:', leftDirection);
-            console.log('New position:', newPosition);
         }
     });
 
     document.addEventListener("DOMContentLoaded", () => {
         const camera = document.querySelector('a-camera');
 
-        // Add zoom controls component to scene
+        // Add SMOOTH ZOOM controls component to scene
         const scene = document.querySelector('a-scene');
-        scene.setAttribute('zoom-controls', '');
+        scene.setAttribute('smooth-zoom-controls', '');
         
-        // Add sync component to scrollring
-        const scrollring = document.getElementById('scrollring');
-        const outsideCamera = document.getElementById('outsidecamera');
-        scrollring.setAttribute('sync-with-image', 'target: #outsidecamera');
-        
-        // Add double intersection move component to scene
-        scene.setAttribute('double-intersection-move', '');
+        // Add DOUBLE INTERSECTION scroller controls component to scene
+        scene.setAttribute('double-intersection-controls', '');
+
+        console.log('All components initialized');
 
         // Handle marker detection
         const markers = document.querySelectorAll('a-marker');
@@ -262,19 +385,22 @@
                 direction.subVectors(markerXZ, cameraXZ).normalize();
                 
                 // Calculate position 5 units beyond the marker in the same XZ direction
-                const imagePosition = new THREE.Vector3();
-                imagePosition.copy(markerXZ);
-                imagePosition.add(direction.multiplyScalar(5));
+                const centerpiecePosition = new THREE.Vector3();
+                centerpiecePosition.copy(markerXZ);
+                centerpiecePosition.add(direction.multiplyScalar(5));
                 
                 // Calculate rotation to face the camera
                 const lookDirection = new THREE.Vector3();
-                lookDirection.subVectors(cameraXZ, imagePosition).normalize();
+                lookDirection.subVectors(cameraXZ, centerpiecePosition).normalize();
                 const angle = Math.atan2(lookDirection.x, lookDirection.z);
                 const yRotation = THREE.Math.radToDeg(angle);
                 
-                // Update outsidecamera image
-                if (outsideCamera) {
+                // Update centerpiece (parent of both image and scrollers)
+                const centerpiece = document.getElementById('centerpiece');
+                
+                if (centerpiece) {
                     // Change image source based on marker value
+                    const outsideCamera = document.getElementById('outsidecamera');
                     const imageSources = {
                         '1': 'boiler.jpg',
                         '2': 'frame_plan.jpg', 
@@ -282,25 +408,25 @@
                         '4': 'profile.jpg'
                     };
                     
-                    if (imageSources[markerValue]) {
+                    if (outsideCamera && imageSources[markerValue]) {
                         outsideCamera.setAttribute('src', imageSources[markerValue]);
                     }
                     
-                    // Set position and rotation to face camera
-                    outsideCamera.setAttribute('position', {
-                        x: imagePosition.x,
+                    // Set position and rotation to face camera (applies to entire centerpiece)
+                    centerpiece.setAttribute('position', {
+                        x: centerpiecePosition.x,
                         y: 0,
-                        z: imagePosition.z
+                        z: centerpiecePosition.z
                     });
 
-                    outsideCamera.setAttribute('rotation', {
+                    centerpiece.setAttribute('rotation', {
                         x: 0,
                         y: yRotation,
                         z: 0
                     });
                     
-                    console.log(`Image positioned at:`, imagePosition);
-                    console.log(`Image rotation Y: ${yRotation} degrees`);
+                    console.log(`Centerpiece positioned at:`, centerpiecePosition);
+                    console.log(`Centerpiece rotation Y: ${yRotation} degrees`);
                 }
             });
             
