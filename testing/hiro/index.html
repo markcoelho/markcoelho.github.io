@@ -47,39 +47,30 @@
         
         <!-- Raycaster entity attached to camera -->
         <a-entity id="raycaster" 
-                  raycaster="objects: .zoom-button, #outsidecamera, .scroller; showLine: false; lineColor: red; far: 20"
+                  raycaster="objects: .zoom-button, .nav-button, #outsidecamera, .scroller; showLine: false; lineColor: red; far: 20"
                   position="0 0 0"
                   visible-in-vr-only></a-entity>
                   
         <a-video opacity="1" id="arjs_feed" position="0 0 -50" width="83" height="83"></a-video>
 
-        <!-- Markers with zoom controls -->
-        <a-marker type="barcode" value="1">
-            <a-image class="zoom-button" src="plus.png" position="1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
-            <a-image class="zoom-button" src="minus.png" position="-1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
-        </a-marker>
-
-        <a-marker type="barcode" value="2">
-            <a-image class="zoom-button" src="plus.png" position="1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
-            <a-image class="zoom-button" src="minus.png" position="-1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
-        </a-marker>
-
-        <a-marker type="barcode" value="3">
-            <a-image class="zoom-button" src="plus.png" position="1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
-            <a-image class="zoom-button" src="minus.png" position="-1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
-        </a-marker>
-
-        <a-marker type="barcode" value="4">
-            <a-image class="zoom-button" src="plus.png" position="1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="increase"></a-image>
-            <a-image class="zoom-button" src="minus.png" position="-1 0.5 -1.3" rotation="-90 0 0" scale="0.3 0.3 0.3" data-action="decrease"></a-image>
-        </a-marker>
+        <!-- Markers without manually added zoom controls -->
+        <a-marker type="barcode" value="0"></a-marker>
+        <a-marker type="barcode" value="1" multiple="yes"></a-marker>
+        <a-marker type="barcode" value="2"></a-marker>
+        <a-marker type="barcode" value="3"></a-marker>
+        <a-marker type="barcode" value="4" multiple="yes"></a-marker>
+        <a-marker type="barcode" value="5" multiple="yes"></a-marker>
+        <a-marker type="barcode" value="6" multiple="yes"></a-marker>
+        <a-marker type="barcode" value="7" multiple="yes"></a-marker>
+        <a-marker type="barcode" value="8"></a-marker>
+        <a-marker type="barcode" value="9"></a-marker>
 
     </a-camera>
 
     <!-- CENTERPIECE - Parent entity containing both image and scrollers -->
     <a-entity id="centerpiece" position="0 0 -5" rotation="0 0 0">
         <!-- Image as child -->
-        <a-image id="outsidecamera" src="boiler.jpg" position="0 0 0" scale="3 3 3">
+        <a-image id="outsidecamera" src="0.jpg" position="0 0 0" scale="3 3 3">
         </a-image>
         
         <!-- Scrollers as children -->
@@ -265,8 +256,7 @@
     AFRAME.registerComponent('smooth-zoom-controls', {
         init: function() {
             this.outsideCamera = document.getElementById('outsidecamera');
-            this.zoomButtons = document.querySelectorAll('.zoom-button');
-            
+            this.zoomButtons = []; // Will be populated dynamically
             this.activeZoomButton = null;
             this.zoomInterval = null;
             this.zoomSpeed = 100; // milliseconds between zoom steps
@@ -274,15 +264,72 @@
             
             console.log('Smooth zoom controls initialized');
             
-            // Add intersection listeners to all zoom buttons
-            this.zoomButtons.forEach(button => {
-                button.addEventListener('raycaster-intersected', (evt) => {
-                    this.handleZoomButtonIntersected(evt.target);
+            // Set up a MutationObserver to watch for dynamically added zoom buttons
+            this.setupMutationObserver();
+            
+            // Also set up a timeout to check for buttons after a short delay
+            setTimeout(() => {
+                this.refreshZoomButtons();
+            }, 500);
+        },
+        
+        setupMutationObserver: function() {
+            // Create a MutationObserver to watch for added zoom buttons
+            this.observer = new MutationObserver((mutations) => {
+                let buttonsAdded = false;
+                
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeType === Node.ELEMENT_NODE && 
+                                node.classList && 
+                                node.classList.contains('zoom-button')) {
+                                buttonsAdded = true;
+                            }
+                        });
+                    }
                 });
                 
-                button.addEventListener('raycaster-intersected-cleared', (evt) => {
+                if (buttonsAdded) {
+                    this.refreshZoomButtons();
+                }
+            });
+            
+            // Start observing the document for added elements
+            this.observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        },
+        
+        refreshZoomButtons: function() {
+            // Get all current zoom buttons
+            this.zoomButtons = document.querySelectorAll('.zoom-button');
+            console.log(`Found ${this.zoomButtons.length} zoom buttons`);
+            
+            // Remove any existing event listeners
+            this.zoomButtons.forEach(button => {
+                button.removeEventListener('raycaster-intersected', this.intersectedHandler);
+                button.removeEventListener('raycaster-intersected-cleared', this.clearedHandler);
+            });
+            
+            // Add intersection listeners to all zoom buttons
+            this.zoomButtons.forEach(button => {
+                // Create bound handlers for this button
+                const intersectedHandler = (evt) => {
+                    this.handleZoomButtonIntersected(evt.target);
+                };
+                
+                const clearedHandler = (evt) => {
                     this.handleZoomButtonCleared(evt.target);
-                });
+                };
+                
+                // Store handlers on the button for later removal
+                button._intersectedHandler = intersectedHandler;
+                button._clearedHandler = clearedHandler;
+                
+                button.addEventListener('raycaster-intersected', intersectedHandler);
+                button.addEventListener('raycaster-intersected-cleared', clearedHandler);
             });
         },
         
@@ -350,18 +397,100 @@
             if (this.zoomInterval) {
                 clearInterval(this.zoomInterval);
             }
+            
+            // Disconnect the MutationObserver
+            if (this.observer) {
+                this.observer.disconnect();
+            }
+        }
+    });
+
+    // AUTOMATIC ZOOM BUTTONS COMPONENT
+    AFRAME.registerComponent('auto-zoom-buttons', {
+        init: function() {
+            this.markers = document.querySelectorAll('a-marker');
+            console.log(`Found ${this.markers.length} markers to add zoom buttons to`);
+            
+            // Add zoom buttons to each marker
+            this.markers.forEach(marker => {
+                this.addZoomButtonsToMarker(marker);
+            });
+        },
+        
+        addZoomButtonsToMarker: function(marker) {
+            const markerValue = marker.getAttribute('value');
+            const isMultiple = marker.getAttribute('multiple') === 'yes';
+            
+            console.log(`Adding zoom buttons to marker ${markerValue}, multiple: ${isMultiple}`);
+            
+            // Create plus button
+            const plusButton = document.createElement('a-image');
+            plusButton.setAttribute('class', 'zoom-button');
+            plusButton.setAttribute('src', 'plus.png');
+            plusButton.setAttribute('position', '1 0.5 0');
+            plusButton.setAttribute('rotation', '-90 0 0');
+            plusButton.setAttribute('scale', '0.3 0.3 0.3');
+            plusButton.setAttribute('data-action', 'increase');
+            
+            // Create minus button
+            const minusButton = document.createElement('a-image');
+            minusButton.setAttribute('class', 'zoom-button');
+            minusButton.setAttribute('src', 'minus.png');
+            minusButton.setAttribute('position', '-1 0.5 0');
+            minusButton.setAttribute('rotation', '-90 0 0');
+            minusButton.setAttribute('scale', '0.3 0.3 0.3');
+            minusButton.setAttribute('data-action', 'decrease');
+            
+            // Add buttons to marker
+            marker.appendChild(plusButton);
+            marker.appendChild(minusButton);
+            
+            // If marker has multiple="yes", add left/right navigation buttons
+            if (isMultiple) {
+                this.addNavigationButtonsToMarker(marker);
+            }
+            
+            console.log(`Zoom buttons added to marker ${markerValue}`);
+        },
+        
+        addNavigationButtonsToMarker: function(marker) {
+            const markerValue = marker.getAttribute('value');
+            console.log(`Adding navigation buttons to marker ${markerValue}`);
+            
+            // Create left button (positioned under minus button)
+            const leftButton = document.createElement('a-image');
+            leftButton.setAttribute('class', 'nav-button');
+            leftButton.setAttribute('src', 'left.png');
+            leftButton.setAttribute('position', '-1 0 0'); // Under minus button
+            leftButton.setAttribute('rotation', '-90 0 0');
+            leftButton.setAttribute('scale', '0.3 0.3 0.3');
+            leftButton.setAttribute('data-action', 'left');
+            
+            // Create right button (positioned under plus button)
+            const rightButton = document.createElement('a-image');
+            rightButton.setAttribute('class', 'nav-button');
+            rightButton.setAttribute('src', 'right.png');
+            rightButton.setAttribute('position', '1 0 0'); // Under plus button
+            rightButton.setAttribute('rotation', '-90 0 0');
+            rightButton.setAttribute('scale', '0.3 0.3 0.3');
+            rightButton.setAttribute('data-action', 'right');
+            
+            // Add navigation buttons to marker
+            marker.appendChild(leftButton);
+            marker.appendChild(rightButton);
+            
+            console.log(`Navigation buttons added to marker ${markerValue}`);
         }
     });
 
     document.addEventListener("DOMContentLoaded", () => {
         const camera = document.querySelector('a-camera');
 
-        // Add SMOOTH ZOOM controls component to scene
+        // Add components to scene
         const scene = document.querySelector('a-scene');
         scene.setAttribute('smooth-zoom-controls', '');
-        
-        // Add DOUBLE INTERSECTION scroller controls component to scene
         scene.setAttribute('double-intersection-controls', '');
+        scene.setAttribute('auto-zoom-buttons', '');
 
         console.log('All components initialized');
 
@@ -402,10 +531,16 @@
                     // Change image source based on marker value
                     const outsideCamera = document.getElementById('outsidecamera');
                     const imageSources = {
-                        '1': 'boiler.jpg',
-                        '2': 'frame_plan.jpg', 
-                        '3': 'main_forecastle_deck.jpg',
-                        '4': 'profile.jpg'
+                        '0': '0.jpg',
+                        '1': '1.1.jpg',
+                        '2': '2.jpg',
+                        '3': '3.jpg',
+                        '4': '4.1.jpg',
+                        '5': '5.1.jpg',
+                        '6': '6.1.jpg',
+                        '7': '7.1.jpg',
+                        '8': '8.jpg',
+                        '9': '9.jpg'
                     };
                     
                     if (outsideCamera && imageSources[markerValue]) {
