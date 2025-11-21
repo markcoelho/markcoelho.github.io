@@ -461,7 +461,7 @@
             const leftButton = document.createElement('a-image');
             leftButton.setAttribute('class', 'nav-button');
             leftButton.setAttribute('src', 'left.png');
-            leftButton.setAttribute('position', '-1 0 0'); // Under minus button
+            leftButton.setAttribute('position', '-1 0.5 1'); // Under minus button
             leftButton.setAttribute('rotation', '-90 0 0');
             leftButton.setAttribute('scale', '0.3 0.3 0.3');
             leftButton.setAttribute('data-action', 'left');
@@ -470,7 +470,7 @@
             const rightButton = document.createElement('a-image');
             rightButton.setAttribute('class', 'nav-button');
             rightButton.setAttribute('src', 'right.png');
-            rightButton.setAttribute('position', '1 0 0'); // Under plus button
+            rightButton.setAttribute('position', '1 0.5 1'); // Under plus button
             rightButton.setAttribute('rotation', '-90 0 0');
             rightButton.setAttribute('scale', '0.3 0.3 0.3');
             rightButton.setAttribute('data-action', 'right');
@@ -483,6 +483,233 @@
         }
     });
 
+    // MULTIPLE IMAGE NAVIGATION COMPONENT
+    AFRAME.registerComponent('multiple-image-navigation', {
+        init: function() {
+            this.outsideCamera = document.getElementById('outsidecamera');
+            this.navButtons = []; // Will be populated dynamically
+            this.activeNavButton = null;
+            
+            // Define image sequences for markers with multiple images
+            this.imageSequences = {
+                '0': ['bigimages/0.jpg'],
+                '1': [
+                    'bigimages/1.1.jpg',
+                    'bigimages/1.2.jpg',
+                    'bigimages/1.3.jpg',
+                    'bigimages/1.4.jpg'
+                ],
+                '2': ['bigimages/2.jpg'], 
+                '3': ['bigimages/3.jpg'],
+                '4': [
+                    'bigimages/4.1.jpg',
+                    'bigimages/4.2.jpg'
+                ],
+                '5': [
+                    'bigimages/5.1.jpg',
+                    'bigimages/5.2.jpg'
+                ],
+                '6': [
+                    'bigimages/6.1.jpg',
+                    'bigimages/6.2.jpg',
+                    'bigimages/6.3.jpg'
+                ],
+                '7': [
+                    'bigimages/7.1.jpg',
+                    'bigimages/7.2.jpg',
+                    'bigimages/7.3.jpg',
+                    'bigimages/7.4.jpg'
+                ],
+                '8': ['bigimages/8.jpg'],
+                '9': ['bigimages/9.jpg']
+            };
+            
+            // Track current image index for each marker - PERSISTENT storage
+            this.currentImageIndex = {};
+            
+            console.log('Multiple image navigation initialized');
+            console.log('Image sequences:', this.imageSequences);
+            
+            // Set up a MutationObserver to watch for dynamically added nav buttons
+            this.setupMutationObserver();
+            
+            // Also set up a timeout to check for buttons after a short delay
+            setTimeout(() => {
+                this.refreshNavButtons();
+            }, 500);
+        },
+        
+        setupMutationObserver: function() {
+            // Create a MutationObserver to watch for added nav buttons
+            this.observer = new MutationObserver((mutations) => {
+                let buttonsAdded = false;
+                
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeType === Node.ELEMENT_NODE && 
+                                node.classList && 
+                                node.classList.contains('nav-button')) {
+                                buttonsAdded = true;
+                            }
+                        });
+                    }
+                });
+                
+                if (buttonsAdded) {
+                    this.refreshNavButtons();
+                }
+            });
+            
+            // Start observing the document for added elements
+            this.observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        },
+        
+        refreshNavButtons: function() {
+            // Get all current nav buttons
+            this.navButtons = document.querySelectorAll('.nav-button');
+            console.log(`Found ${this.navButtons.length} nav buttons`);
+            
+            // Remove any existing event listeners
+            this.navButtons.forEach(button => {
+                button.removeEventListener('raycaster-intersected', this.intersectedHandler);
+                button.removeEventListener('raycaster-intersected-cleared', this.clearedHandler);
+                button.removeEventListener('click', this.clickHandler);
+            });
+            
+            // Add intersection listeners to all nav buttons
+            this.navButtons.forEach(button => {
+                // Create bound handlers for this button
+                const intersectedHandler = (evt) => {
+                    this.handleNavButtonIntersected(evt.target);
+                };
+                
+                const clearedHandler = (evt) => {
+                    this.handleNavButtonCleared(evt.target);
+                };
+                
+                const clickHandler = (evt) => {
+                    this.handleNavButtonClick(evt.target);
+                };
+                
+                // Store handlers on the button for later removal
+                button._intersectedHandler = intersectedHandler;
+                button._clearedHandler = clearedHandler;
+                button._clickHandler = clickHandler;
+                
+                button.addEventListener('raycaster-intersected', intersectedHandler);
+                button.addEventListener('raycaster-intersected-cleared', clearedHandler);
+                button.addEventListener('click', clickHandler);
+            });
+        },
+        
+        handleNavButtonIntersected: function(button) {
+            this.activeNavButton = button;
+            console.log(`Nav button ${button.getAttribute('data-action')} intersected`);
+        },
+        
+        handleNavButtonCleared: function(button) {
+            if (this.activeNavButton === button) {
+                console.log(`Nav button cleared`);
+                this.activeNavButton = null;
+            }
+        },
+        
+        handleNavButtonClick: function(button) {
+            if (!this.activeNavButton || this.activeNavButton !== button) {
+                return;
+            }
+            
+            const action = button.getAttribute('data-action');
+            console.log(`Nav button ${action} clicked`);
+            
+            // Find which marker this button belongs to
+            const marker = this.findParentMarker(button);
+            if (!marker) {
+                console.log('Could not find parent marker for nav button');
+                return;
+            }
+            
+            const markerValue = marker.getAttribute('value');
+            this.navigateImages(markerValue, action);
+        },
+        
+        findParentMarker: function(element) {
+            let parent = element.parentElement;
+            while (parent) {
+                if (parent.tagName.toLowerCase() === 'a-marker') {
+                    return parent;
+                }
+                parent = parent.parentElement;
+            }
+            return null;
+        },
+        
+        navigateImages: function(markerValue, direction) {
+            // Check if this marker has multiple images
+            if (!this.imageSequences[markerValue]) {
+                console.log(`Marker ${markerValue} does not have multiple images`);
+                return;
+            }
+            
+            const imageSequence = this.imageSequences[markerValue];
+            
+            // Don't navigate if there's only one image
+            if (imageSequence.length <= 1) {
+                console.log(`Marker ${markerValue} has only one image, no navigation needed`);
+                return;
+            }
+            
+            // Initialize current index if not set
+            if (this.currentImageIndex[markerValue] === undefined) {
+                this.currentImageIndex[markerValue] = 0;
+            }
+            
+            let newIndex = this.currentImageIndex[markerValue];
+            
+            // Calculate new index based on direction
+            if (direction === 'right') {
+                newIndex = (newIndex + 1) % imageSequence.length;
+            } else if (direction === 'left') {
+                newIndex = (newIndex - 1 + imageSequence.length) % imageSequence.length;
+            }
+            
+            // Update current index
+            this.currentImageIndex[markerValue] = newIndex;
+            
+            // Change the image source
+            const newImageSrc = imageSequence[newIndex];
+            this.outsideCamera.setAttribute('src', newImageSrc);
+            
+            console.log(`Marker ${markerValue}: Changed image to ${newImageSrc} (index ${newIndex})`);
+        },
+        
+        // Method to get the current image for a marker
+        getCurrentImageForMarker: function(markerValue) {
+            if (!this.imageSequences[markerValue]) {
+                return null;
+            }
+            
+            // Initialize current index if not set
+            if (this.currentImageIndex[markerValue] === undefined) {
+                this.currentImageIndex[markerValue] = 0;
+            }
+            
+            const currentIndex = this.currentImageIndex[markerValue];
+            return this.imageSequences[markerValue][currentIndex];
+        },
+        
+        remove: function() {
+            // Disconnect the MutationObserver
+            if (this.observer) {
+                this.observer.disconnect();
+            }
+        }
+    });
+
     document.addEventListener("DOMContentLoaded", () => {
         const camera = document.querySelector('a-camera');
 
@@ -491,6 +718,7 @@
         scene.setAttribute('smooth-zoom-controls', '');
         scene.setAttribute('double-intersection-controls', '');
         scene.setAttribute('auto-zoom-buttons', '');
+        const multipleImageNav = scene.setAttribute('multiple-image-navigation', '');
 
         console.log('All components initialized');
 
@@ -528,23 +756,21 @@
                 const centerpiece = document.getElementById('centerpiece');
                 
                 if (centerpiece) {
+                    // Get the multiple image navigation component
+                    const multipleImageNav = scene.components['multiple-image-navigation'];
+                    
                     // Change image source based on marker value
                     const outsideCamera = document.getElementById('outsidecamera');
-                    const imageSources = {
-                        '0': '0.jpg',
-                        '1': '1.1.jpg',
-                        '2': '2.jpg',
-                        '3': '3.jpg',
-                        '4': '4.1.jpg',
-                        '5': '5.1.jpg',
-                        '6': '6.1.jpg',
-                        '7': '7.1.jpg',
-                        '8': '8.jpg',
-                        '9': '9.jpg'
-                    };
                     
-                    if (outsideCamera && imageSources[markerValue]) {
-                        outsideCamera.setAttribute('src', imageSources[markerValue]);
+                    if (outsideCamera && multipleImageNav) {
+                        const imageSrc = multipleImageNav.getCurrentImageForMarker(markerValue);
+                        
+                        if (imageSrc) {
+                            outsideCamera.setAttribute('src', imageSrc);
+                            console.log(`Marker ${markerValue}: Loading image: ${imageSrc}`);
+                        } else {
+                            console.log(`Marker ${markerValue}: No image found`);
+                        }
                     }
                     
                     // Set position and rotation to face camera (applies to entire centerpiece)
@@ -567,6 +793,7 @@
             
             marker.addEventListener('markerLost', (e) => {
                 console.log(`marker ${marker.getAttribute('value')} lost`);
+                // The current image index is preserved in the multiple-image-navigation component
             });
         });
         
