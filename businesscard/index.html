@@ -1,84 +1,159 @@
+<!doctype HTML>
 <html>
-  <head>
+
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- AR engine that updates the visibility and positions of a-entity -->
 
-    <link rel="shortcut icon" href="#">
+    <script src="js/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
+    <script src="js/aframe-ar.js"></script>
 
-    <!--  mindar and aframe library hosted in cdn to build a web AR application! -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            font-family: monospace;
+        }
 
-    <!-- detect click event -->
-    <script> 
-      document.addEventListener("DOMContentLoaded", function() {
-        const clickCat = document.querySelector('#catsModel');
-        // detect click event
-        clickCat.addEventListener("click", event => {
-          console.log("catsModel click");
+        .a-canvas {
+            z-index: 1 !important;
+            position: absolute !important;
+        }
+        
+        .a-enter-vr {
+            z-index: 2 !important;
+        }
+    </style>
+</head>
+
+<body style="margin: 0px; overflow: hidden;">
+
+<a-scene renderer="sortObjects: true" vr-mode-ui="enabled: true;" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+
+    <a-assets>
+        <a-asset-item id="lrbox" src="models/lrbox.gltf"></a-asset-item>
+	</a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: true">
+                  
+        <a-video opacity="1" id="arjs_feed" position="0 0 -20" width="22" height="22"></a-video>
+
+        <!-- Business Card Marker -->
+        <a-marker type="barcode" value="1">
+            <!-- Business Card Container -->
+            <a-entity id="business-card" position="0 0.5 0">
+                <!-- Card Background -->
+                <a-plane position="0 0.2 0" width="2" height="1.2" color="#2c3e50" rotation="-90 0 0"></a-plane>
+                
+                <!-- Profile Image -->
+                <a-image position="-0.7 0.21 0" src="boiler.jpg" width="0.6" height="0.6" rotation="-90 0 0"></a-image>
+                
+                <!-- Name -->
+                <a-text value="John Smith" position="-0.1 0.21 0.4" align="left" color="white" width="1.5" rotation="-90 0 0"></a-text>
+                
+                <!-- Title -->
+                <a-text value="CEO & Founder" position="-0.1 0.21 0.3" align="left" color="#ecf0f1" width="1.5" rotation="-90 0 0" scale="0.8 0.8 0.8"></a-text>
+                
+                <!-- Company -->
+                <a-text value="Tech Innovations Inc." position="-0.1 0.21 0.2" align="left" color="#3498db" width="1.5" rotation="-90 0 0" scale="0.7 0.7 0.7"></a-text>
+                
+                <!-- Contact Info -->
+                <a-text value="📞 +1 (555) 123-4567" position="-0.1 0.21 0.05" align="left" color="white" width="1.5" rotation="-90 0 0" scale="0.6 0.6 0.6"></a-text>
+                <a-text value="✉️ john@techinnovations.com" position="-0.1 0.21 -0.1" align="left" color="white" width="1.5" rotation="-90 0 0" scale="0.6 0.6 0.6"></a-text>
+                <a-text value="🌐 www.techinnovations.com" position="-0.1 0.21 -0.25" align="left" color="white" width="1.5" rotation="-90 0 0" scale="0.6 0.6 0.6"></a-text>
+                
+                <!-- Social Media Icons -->
+                <a-image position="0.3 0.21 -0.4" src="frame_plan.jpg" width="0.15" height="0.15" rotation="-90 0 0" data-social="linkedin"></a-image>
+                <a-image position="0.5 0.21 -0.4" src="main_forecastle_deck.jpg" width="0.15" height="0.15" rotation="-90 0 0" data-social="twitter"></a-image>
+                <a-image position="0.7 0.21 -0.4" src="profile.jpg" width="0.15" height="0.15" rotation="-90 0 0" data-social="instagram"></a-image>
+            </a-entity>
+        </a-marker>
+
+        <!-- Other markers for different content -->
+        <a-marker type="barcode" value="2">
+            <a-entity id="company-video" position="0 0.5 0">
+                <!-- Video Presentation -->
+                <a-plane position="0 0.21 0" width="2" height="1.5" color="#34495e" rotation="-90 0 0"></a-plane>
+                <a-text value="Company Overview" position="0 0.22 0.6" align="center" color="white" width="2" rotation="-90 0 0"></a-text>
+                <a-video src="#video-placeholder" position="0 0.21 0" width="1.6" height="0.9" rotation="-90 0 0"></a-video>
+                <a-text value="Watch our story" position="0 0.22 -0.7" align="center" color="#3498db" width="2" rotation="-90 0 0" scale="0.8 0.8 0.8"></a-text>
+            </a-entity>
+        </a-marker>
+
+        <a-marker type="barcode" value="3">
+            <a-entity id="services" position="0 0.5 0">
+                <!-- Services Overview -->
+                <a-plane position="0 0.21 0" width="2" height="2" color="#16a085" rotation="-90 0 0"></a-plane>
+                <a-text value="Our Services" position="0 0.22 0.9" align="center" color="white" width="2" rotation="-90 0 0"></a-text>
+                <a-text value="• Web Development" position="0 0.22 0.6" align="center" color="white" width="1.8" rotation="-90 0 0" scale="0.7 0.7 0.7"></a-text>
+                <a-text value="• Mobile Apps" position="0 0.22 0.4" align="center" color="white" width="1.8" rotation="-90 0 0" scale="0.7 0.7 0.7"></a-text>
+                <a-text value="• AR/VR Solutions" position="0 0.22 0.2" align="center" color="white" width="1.8" rotation="-90 0 0" scale="0.7 0.7 0.7"></a-text>
+                <a-text value="• AI Integration" position="0 0.22 0" align="center" color="white" width="1.8" rotation="-90 0 0" scale="0.7 0.7 0.7"></a-text>
+                <a-text value="• Cloud Services" position="0 0.22 -0.2" align="center" color="white" width="1.8" rotation="-90 0 0" scale="0.7 0.7 0.7"></a-text>
+                <a-text value="Contact us for details!" position="0 0.22 -0.6" align="center" color="#f1c40f" width="2" rotation="-90 0 0" scale="0.6 0.6 0.6"></a-text>
+            </a-entity>
+        </a-marker>
+
+        <a-marker type="barcode" value="4">
+            <a-entity id="portfolio" position="0 0.5 0">
+                <!-- Portfolio Showcase -->
+                <a-plane position="0 0.21 0" width="2" height="1.8" color="#8e44ad" rotation="-90 0 0"></a-plane>
+                <a-text value="Our Portfolio" position="0 0.22 0.8" align="center" color="white" width="2" rotation="-90 0 0"></a-text>
+                <a-image position="-0.5 0.21 0.3" src="boiler.jpg" width="0.6" height="0.4" rotation="-90 0 0"></a-image>
+                <a-text value="Project Alpha" position="-0.5 0.22 -0.2" align="center" color="white" width="1" rotation="-90 0 0" scale="0.6 0.6 0.6"></a-text>
+                <a-image position="0.5 0.21 0.3" src="frame_plan.jpg" width="0.6" height="0.4" rotation="-90 0 0"></a-image>
+                <a-text value="Project Beta" position="0.5 0.22 -0.2" align="center" color="white" width="1" rotation="-90 0 0" scale="0.6 0.6 0.6"></a-text>
+                <a-text value="See more at our website" position="0 0.22 -0.7" align="center" color="#e74c3c" width="2" rotation="-90 0 0" scale="0.6 0.6 0.6"></a-text>
+            </a-entity>
+        </a-marker>
+
+    </a-camera>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Add marker event listeners
+            const markers = document.querySelectorAll('a-marker');
+            
+            markers.forEach(marker => {
+                marker.addEventListener('markerFound', (e) => {
+                    console.log(`marker ${marker.getAttribute('value')} visible`);
+                    
+                    // You can add specific actions for each marker here
+                    switch(marker.getAttribute('value')) {
+                        case '1':
+                            console.log('Business card detected - showing contact info');
+                            break;
+                        case '2':
+                            console.log('Video marker detected - playing company overview');
+                            break;
+                        case '3':
+                            console.log('Services marker detected - showing services');
+                            break;
+                        case '4':
+                            console.log('Portfolio marker detected - showing projects');
+                            break;
+                    }
+                });
+                
+                marker.addEventListener('markerLost', (e) => {
+                    console.log(`marker ${marker.getAttribute('value')} lost`);
+                });
+            });
+            
+            setTimeout(() => {
+                const arjsVideo = document.getElementById("arjs-video");
+                if (arjsVideo && arjsVideo.srcObject) {
+                    const arFeed = document.getElementById('arjs_feed');
+                    arFeed.srcObject = arjsVideo.srcObject;
+                    arFeed.setAttribute('src', '#arjs-video');
+                }
+            }, 3000);
         });
-      });
     </script>
 
-  </head>
-  <body>
-
-    <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 2" 
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false"
-    >
-    <!-- Property  mindar-image :  where is the compiled .mind file -->
-    <!-- Property maxTrack:  maximum number of target that will be tracked simultaneously. Default is 1. -->
-    <!-- Impact on performance! Avoid tracking many targets at the same time. -->
-
-      <a-camera 
-        position="0 0 0"
-        look-controls="enabled: false"
-        cursor="fuse: false; rayOrigin: mouse;" 
-        raycaster="far: ${customFields.libVersion}; objects: .clickable"
-      ></a-camera>
-      <!-- cursor and raycaster to detect is when the user click/touch a certain elements -->
-
-      <a-assets>
-        <a-asset-item 
-          id="catsModel"
-          src="./assets/pop_cat/scene.gltf"
-        ></a-asset-item>
-        <a-asset-item 
-          id="avocadoModel"
-          src="assets/avacado/"
-        ></a-asset-item>
-      </a-assets>
-
-      <!-- a-entity is a object that shows on top of the target image. -->
-      <!-- Property mindar-image-target: tells the engine to detect and track a particular image target.  -->
-
-      <!-- The targetIndex is always 0, if your targets.mind contains only a single image. -->
-      <!-- Multi-Targets -->
-      <!-- two <a-entity>, with different targetIndex. -->
-
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model
-          class="clickable"
-          rotation="0 0 0 "
-          position="0 -0.25 0"
-          scale="0.05 0.05 0.05"
-          src="#catsModel"
-          animation-mixer
-        >
-      </a-entity>
-      <a-entity mindar-image-target="targetIndex: 1">
-        <a-gltf-model
-          rotation="0 0 0 "
-          position="0 -0.25 0"
-          scale="0.05 0.05 0.05"
-          src="#avocadoModel"
-          animation-mixer
-          >
-      </a-entity>
-    </a-scene>
-  </body>
+</a-scene>
+</body>
 </html>
