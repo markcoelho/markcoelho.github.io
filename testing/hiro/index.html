@@ -252,6 +252,135 @@
         }
     });
 
+    // SIMPLE PROGRESS BAR COMPONENT
+    AFRAME.registerComponent('progress-bar', {
+        schema: {
+            markerValue: { type: 'string' }
+        },
+        
+        init: function() {
+            this.progressInterval = null;
+            this.el.setAttribute('width', '0');
+            this.el.setAttribute('visible', 'false'); // Start invisible
+            
+            // Get the background container
+            const marker = this.el.parentEl;
+            if (marker) {
+                const markerValue = this.data.markerValue;
+                this.progressBarBg = document.getElementById(`progress-bar-bg-${markerValue}`);
+                if (this.progressBarBg) {
+                    this.progressBarBg.setAttribute('visible', 'false'); // Start invisible
+                }
+            }
+            
+            // Listen for fuse events on parent marker
+            if (marker) {
+                // Listen for when fuse starts on any child button
+                marker.addEventListener('fusing', (evt) => {
+                    if (evt.target.classList.contains('zoom-button') || 
+                        evt.target.classList.contains('nav-button')) {
+                        this.startProgress();
+                    }
+                });
+                
+                // Listen for when fuse ends on any child button
+                marker.addEventListener('mouseleave', (evt) => {
+                    if (evt.target.classList.contains('zoom-button') || 
+                        evt.target.classList.contains('nav-button')) {
+                        this.resetProgress();
+                    }
+                });
+                
+                // Also listen for raycaster cleared events
+                marker.querySelectorAll('.zoom-button, .nav-button').forEach(button => {
+                    button.addEventListener('raycaster-intersected-cleared', () => {
+                        this.resetProgress();
+                    });
+                });
+            }
+        },
+        
+        startProgress: function() {
+            // Clear any existing progress interval
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+            }
+            
+            // Make progress bar and background visible
+            this.el.setAttribute('visible', 'true');
+            if (this.progressBarBg) {
+                this.progressBarBg.setAttribute('visible', 'true');
+            }
+            
+            const totalTime = 500; // ms (matches fuseTimeout)
+            const steps = 20; // Number of animation steps
+            const stepTime = totalTime / steps;
+            const stepWidth = 2.5 / steps; // Total width is 2.5
+            
+            let currentStep = 0;
+            
+            this.progressInterval = setInterval(() => {
+                if (currentStep >= steps) {
+                    clearInterval(this.progressInterval);
+                    // Hide after completion (fuse will trigger click)
+                    setTimeout(() => {
+                        this.hideProgressBar();
+                    }, 100);
+                    return;
+                }
+                
+                currentStep++;
+                const newWidth = stepWidth * currentStep;
+                const newPositionX = -1.25 + (newWidth / 2); // Center the fill as it grows
+                
+                this.el.setAttribute('width', newWidth);
+                this.el.setAttribute('position', {
+                    x: newPositionX,
+                    y: 0,
+                    z: 0.61
+                });
+                
+                // Keep color blue only
+                this.el.setAttribute('color', '#1E90FF'); // Blue only
+                
+            }, stepTime);
+        },
+        
+        resetProgress: function() {
+            // Clear progress interval
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+                this.progressInterval = null;
+            }
+            
+            // Hide progress bar
+            this.hideProgressBar();
+        },
+        
+        hideProgressBar: function() {
+            // Reset to initial state
+            this.el.setAttribute('width', '0');
+            this.el.setAttribute('position', {
+                x: -1.25,
+                y: 0,
+                z: 0.61
+            });
+            this.el.setAttribute('visible', 'false'); // Hide
+            this.el.setAttribute('color', '#1E90FF'); // Keep blue
+            
+            // Hide background
+            if (this.progressBarBg) {
+                this.progressBarBg.setAttribute('visible', 'false');
+            }
+        },
+        
+        remove: function() {
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+            }
+        }
+    });
+
     // SMOOTH CONTINUOUS ZOOM COMPONENT
     AFRAME.registerComponent('smooth-zoom-controls', {
         init: function() {
@@ -311,6 +440,8 @@
             this.zoomButtons.forEach(button => {
                 button.removeEventListener('raycaster-intersected', this.intersectedHandler);
                 button.removeEventListener('raycaster-intersected-cleared', this.clearedHandler);
+                button.removeEventListener('mouseenter', this.mouseEnterHandler);
+                button.removeEventListener('mouseleave', this.mouseLeaveHandler);
             });
             
             // Add intersection listeners to all zoom buttons
@@ -423,6 +554,31 @@
             
             console.log(`Adding zoom buttons to marker ${markerValue}, multiple: ${isMultiple}`);
             
+            // Create progress bar container (the background)
+            const progressBarContainer = document.createElement('a-plane');
+            progressBarContainer.setAttribute('color', '#333333'); // Dark gray background
+            progressBarContainer.setAttribute('position', '0 -0.01 0.6'); // Center of marker
+            progressBarContainer.setAttribute('rotation', '-90 0 0'); // Flat on the marker
+            progressBarContainer.setAttribute('width', '2.5');
+            progressBarContainer.setAttribute('height', '0.2');
+            progressBarContainer.setAttribute('id', `progress-bar-bg-${markerValue}`);
+            progressBarContainer.setAttribute('visible', 'false'); // Start invisible
+
+            // Create progress bar fill (will animate)
+            const progressBarFill = document.createElement('a-plane');
+            progressBarFill.setAttribute('color', '#1E90FF'); // Blue only
+            progressBarFill.setAttribute('position', '-1.25 0 0.61'); // Start from left (offset by half width)
+            progressBarFill.setAttribute('rotation', '-90 0 0'); // Flat on the marker
+            progressBarFill.setAttribute('width', '0'); // Start with 0 width
+            progressBarFill.setAttribute('height', '0.18'); // Slightly smaller than container
+            progressBarFill.setAttribute('id', `progress-bar-fill-${markerValue}`);
+            progressBarFill.setAttribute('visible', 'false'); // Start invisible
+            progressBarFill.setAttribute('progress-bar', `markerValue: ${markerValue}`); // Add progress bar component
+
+            // Add progress bar to marker
+            marker.appendChild(progressBarContainer);
+            marker.appendChild(progressBarFill);
+            
             // Create plus button
             const plusButton = document.createElement('a-image');
             plusButton.setAttribute('class', 'zoom-button');
@@ -431,6 +587,7 @@
             plusButton.setAttribute('rotation', '-90 0 0');
             plusButton.setAttribute('scale', '0.3 0.3 0.3');
             plusButton.setAttribute('data-action', 'increase');
+            plusButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
             
             // Create minus button
             const minusButton = document.createElement('a-image');
@@ -440,6 +597,7 @@
             minusButton.setAttribute('rotation', '-90 0 0');
             minusButton.setAttribute('scale', '0.3 0.3 0.3');
             minusButton.setAttribute('data-action', 'decrease');
+            minusButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
             
             // Add buttons to marker
             marker.appendChild(plusButton);
@@ -465,6 +623,7 @@
             leftButton.setAttribute('rotation', '-90 0 0');
             leftButton.setAttribute('scale', '0.3 0.3 0.3');
             leftButton.setAttribute('data-action', 'left');
+            leftButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
             
             // Create right button (positioned under plus button)
             const rightButton = document.createElement('a-image');
@@ -474,12 +633,68 @@
             rightButton.setAttribute('rotation', '-90 0 0');
             rightButton.setAttribute('scale', '0.3 0.3 0.3');
             rightButton.setAttribute('data-action', 'right');
+            rightButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
             
             // Add navigation buttons to marker
             marker.appendChild(leftButton);
             marker.appendChild(rightButton);
             
             console.log(`Navigation buttons added to marker ${markerValue}`);
+        }
+    });
+
+    // CURSOR LISTENER COMPONENT (for fuse events)
+    AFRAME.registerComponent('cursor-listener', {
+        init: function() {
+            this.el.addEventListener('fusing', (evt) => {
+                console.log('Fuse started on', this.el.className);
+                // Trigger progress bar animation
+                const marker = this.findParentMarker(this.el);
+                if (marker) {
+                    const markerValue = marker.getAttribute('value');
+                    const progressBar = document.getElementById(`progress-bar-fill-${markerValue}`);
+                    if (progressBar && progressBar.components['progress-bar']) {
+                        progressBar.components['progress-bar'].startProgress();
+                    }
+                }
+            });
+            
+            this.el.addEventListener('mouseleave', (evt) => {
+                console.log('Fuse cancelled on', this.el.className);
+                // Reset progress bar
+                const marker = this.findParentMarker(this.el);
+                if (marker) {
+                    const markerValue = marker.getAttribute('value');
+                    const progressBar = document.getElementById(`progress-bar-fill-${markerValue}`);
+                    if (progressBar && progressBar.components['progress-bar']) {
+                        progressBar.components['progress-bar'].resetProgress();
+                    }
+                }
+            });
+            
+            // Also reset on raycaster cleared
+            this.el.addEventListener('raycaster-intersected-cleared', (evt) => {
+                console.log('Raycaster cleared on', this.el.className);
+                const marker = this.findParentMarker(this.el);
+                if (marker) {
+                    const markerValue = marker.getAttribute('value');
+                    const progressBar = document.getElementById(`progress-bar-fill-${markerValue}`);
+                    if (progressBar && progressBar.components['progress-bar']) {
+                        progressBar.components['progress-bar'].resetProgress();
+                    }
+                }
+            });
+        },
+        
+        findParentMarker: function(element) {
+            let parent = element.parentElement;
+            while (parent) {
+                if (parent.tagName.toLowerCase() === 'a-marker') {
+                    return parent;
+                }
+                parent = parent.parentElement;
+            }
+            return null;
         }
     });
 
