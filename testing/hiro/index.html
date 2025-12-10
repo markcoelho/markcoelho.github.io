@@ -72,6 +72,9 @@
         <!-- Image as child -->
         <a-image id="outsidecamera" src="0.jpg" position="0 0 0" scale="3 3 3">
         </a-image>
+
+        <a-image id="scrolldirection" src="directionarrow.png" rotation="0 0 90" position="0 0 0.2" scale="1">
+        </a-image>
         
         <!-- Scrollers as children -->
         <a-entity id="scrollers">
@@ -192,6 +195,12 @@
                 console.log('Stopping movement');
                 clearInterval(this.moveInterval);
                 this.moveInterval = null;
+                
+                // Hide scrolldirection image
+                const scrollDirectionImage = document.getElementById('scrolldirection');
+                if (scrollDirectionImage) {
+                    scrollDirectionImage.setAttribute('visible', 'false');
+                }
             }
         },
         
@@ -229,11 +238,61 @@
             // Update ONLY the image position (scrollers stay fixed relative to centerpiece)
             this.outsideCamera.setAttribute('position', newImagePosition);
             
+            // Update scrolldirection image rotation based on active scroll direction
+            this.updateScrollDirection(moveX, moveY);
+            
             // Log diagonal movement if applicable
             if (moveX !== 0 && moveY !== 0) {
                 const direction = this.getDiagonalDirection(moveX, moveY);
                 console.log(`Diagonal movement: ${direction}`);
             }
+        },
+        
+        updateScrollDirection: function(moveX, moveY) {
+            const scrollDirectionImage = document.getElementById('scrolldirection');
+            if (!scrollDirectionImage) return;
+            
+            // Hide if no movement
+            if (moveX === 0 && moveY === 0) {
+                scrollDirectionImage.setAttribute('visible', 'false');
+                return;
+            }
+            
+            // Show the image
+            scrollDirectionImage.setAttribute('visible', 'true');
+            
+            let rotation = 90; // Default (scroll up)
+            
+            // Check for single direction scrolls first
+            if (moveY > 0 && moveX === 0) { // UP only
+                rotation = -90; // Arrow points up
+            } else if (moveY < 0 && moveX === 0) { // DOWN only
+                rotation = 90; // Arrow points down
+            } else if (moveX > 0 && moveY === 0) { // RIGHT only
+                rotation = 180; // Arrow points right
+            } else if (moveX < 0 && moveY === 0) { // LEFT only
+                rotation = 0; // Arrow points left
+            }
+            // For diagonal movement, use the primary direction based on active scrollers
+            else if (moveX !== 0 && moveY !== 0) {
+                // Determine which direction has priority (check which scrollers are active)
+                if (this.activeScrollers.has('scroller-top')) {
+                    rotation = -90; // UP priority (arrow up)
+                } else if (this.activeScrollers.has('scroller-bottom')) {
+                    rotation = 90; // DOWN priority (arrow down)
+                } else if (this.activeScrollers.has('scroller-left')) {
+                    rotation = 0; // LEFT priority (arrow left)
+                } else if (this.activeScrollers.has('scroller-right')) {
+                    rotation = 180; // RIGHT priority (arrow right)
+                }
+            }
+            
+            // Apply the rotation
+            scrollDirectionImage.setAttribute('rotation', {
+                x: 0,
+                y: 0,
+                z: rotation
+            });
         },
         
         getDiagonalDirection: function(moveX, moveY) {
