@@ -54,8 +54,12 @@
         <a-video opacity="1" id="arjs_feed" position="0 0 -50" width="83" height="83"></a-video>
 
         <!-- Markers without manually added zoom controls -->
-        <a-marker type="barcode" value="0"></a-marker>
-        <a-marker type="barcode" value="1" multiple="yes"></a-marker>
+        <a-marker type="barcode" value="0">
+            <a-entity scale="0.02 0.02 0.02" gltf-model="ship_example.glb"></a-entity>
+        </a-marker>
+        <a-marker type="barcode" value="1" multiple="yes">
+            
+        </a-marker>
         <a-marker type="barcode" value="2"></a-marker>
         <a-marker type="barcode" value="3"></a-marker>
         <a-marker type="barcode" value="4" multiple="yes"></a-marker>
@@ -441,266 +445,360 @@
     });
 
     // SMOOTH CONTINUOUS ZOOM COMPONENT
-    AFRAME.registerComponent('smooth-zoom-controls', {
-        init: function() {
-            this.outsideCamera = document.getElementById('outsidecamera');
-            this.zoomButtons = []; // Will be populated dynamically
-            this.activeZoomButton = null;
-            this.zoomInterval = null;
-            this.zoomSpeed = 100; // milliseconds between zoom steps
-            this.zoomIncrement = 1; // Smaller increment for smoother zoom
-            
-            console.log('Smooth zoom controls initialized');
-            
-            // Set up a MutationObserver to watch for dynamically added zoom buttons
-            this.setupMutationObserver();
-            
-            // Also set up a timeout to check for buttons after a short delay
-            setTimeout(() => {
-                this.refreshZoomButtons();
-            }, 500);
-        },
-        
-        setupMutationObserver: function() {
-            // Create a MutationObserver to watch for added zoom buttons
-            this.observer = new MutationObserver((mutations) => {
-                let buttonsAdded = false;
+    // SMOOTH CONTINUOUS ZOOM COMPONENT - UPDATED WITH FUSE TIMER
+        // SMOOTH CONTINUOUS ZOOM COMPONENT - UPDATED TO HANDLE 3D MODELS
+        AFRAME.registerComponent('smooth-zoom-controls', {
+            init: function() {
+                this.zoomButtons = []; // Will be populated dynamically
+                this.activeZoomButton = null;
+                this.zoomInterval = null;
+                this.zoomSpeed = 100; // milliseconds between zoom steps
+                this.zoomIncrement = 0.01; // Smaller increment for smoother zoom (3D models need smaller scale)
                 
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'childList') {
-                        mutation.addedNodes.forEach((node) => {
-                            if (node.nodeType === Node.ELEMENT_NODE && 
-                                node.classList && 
-                                node.classList.contains('zoom-button')) {
-                                buttonsAdded = true;
-                            }
-                        });
+                // ADDED: Fuse timer variables
+                this.fuseTimeout = 500; // Same as cursor fuse timeout
+                this.fuseTimer = null;
+                
+                console.log('Smooth zoom controls initialized');
+                
+                // Set up a MutationObserver to watch for dynamically added zoom buttons
+                this.setupMutationObserver();
+                
+                // Also set up a timeout to check for buttons after a short delay
+                setTimeout(() => {
+                    this.refreshZoomButtons();
+                }, 500);
+            },
+            
+            setupMutationObserver: function() {
+                // Create a MutationObserver to watch for added zoom buttons
+                this.observer = new MutationObserver((mutations) => {
+                    let buttonsAdded = false;
+                    
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'childList') {
+                            mutation.addedNodes.forEach((node) => {
+                                if (node.nodeType === Node.ELEMENT_NODE && 
+                                    node.classList && 
+                                    node.classList.contains('zoom-button')) {
+                                    buttonsAdded = true;
+                                }
+                            });
+                        }
+                    });
+                    
+                    if (buttonsAdded) {
+                        this.refreshZoomButtons();
                     }
                 });
                 
-                if (buttonsAdded) {
-                    this.refreshZoomButtons();
+                // Start observing the document for added elements
+                this.observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            },
+            
+            refreshZoomButtons: function() {
+                // Get all current zoom buttons
+                this.zoomButtons = document.querySelectorAll('.zoom-button');
+                console.log(`Found ${this.zoomButtons.length} zoom buttons`);
+                
+                // Remove any existing event listeners
+                this.zoomButtons.forEach(button => {
+                    button.removeEventListener('raycaster-intersected', this.intersectedHandler);
+                    button.removeEventListener('raycaster-intersected-cleared', this.clearedHandler);
+                });
+                
+                // Add intersection listeners to all zoom buttons
+                this.zoomButtons.forEach(button => {
+                    // Create bound handlers for this button
+                    const intersectedHandler = (evt) => {
+                        this.handleZoomButtonIntersected(evt.target);
+                    };
+                    
+                    const clearedHandler = (evt) => {
+                        this.handleZoomButtonCleared(evt.target);
+                    };
+                    
+                    // Store handlers on the button for later removal
+                    button._intersectedHandler = intersectedHandler;
+                    button._clearedHandler = clearedHandler;
+                    
+                    button.addEventListener('raycaster-intersected', intersectedHandler);
+                    button.addEventListener('raycaster-intersected-cleared', clearedHandler);
+                });
+            },
+            
+            handleZoomButtonIntersected: function(button) {
+                // Stop any existing zoom
+                if (this.zoomInterval) {
+                    clearInterval(this.zoomInterval);
+                    this.zoomInterval = null;
                 }
-            });
-            
-            // Start observing the document for added elements
-            this.observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        },
-        
-        refreshZoomButtons: function() {
-            // Get all current zoom buttons
-            this.zoomButtons = document.querySelectorAll('.zoom-button');
-            console.log(`Found ${this.zoomButtons.length} zoom buttons`);
-            
-            // Remove any existing event listeners
-            this.zoomButtons.forEach(button => {
-                button.removeEventListener('raycaster-intersected', this.intersectedHandler);
-                button.removeEventListener('raycaster-intersected-cleared', this.clearedHandler);
-                button.removeEventListener('mouseenter', this.mouseEnterHandler);
-                button.removeEventListener('mouseleave', this.mouseLeaveHandler);
-            });
-            
-            // Add intersection listeners to all zoom buttons
-            this.zoomButtons.forEach(button => {
-                // Create bound handlers for this button
-                const intersectedHandler = (evt) => {
-                    this.handleZoomButtonIntersected(evt.target);
-                };
                 
-                const clearedHandler = (evt) => {
-                    this.handleZoomButtonCleared(evt.target);
-                };
+                // Clear any existing fuse timer
+                if (this.fuseTimer) {
+                    clearTimeout(this.fuseTimer);
+                    this.fuseTimer = null;
+                }
                 
-                // Store handlers on the button for later removal
-                button._intersectedHandler = intersectedHandler;
-                button._clearedHandler = clearedHandler;
+                this.activeZoomButton = button;
+                const action = button.getAttribute('data-action');
+                const markerValue = button.getAttribute('data-marker');
                 
-                button.addEventListener('raycaster-intersected', intersectedHandler);
-                button.addEventListener('raycaster-intersected-cleared', clearedHandler);
-            });
-        },
-        
-        handleZoomButtonIntersected: function(button) {
-            // Stop any existing zoom
-            if (this.zoomInterval) {
-                clearInterval(this.zoomInterval);
-                this.zoomInterval = null;
-            }
+                // Store marker value on the active button for reference
+                this.activeZoomButton.markerValue = markerValue;
+                
+                // ADDED: Start fuse timer instead of immediate zoom
+                console.log(`Zoom button ${action} intersected for marker ${markerValue} - starting fuse timer`);
+                this.fuseTimer = setTimeout(() => {
+                    console.log(`Zoom button ${action} fuse complete for marker ${markerValue} - starting zoom`);
+                    this.startZoom(action);
+                }, this.fuseTimeout);
+            },
             
-            this.activeZoomButton = button;
-            const action = button.getAttribute('data-action');
-            console.log(`Zoom button ${action} intersected - starting continuous zoom`);
-            this.startZoom(action);
-        },
-        
-        handleZoomButtonCleared: function(button) {
-            if (this.activeZoomButton === button) {
-                console.log(`Zoom button cleared - stopping zoom`);
-                this.activeZoomButton = null;
-                this.stopZoom();
-            }
-        },
-        
-        startZoom: function(action) {
-            this.zoomInterval = setInterval(() => {
-                this.continuousZoom(action);
-            }, this.zoomSpeed);
-        },
-        
-        stopZoom: function() {
-            if (this.zoomInterval) {
-                console.log('Stopping zoom');
-                clearInterval(this.zoomInterval);
-                this.zoomInterval = null;
-            }
-        },
-        
-        continuousZoom: function(action) {
-            if (!this.outsideCamera || !this.activeZoomButton) {
-                this.stopZoom();
-                return;
-            }
+            handleZoomButtonCleared: function(button) {
+                if (this.activeZoomButton === button) {
+                    console.log(`Zoom button cleared - stopping zoom and fuse timer`);
+                    
+                    // Clear fuse timer
+                    if (this.fuseTimer) {
+                        clearTimeout(this.fuseTimer);
+                        this.fuseTimer = null;
+                    }
+                    
+                    this.activeZoomButton = null;
+                    this.stopZoom();
+                }
+            },
             
-            const currentScale = this.outsideCamera.getAttribute('scale');
-            const currentScaleValue = currentScale.x;
+            startZoom: function(action) {
+                this.zoomInterval = setInterval(() => {
+                    this.continuousZoom(action);
+                }, this.zoomSpeed);
+            },
             
-            let newScaleValue;
-            if (action === 'increase') {
-                newScaleValue = currentScaleValue + this.zoomIncrement;
-            } else {
-                newScaleValue = Math.max(0.1, currentScaleValue - this.zoomIncrement);
-            }
+            stopZoom: function() {
+                if (this.zoomInterval) {
+                    console.log('Stopping zoom');
+                    clearInterval(this.zoomInterval);
+                    this.zoomInterval = null;
+                }
+            },
             
-            // Apply new scale
-            this.outsideCamera.setAttribute('scale', {
-                x: newScaleValue,
-                y: newScaleValue, 
-                z: newScaleValue
-            });
-        },
-        
-        remove: function() {
-            // Clean up interval when component is removed
-            if (this.zoomInterval) {
-                clearInterval(this.zoomInterval);
-            }
+            continuousZoom: function(action) {
+                if (!this.activeZoomButton) {
+                    this.stopZoom();
+                    return;
+                }
+                
+                const markerValue = this.activeZoomButton.markerValue;
+                
+                // Special handling for marker 0 (3D model)
+                if (markerValue === '0') {
+                    this.zoom3DModel(action, markerValue);
+                } else {
+                    this.zoomImage(action);
+                }
+            },
             
-            // Disconnect the MutationObserver
-            if (this.observer) {
-                this.observer.disconnect();
+            zoomImage: function(action) {
+                const outsideCamera = document.getElementById('outsidecamera');
+                if (!outsideCamera) {
+                    this.stopZoom();
+                    return;
+                }
+                
+                const currentScale = outsideCamera.getAttribute('scale');
+                const currentScaleValue = currentScale.x;
+                
+                let newScaleValue;
+                if (action === 'increase') {
+                    newScaleValue = currentScaleValue + (this.zoomIncrement * 100); // Larger increment for images
+                } else {
+                    newScaleValue = Math.max(0.1, currentScaleValue - (this.zoomIncrement * 100));
+                }
+                
+                // Apply new scale to image
+                outsideCamera.setAttribute('scale', {
+                    x: newScaleValue,
+                    y: newScaleValue, 
+                    z: newScaleValue
+                });
+            },
+            
+            // In the zoom3DModel function of smooth-zoom-controls component, update:
+            zoom3DModel: function(action, markerValue) {
+                // Find the marker with the given value
+                const marker = document.querySelector(`a-marker[value="${markerValue}"]`);
+                if (!marker) {
+                    console.log(`Marker ${markerValue} not found`);
+                    this.stopZoom();
+                    return;
+                }
+                
+                // Find the 3D model entity inside the marker
+                const modelEntity = marker.querySelector('a-entity[gltf-model]');
+                if (!modelEntity) {
+                    console.log(`No 3D model found in marker ${markerValue}`);
+                    this.stopZoom();
+                    return;
+                }
+                
+                // Check if the 3D model is visible
+                const isVisible = modelEntity.getAttribute('visible') !== false;
+                if (!isVisible) {
+                    console.log(`3D model is not visible, cannot zoom`);
+                    this.stopZoom();
+                    return;
+                }
+                
+                const currentScale = modelEntity.getAttribute('scale');
+                const currentScaleValue = currentScale ? currentScale.x : 0.02; // Default from marker
+                
+                let newScaleValue;
+                if (action === 'increase') {
+                    newScaleValue = currentScaleValue + this.zoomIncrement;
+                } else {
+                    newScaleValue = Math.max(0.001, currentScaleValue - this.zoomIncrement); // Minimum scale
+                }
+                
+                // Apply new scale to 3D model
+                modelEntity.setAttribute('scale', {
+                    x: newScaleValue,
+                    y: newScaleValue, 
+                    z: newScaleValue
+                });
+                
+                console.log(`3D model scale: ${newScaleValue}`);
+            },
+            
+            remove: function() {
+                // Clean up interval when component is removed
+                if (this.zoomInterval) {
+                    clearInterval(this.zoomInterval);
+                }
+                
+                // Clean up fuse timer
+                if (this.fuseTimer) {
+                    clearTimeout(this.fuseTimer);
+                }
+                
+                // Disconnect the MutationObserver
+                if (this.observer) {
+                    this.observer.disconnect();
+                }
             }
-        }
-    });
+        });
 
     // AUTOMATIC ZOOM BUTTONS COMPONENT
-    AFRAME.registerComponent('auto-zoom-buttons', {
-        init: function() {
-            this.markers = document.querySelectorAll('a-marker');
-            console.log(`Found ${this.markers.length} markers to add zoom buttons to`);
-            
-            // Add zoom buttons to each marker
-            this.markers.forEach(marker => {
-                this.addZoomButtonsToMarker(marker);
-            });
-        },
+    // AUTOMATIC ZOOM BUTTONS COMPONENT - UPDATED
+        // AUTOMATIC ZOOM BUTTONS COMPONENT - UPDATED
+AFRAME.registerComponent('auto-zoom-buttons', {
+    init: function() {
+        this.markers = document.querySelectorAll('a-marker');
+        console.log(`Found ${this.markers.length} markers to add zoom buttons to`);
         
-        addZoomButtonsToMarker: function(marker) {
-            const markerValue = marker.getAttribute('value');
-            const isMultiple = marker.getAttribute('multiple') === 'yes';
-            
-            console.log(`Adding zoom buttons to marker ${markerValue}, multiple: ${isMultiple}`);
-            
-            // Create progress bar container (the background)
-            const progressBarContainer = document.createElement('a-plane');
-            progressBarContainer.setAttribute('color', '#333333'); // Dark gray background
-            progressBarContainer.setAttribute('position', '0 -0.01 0.6'); // Center of marker
-            progressBarContainer.setAttribute('rotation', '-90 0 0'); // Flat on the marker
-            progressBarContainer.setAttribute('width', '2.5');
-            progressBarContainer.setAttribute('height', '0.2');
-            progressBarContainer.setAttribute('id', `progress-bar-bg-${markerValue}`);
-            progressBarContainer.setAttribute('visible', 'false'); // Start invisible
-
-            // Create progress bar fill (will animate)
-            const progressBarFill = document.createElement('a-plane');
-            progressBarFill.setAttribute('color', '#1E90FF'); // Blue only
-            progressBarFill.setAttribute('position', '-1.25 0 0.61'); // Start from left (offset by half width)
-            progressBarFill.setAttribute('rotation', '-90 0 0'); // Flat on the marker
-            progressBarFill.setAttribute('width', '0'); // Start with 0 width
-            progressBarFill.setAttribute('height', '0.18'); // Slightly smaller than container
-            progressBarFill.setAttribute('id', `progress-bar-fill-${markerValue}`);
-            progressBarFill.setAttribute('visible', 'false'); // Start invisible
-            progressBarFill.setAttribute('progress-bar', `markerValue: ${markerValue}`); // Add progress bar component
-
-            // Add progress bar to marker
-            marker.appendChild(progressBarContainer);
-            marker.appendChild(progressBarFill);
-            
-            // Create plus button
-            const plusButton = document.createElement('a-image');
-            plusButton.setAttribute('class', 'zoom-button');
-            plusButton.setAttribute('src', 'plus.png');
-            plusButton.setAttribute('position', '1 0.5 0');
-            plusButton.setAttribute('rotation', '-90 0 0');
-            plusButton.setAttribute('scale', '0.3 0.3 0.3');
-            plusButton.setAttribute('data-action', 'increase');
-            plusButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
-            
-            // Create minus button
-            const minusButton = document.createElement('a-image');
-            minusButton.setAttribute('class', 'zoom-button');
-            minusButton.setAttribute('src', 'minus.png');
-            minusButton.setAttribute('position', '-1 0.5 0');
-            minusButton.setAttribute('rotation', '-90 0 0');
-            minusButton.setAttribute('scale', '0.3 0.3 0.3');
-            minusButton.setAttribute('data-action', 'decrease');
-            minusButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
-            
-            // Add buttons to marker
-            marker.appendChild(plusButton);
-            marker.appendChild(minusButton);
-            
-            // If marker has multiple="yes", add left/right navigation buttons
-            if (isMultiple) {
-                this.addNavigationButtonsToMarker(marker);
-            }
-            
-            console.log(`Zoom buttons added to marker ${markerValue}`);
-        },
+        // Add zoom and navigation buttons to each marker
+        this.markers.forEach(marker => {
+            this.addZoomButtonsToMarker(marker);
+            // Add navigation buttons to ALL markers (including marker 0)
+            this.addNavigationButtonsToMarker(marker);
+        });
+    },
+    
+    addZoomButtonsToMarker: function(marker) {
+        const markerValue = marker.getAttribute('value');
+        const isMultiple = marker.getAttribute('multiple') === 'yes';
         
-        addNavigationButtonsToMarker: function(marker) {
-            const markerValue = marker.getAttribute('value');
-            console.log(`Adding navigation buttons to marker ${markerValue}`);
-            
-            // Create left button (positioned under minus button)
-            const leftButton = document.createElement('a-image');
-            leftButton.setAttribute('class', 'nav-button');
-            leftButton.setAttribute('src', 'left.png');
-            leftButton.setAttribute('position', '-1 0.5 1'); // Under minus button
-            leftButton.setAttribute('rotation', '-90 0 0');
-            leftButton.setAttribute('scale', '0.3 0.3 0.3');
-            leftButton.setAttribute('data-action', 'left');
-            leftButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
-            
-            // Create right button (positioned under plus button)
-            const rightButton = document.createElement('a-image');
-            rightButton.setAttribute('class', 'nav-button');
-            rightButton.setAttribute('src', 'right.png');
-            rightButton.setAttribute('position', '1 0.5 1'); // Under plus button
-            rightButton.setAttribute('rotation', '-90 0 0');
-            rightButton.setAttribute('scale', '0.3 0.3 0.3');
-            rightButton.setAttribute('data-action', 'right');
-            rightButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
-            
-            // Add navigation buttons to marker
-            marker.appendChild(leftButton);
-            marker.appendChild(rightButton);
-            
-            console.log(`Navigation buttons added to marker ${markerValue}`);
-        }
-    });
+        console.log(`Adding zoom buttons to marker ${markerValue}`);
+        
+        // Create progress bar container (the background)
+        const progressBarContainer = document.createElement('a-plane');
+        progressBarContainer.setAttribute('color', '#333333'); // Dark gray background
+        progressBarContainer.setAttribute('position', '0 -0.01 0.6'); // Center of marker
+        progressBarContainer.setAttribute('rotation', '-90 0 0'); // Flat on the marker
+        progressBarContainer.setAttribute('width', '2.5');
+        progressBarContainer.setAttribute('height', '0.2');
+        progressBarContainer.setAttribute('id', `progress-bar-bg-${markerValue}`);
+        progressBarContainer.setAttribute('visible', 'false'); // Start invisible
+
+        // Create progress bar fill (will animate)
+        const progressBarFill = document.createElement('a-plane');
+        progressBarFill.setAttribute('color', '#1E90FF'); // Blue only
+        progressBarFill.setAttribute('position', '-1.25 0 0.61'); // Start from left (offset by half width)
+        progressBarFill.setAttribute('rotation', '-90 0 0'); // Flat on the marker
+        progressBarFill.setAttribute('width', '0'); // Start with 0 width
+        progressBarFill.setAttribute('height', '0.18'); // Slightly smaller than container
+        progressBarFill.setAttribute('id', `progress-bar-fill-${markerValue}`);
+        progressBarFill.setAttribute('visible', 'false'); // Start invisible
+        progressBarFill.setAttribute('progress-bar', `markerValue: ${markerValue}`); // Add progress bar component
+
+        // Add progress bar to marker
+        marker.appendChild(progressBarContainer);
+        marker.appendChild(progressBarFill);
+        
+        // Create plus button
+        const plusButton = document.createElement('a-image');
+        plusButton.setAttribute('class', 'zoom-button');
+        plusButton.setAttribute('src', 'plus.png');
+        plusButton.setAttribute('position', '1 0.5 0');
+        plusButton.setAttribute('rotation', '-90 0 0');
+        plusButton.setAttribute('scale', '0.3 0.3 0.3');
+        plusButton.setAttribute('data-action', 'increase');
+        plusButton.setAttribute('data-marker', markerValue); // Store marker value
+        plusButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
+        
+        // Create minus button
+        const minusButton = document.createElement('a-image');
+        minusButton.setAttribute('class', 'zoom-button');
+        minusButton.setAttribute('src', 'minus.png');
+        minusButton.setAttribute('position', '-1 0.5 0');
+        minusButton.setAttribute('rotation', '-90 0 0');
+        minusButton.setAttribute('scale', '0.3 0.3 0.3');
+        minusButton.setAttribute('data-action', 'decrease');
+        minusButton.setAttribute('data-marker', markerValue); // Store marker value
+        minusButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
+        
+        // Add buttons to marker
+        marker.appendChild(plusButton);
+        marker.appendChild(minusButton);
+        
+        console.log(`Zoom buttons added to marker ${markerValue}`);
+    },
+    
+    addNavigationButtonsToMarker: function(marker) {
+        const markerValue = marker.getAttribute('value');
+        console.log(`Adding navigation buttons to marker ${markerValue}`);
+        
+        // Create left button (positioned under minus button)
+        const leftButton = document.createElement('a-image');
+        leftButton.setAttribute('class', 'nav-button');
+        leftButton.setAttribute('src', 'left.png');
+        leftButton.setAttribute('position', '-1 0.5 1'); // Under minus button
+        leftButton.setAttribute('rotation', '-90 0 0');
+        leftButton.setAttribute('scale', '0.3 0.3 0.3');
+        leftButton.setAttribute('data-action', 'left');
+        leftButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
+        
+        // Create right button (positioned under plus button)
+        const rightButton = document.createElement('a-image');
+        rightButton.setAttribute('class', 'nav-button');
+        rightButton.setAttribute('src', 'right.png');
+        rightButton.setAttribute('position', '1 0.5 1'); // Under plus button
+        rightButton.setAttribute('rotation', '-90 0 0');
+        rightButton.setAttribute('scale', '0.3 0.3 0.3');
+        rightButton.setAttribute('data-action', 'right');
+        rightButton.setAttribute('cursor-listener', ''); // Add cursor listener for fuse
+        
+        // Add navigation buttons to marker
+        marker.appendChild(leftButton);
+        marker.appendChild(rightButton);
+        
+        console.log(`Navigation buttons added to marker ${markerValue}`);
+    }
+});
 
     // CURSOR LISTENER COMPONENT (for fuse events)
     AFRAME.registerComponent('cursor-listener', {
@@ -758,231 +856,289 @@
     });
 
     // MULTIPLE IMAGE NAVIGATION COMPONENT
-    AFRAME.registerComponent('multiple-image-navigation', {
-        init: function() {
-            this.outsideCamera = document.getElementById('outsidecamera');
-            this.navButtons = []; // Will be populated dynamically
-            this.activeNavButton = null;
+    // MULTIPLE IMAGE NAVIGATION COMPONENT - UPDATED FOR MARKER 0
+AFRAME.registerComponent('multiple-image-navigation', {
+    init: function() {
+        this.outsideCamera = document.getElementById('outsidecamera');
+        this.centerpiece = document.getElementById('centerpiece');
+        this.navButtons = []; // Will be populated dynamically
+        this.activeNavButton = null;
+        
+        // Define content sequences for markers
+        // For marker 0, we have: [3D model, image1, image2, ...]
+        // For other markers, just images
+        this.contentSequences = {
+            '0': [
+                { type: '3d-model', value: null }, // First: 3D model (no src needed)
+                { type: 'image', value: 'bigimages/0.jpg' } // Second: Image
+            ],
+            '1': [
+                { type: 'image', value: 'bigimages/1.1.jpg' },
+                { type: 'image', value: 'bigimages/1.2.jpg' },
+                { type: 'image', value: 'bigimages/1.3.jpg' },
+                { type: 'image', value: 'bigimages/1.4.jpg' }
+            ],
+            '2': [{ type: 'image', value: 'bigimages/2.jpg' }], 
+            '3': [{ type: 'image', value: 'bigimages/3.jpg' }],
+            '4': [
+                { type: 'image', value: 'bigimages/4.1.jpg' },
+                { type: 'image', value: 'bigimages/4.2.jpg' }
+            ],
+            '5': [
+                { type: 'image', value: 'bigimages/5.1.jpg' },
+                { type: 'image', value: 'bigimages/5.2.jpg' }
+            ],
+            '6': [
+                { type: 'image', value: 'bigimages/6.1.jpg' },
+                { type: 'image', value: 'bigimages/6.2.jpg' },
+                { type: 'image', value: 'bigimages/6.3.jpg' }
+            ],
+            '7': [
+                { type: 'image', value: 'bigimages/7.1.jpg' },
+                { type: 'image', value: 'bigimages/7.2.jpg' },
+                { type: 'image', value: 'bigimages/7.3.jpg' },
+                { type: 'image', value: 'bigimages/7.4.jpg' }
+            ],
+            '8': [{ type: 'image', value: 'bigimages/8.jpg' }],
+            '9': [{ type: 'image', value: 'bigimages/9.jpg' }]
+        };
+        
+        // Track current content index for each marker - PERSISTENT storage
+        this.currentContentIndex = {};
+        
+        console.log('Multiple image navigation initialized');
+        console.log('Content sequences:', this.contentSequences);
+        
+        // Set up a MutationObserver to watch for dynamically added nav buttons
+        this.setupMutationObserver();
+        
+        // Also set up a timeout to check for buttons after a short delay
+        setTimeout(() => {
+            this.refreshNavButtons();
+        }, 500);
+    },
+    
+    setupMutationObserver: function() {
+        // Create a MutationObserver to watch for added nav buttons
+        this.observer = new MutationObserver((mutations) => {
+            let buttonsAdded = false;
             
-            // Define image sequences for markers with multiple images
-            this.imageSequences = {
-                '0': ['bigimages/0.jpg'],
-                '1': [
-                    'bigimages/1.1.jpg',
-                    'bigimages/1.2.jpg',
-                    'bigimages/1.3.jpg',
-                    'bigimages/1.4.jpg'
-                ],
-                '2': ['bigimages/2.jpg'], 
-                '3': ['bigimages/3.jpg'],
-                '4': [
-                    'bigimages/4.1.jpg',
-                    'bigimages/4.2.jpg'
-                ],
-                '5': [
-                    'bigimages/5.1.jpg',
-                    'bigimages/5.2.jpg'
-                ],
-                '6': [
-                    'bigimages/6.1.jpg',
-                    'bigimages/6.2.jpg',
-                    'bigimages/6.3.jpg'
-                ],
-                '7': [
-                    'bigimages/7.1.jpg',
-                    'bigimages/7.2.jpg',
-                    'bigimages/7.3.jpg',
-                    'bigimages/7.4.jpg'
-                ],
-                '8': ['bigimages/8.jpg'],
-                '9': ['bigimages/9.jpg']
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE && 
+                            node.classList && 
+                            node.classList.contains('nav-button')) {
+                            buttonsAdded = true;
+                        }
+                    });
+                }
+            });
+            
+            if (buttonsAdded) {
+                this.refreshNavButtons();
+            }
+        });
+        
+        // Start observing the document for added elements
+        this.observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    },
+    
+    refreshNavButtons: function() {
+        // Get all current nav buttons
+        this.navButtons = document.querySelectorAll('.nav-button');
+        console.log(`Found ${this.navButtons.length} nav buttons`);
+        
+        // Remove any existing event listeners
+        this.navButtons.forEach(button => {
+            button.removeEventListener('raycaster-intersected', this.intersectedHandler);
+            button.removeEventListener('raycaster-intersected-cleared', this.clearedHandler);
+            button.removeEventListener('click', this.clickHandler);
+        });
+        
+        // Add intersection listeners to all nav buttons
+        this.navButtons.forEach(button => {
+            // Create bound handlers for this button
+            const intersectedHandler = (evt) => {
+                this.handleNavButtonIntersected(evt.target);
             };
             
-            // Track current image index for each marker - PERSISTENT storage
-            this.currentImageIndex = {};
+            const clearedHandler = (evt) => {
+                this.handleNavButtonCleared(evt.target);
+            };
             
-            console.log('Multiple image navigation initialized');
-            console.log('Image sequences:', this.imageSequences);
+            const clickHandler = (evt) => {
+                this.handleNavButtonClick(evt.target);
+            };
             
-            // Set up a MutationObserver to watch for dynamically added nav buttons
-            this.setupMutationObserver();
+            // Store handlers on the button for later removal
+            button._intersectedHandler = intersectedHandler;
+            button._clearedHandler = clearedHandler;
+            button._clickHandler = clickHandler;
             
-            // Also set up a timeout to check for buttons after a short delay
-            setTimeout(() => {
-                this.refreshNavButtons();
-            }, 500);
-        },
+            button.addEventListener('raycaster-intersected', intersectedHandler);
+            button.addEventListener('raycaster-intersected-cleared', clearedHandler);
+            button.addEventListener('click', clickHandler);
+        });
+    },
+    
+    handleNavButtonIntersected: function(button) {
+        this.activeNavButton = button;
+        console.log(`Nav button ${button.getAttribute('data-action')} intersected`);
+    },
+    
+    handleNavButtonCleared: function(button) {
+        if (this.activeNavButton === button) {
+            console.log(`Nav button cleared`);
+            this.activeNavButton = null;
+        }
+    },
+    
+    handleNavButtonClick: function(button) {
+        if (!this.activeNavButton || this.activeNavButton !== button) {
+            return;
+        }
         
-        setupMutationObserver: function() {
-            // Create a MutationObserver to watch for added nav buttons
-            this.observer = new MutationObserver((mutations) => {
-                let buttonsAdded = false;
-                
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'childList') {
-                        mutation.addedNodes.forEach((node) => {
-                            if (node.nodeType === Node.ELEMENT_NODE && 
-                                node.classList && 
-                                node.classList.contains('nav-button')) {
-                                buttonsAdded = true;
-                            }
-                        });
-                    }
-                });
-                
-                if (buttonsAdded) {
-                    this.refreshNavButtons();
+        const action = button.getAttribute('data-action');
+        console.log(`Nav button ${action} clicked`);
+        
+        // Find which marker this button belongs to
+        const marker = this.findParentMarker(button);
+        if (!marker) {
+            console.log('Could not find parent marker for nav button');
+            return;
+        }
+        
+        const markerValue = marker.getAttribute('value');
+        this.navigateContent(markerValue, action);
+    },
+    
+    findParentMarker: function(element) {
+        let parent = element.parentElement;
+        while (parent) {
+            if (parent.tagName.toLowerCase() === 'a-marker') {
+                return parent;
+            }
+            parent = parent.parentElement;
+        }
+        return null;
+    },
+    
+    navigateContent: function(markerValue, direction) {
+        // Check if this marker has multiple content items
+        if (!this.contentSequences[markerValue]) {
+            console.log(`Marker ${markerValue} does not have multiple content items`);
+            return;
+        }
+        
+        const contentSequence = this.contentSequences[markerValue];
+        
+        // Don't navigate if there's only one item
+        if (contentSequence.length <= 1) {
+            console.log(`Marker ${markerValue} has only one content item, no navigation needed`);
+            return;
+        }
+        
+        // Initialize current index if not set
+        if (this.currentContentIndex[markerValue] === undefined) {
+            this.currentContentIndex[markerValue] = 0;
+        }
+        
+        let newIndex = this.currentContentIndex[markerValue];
+        
+        // Calculate new index based on direction
+        if (direction === 'right') {
+            newIndex = (newIndex + 1) % contentSequence.length;
+        } else if (direction === 'left') {
+            newIndex = (newIndex - 1 + contentSequence.length) % contentSequence.length;
+        }
+        
+        // Update current index
+        this.currentContentIndex[markerValue] = newIndex;
+        
+        // Change the content based on type
+        const newContent = contentSequence[newIndex];
+        this.showContent(markerValue, newContent, newIndex);
+        
+        console.log(`Marker ${markerValue}: Changed to ${newContent.type} (index ${newIndex})`);
+    },
+    
+    showContent: function(markerValue, content, index) {
+        // For marker 0, handle special case: show/hide 3D model and image
+        if (markerValue === '0') {
+            const marker = document.querySelector(`a-marker[value="0"]`);
+            const modelEntity = marker ? marker.querySelector('a-entity[gltf-model]') : null;
+            
+            if (content.type === '3d-model') {
+                // Show 3D model, hide image
+                if (modelEntity) {
+                    modelEntity.setAttribute('visible', 'true');
                 }
-            });
-            
-            // Start observing the document for added elements
-            this.observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        },
-        
-        refreshNavButtons: function() {
-            // Get all current nav buttons
-            this.navButtons = document.querySelectorAll('.nav-button');
-            console.log(`Found ${this.navButtons.length} nav buttons`);
-            
-            // Remove any existing event listeners
-            this.navButtons.forEach(button => {
-                button.removeEventListener('raycaster-intersected', this.intersectedHandler);
-                button.removeEventListener('raycaster-intersected-cleared', this.clearedHandler);
-                button.removeEventListener('click', this.clickHandler);
-            });
-            
-            // Add intersection listeners to all nav buttons
-            this.navButtons.forEach(button => {
-                // Create bound handlers for this button
-                const intersectedHandler = (evt) => {
-                    this.handleNavButtonIntersected(evt.target);
-                };
-                
-                const clearedHandler = (evt) => {
-                    this.handleNavButtonCleared(evt.target);
-                };
-                
-                const clickHandler = (evt) => {
-                    this.handleNavButtonClick(evt.target);
-                };
-                
-                // Store handlers on the button for later removal
-                button._intersectedHandler = intersectedHandler;
-                button._clearedHandler = clearedHandler;
-                button._clickHandler = clickHandler;
-                
-                button.addEventListener('raycaster-intersected', intersectedHandler);
-                button.addEventListener('raycaster-intersected-cleared', clearedHandler);
-                button.addEventListener('click', clickHandler);
-            });
-        },
-        
-        handleNavButtonIntersected: function(button) {
-            this.activeNavButton = button;
-            console.log(`Nav button ${button.getAttribute('data-action')} intersected`);
-        },
-        
-        handleNavButtonCleared: function(button) {
-            if (this.activeNavButton === button) {
-                console.log(`Nav button cleared`);
-                this.activeNavButton = null;
-            }
-        },
-        
-        handleNavButtonClick: function(button) {
-            if (!this.activeNavButton || this.activeNavButton !== button) {
-                return;
-            }
-            
-            const action = button.getAttribute('data-action');
-            console.log(`Nav button ${action} clicked`);
-            
-            // Find which marker this button belongs to
-            const marker = this.findParentMarker(button);
-            if (!marker) {
-                console.log('Could not find parent marker for nav button');
-                return;
-            }
-            
-            const markerValue = marker.getAttribute('value');
-            this.navigateImages(markerValue, action);
-        },
-        
-        findParentMarker: function(element) {
-            let parent = element.parentElement;
-            while (parent) {
-                if (parent.tagName.toLowerCase() === 'a-marker') {
-                    return parent;
+                if (this.outsideCamera) {
+                    this.outsideCamera.setAttribute('visible', 'false');
                 }
-                parent = parent.parentElement;
+                if (this.centerpiece) {
+                    this.centerpiece.setAttribute('visible', 'false');
+                }
+            } else if (content.type === 'image') {
+                // Show image, hide 3D model
+                if (modelEntity) {
+                    modelEntity.setAttribute('visible', 'false');
+                }
+                if (this.outsideCamera) {
+                    this.outsideCamera.setAttribute('src', content.value);
+                    this.outsideCamera.setAttribute('visible', 'true');
+                }
+                if (this.centerpiece) {
+                    this.centerpiece.setAttribute('visible', 'true');
+                }
             }
-            return null;
-        },
-        
-        navigateImages: function(markerValue, direction) {
-            // Check if this marker has multiple images
-            if (!this.imageSequences[markerValue]) {
-                console.log(`Marker ${markerValue} does not have multiple images`);
-                return;
+        } else {
+            // For other markers, just show the image
+            if (this.outsideCamera && content.type === 'image') {
+                this.outsideCamera.setAttribute('src', content.value);
+                this.outsideCamera.setAttribute('visible', 'true');
             }
-            
-            const imageSequence = this.imageSequences[markerValue];
-            
-            // Don't navigate if there's only one image
-            if (imageSequence.length <= 1) {
-                console.log(`Marker ${markerValue} has only one image, no navigation needed`);
-                return;
-            }
-            
-            // Initialize current index if not set
-            if (this.currentImageIndex[markerValue] === undefined) {
-                this.currentImageIndex[markerValue] = 0;
-            }
-            
-            let newIndex = this.currentImageIndex[markerValue];
-            
-            // Calculate new index based on direction
-            if (direction === 'right') {
-                newIndex = (newIndex + 1) % imageSequence.length;
-            } else if (direction === 'left') {
-                newIndex = (newIndex - 1 + imageSequence.length) % imageSequence.length;
-            }
-            
-            // Update current index
-            this.currentImageIndex[markerValue] = newIndex;
-            
-            // Change the image source
-            const newImageSrc = imageSequence[newIndex];
-            this.outsideCamera.setAttribute('src', newImageSrc);
-            
-            console.log(`Marker ${markerValue}: Changed image to ${newImageSrc} (index ${newIndex})`);
-        },
-        
-        // Method to get the current image for a marker
-        getCurrentImageForMarker: function(markerValue) {
-            if (!this.imageSequences[markerValue]) {
-                return null;
-            }
-            
-            // Initialize current index if not set
-            if (this.currentImageIndex[markerValue] === undefined) {
-                this.currentImageIndex[markerValue] = 0;
-            }
-            
-            const currentIndex = this.currentImageIndex[markerValue];
-            return this.imageSequences[markerValue][currentIndex];
-        },
-        
-        remove: function() {
-            // Disconnect the MutationObserver
-            if (this.observer) {
-                this.observer.disconnect();
+            if (this.centerpiece) {
+                this.centerpiece.setAttribute('visible', 'true');
             }
         }
-    });
+    },
+    
+    // Method to get the current content for a marker
+    getCurrentContentForMarker: function(markerValue) {
+        if (!this.contentSequences[markerValue]) {
+            return null;
+        }
+        
+        // Initialize current index if not set
+        if (this.currentContentIndex[markerValue] === undefined) {
+            this.currentContentIndex[markerValue] = 0;
+        }
+        
+        const currentIndex = this.currentContentIndex[markerValue];
+        return this.contentSequences[markerValue][currentIndex];
+    },
+    
+    // Method to get the current image src for a marker (for backward compatibility)
+    getCurrentImageForMarker: function(markerValue) {
+        const currentContent = this.getCurrentContentForMarker(markerValue);
+        if (currentContent && currentContent.type === 'image') {
+            return currentContent.value;
+        }
+        return null;
+    },
+    
+    remove: function() {
+        // Disconnect the MutationObserver
+        if (this.observer) {
+            this.observer.disconnect();
+        }
+    }
+});
 
     document.addEventListener("DOMContentLoaded", () => {
         const camera = document.querySelector('a-camera');
@@ -1002,7 +1158,16 @@
             marker.addEventListener('markerFound', (e) => {
                 const markerValue = marker.getAttribute('value');
                 console.log(`marker ${markerValue} visible`);
-                
+
+                // Get the multiple image navigation component
+                const multipleImageNav = scene.components['multiple-image-navigation'];
+
+                // For marker 0, show the current content (default is 3D model)
+            if (markerValue === '0' && multipleImageNav) {
+                const currentContent = multipleImageNav.getCurrentContentForMarker('0');
+                multipleImageNav.showContent('0', currentContent, multipleImageNav.currentContentIndex['0'] || 0);
+            }
+                   
                 // Get marker's world position and camera's world position
                 const markerWorldPos = getWorldPosition(marker);
                 const cameraWorldPos = getWorldPosition(camera);
