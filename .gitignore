@@ -3,3 +3,5 @@
 /node_modules
 ssh
 ssh.pub
+key.pem
+key
