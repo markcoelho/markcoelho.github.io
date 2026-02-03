@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split-Screen AR Experience</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #left_eye {
+            width: 50vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            border-right: 2px solid #333;
+        }
+        
+        #right_eye {
+            width: 50vw;
+            height: 100vh;
+            background: #000;
+            position: relative;
+        }
+        
+        #right-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+        
+        #video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            /* Removed the transform: scaleX(-1) that was flipping the video */
+        }
+        
+        
+        html.a-fullscreen .a-canvas {
+            width: 50vw !important;
+        }
+        
+        #left_eye a-scene {
+            width: 100%;
+            height: 100%;
+        }
+
+        .mindar-ui-overlay{
+          display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="left_eye">
+            <a-scene mindar-image="imageTargetSrc: /minds/targets(2).mind; maxTrack: 50" 
+                    vr-mode-ui="enabled: false" 
+                    xr-mode-ui="enabled: false" 
+                    device-orientation-permission-ui="enabled: false">
+                <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+                <script>
+                    function getColorByIndex(index) {
+                        const hue = (index * 137.508) % 360;
+                        return `hsl(${hue}, 70%, 60%)`;
+                    }
+                    
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const scene = document.querySelector("a-scene");
+                        for (let i = 0; i < 50; i++) {
+                            const entity = document.createElement("a-entity");
+                            entity.setAttribute("mindar-image-target", `targetIndex: ${i}`);
+                            
+                            const plane = document.createElement("a-plane");
+                            plane.setAttribute("color", getColorByIndex(i));
+                            plane.setAttribute("opacity", "0.7");
+                            plane.setAttribute("position", "0 0 0");
+                            plane.setAttribute("height", "0.5");
+                            plane.setAttribute("width", "0.8");
+                            plane.setAttribute("rotation", "0 0 0");
+                            
+                            entity.appendChild(plane);
+                            scene.appendChild(entity);
+                        }
+                    });
+                </script>
+            </a-scene>
+        </div>
+        
+        <div id="right_eye">
+            <video id="video-feed" autoplay muted playsinline></video>
+            <canvas id="right-canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Function to copy canvas from left to right
+        function copyCanvas() {
+            const leftCanvas = document.querySelector('.a-canvas');
+            const rightCanvas = document.getElementById('right-canvas');
+            
+            if (leftCanvas && rightCanvas) {
+                // Set right canvas dimensions to match left canvas
+                rightCanvas.width = leftCanvas.width;
+                rightCanvas.height = leftCanvas.height;
+                
+                const ctx = rightCanvas.getContext('2d');
+                
+                // Draw the left canvas onto the right canvas
+                ctx.drawImage(leftCanvas, 0, 0);
+            }
+            
+            // Continue the animation loop
+            requestAnimationFrame(copyCanvas);
+        }
+        
+        // Function to get the video element from A-Frame and display it
+        function setupVideoFeed() {
+            // Wait for A-Frame to initialize and get the video element
+            const checkVideo = setInterval(() => {
+                const videos = document.querySelectorAll('video');
+                if (videos.length > 0) {
+                    const arVideo = videos[0];
+                    const videoFeed = document.getElementById('video-feed');
+                    
+                    if (arVideo.srcObject) {
+                        videoFeed.srcObject = arVideo.srcObject;
+                        clearInterval(checkVideo);
+                    } else if (arVideo.src) {
+                        videoFeed.src = arVideo.src;
+                        clearInterval(checkVideo);
+                    }
+                }
+            }, 500);
+        }
+        
+        // Wait for A-Frame to initialize
+        window.addEventListener('load', function() {
+            // Start the canvas copying process
+            setTimeout(() => {
+                requestAnimationFrame(copyCanvas);
+                setupVideoFeed();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
