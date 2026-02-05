@@ -1,48 +1,139 @@
-//marker-navigation-ui.js
+// marker-navigation-ui.js
+// Creates 3x3 image grids above markers for image selection
 AFRAME.registerComponent('marker-navigation-ui', {
+    schema: { contentLoaded: { default: false } }, // Tracks if content JSON is loaded
+    
     init: function() {
-        const markers = document.querySelectorAll('a-marker');
-        markers.forEach(marker => {
-            this.addNavigationButtonsToMarker(marker);
+        this.contentManager = null; // Will store reference to content manager
+        
+        // Check every 500ms if content JSON is loaded
+        this.checkContentInterval = setInterval(() => {
+            this.contentManager = this.el.sceneEl.components['marker-content-manager'];
+            // When content is loaded and we haven't created grids yet
+            if (this.contentManager?.contentSequences && !this.data.contentLoaded) {
+                this.data.contentLoaded = true;
+                this.createAllGrids(); // Build grids for all markers
+                clearInterval(this.checkContentInterval); // Stop checking
+            }
+        }, 500);
+        
+        // Alternative way: listen for content-loaded event
+        this.el.addEventListener('content-loaded', () => {
+            this.data.contentLoaded = true;
+            this.createAllGrids();
         });
     },
     
-    addNavigationButtonsToMarker: function(marker) {
-        const markerValue = marker.getAttribute('value');
-        if (marker.querySelectorAll('.nav-button').length > 0) return;
-        
-        // Always create navigation buttons
-        const leftButton = this.createButton('assets/icons/left.png', '-1 -4 -3', 'left', markerValue, 'nav-button');
-        const rightButton = this.createButton('assets/icons/right.png', '1 -4 -3', 'right', markerValue, 'nav-button');
-        
-        // Store buttons on marker for easy access
-        marker._navButtons = { left: leftButton, right: rightButton };
-        
-        // Initially hide them
-        leftButton.setAttribute('visible', 'false');
-        rightButton.setAttribute('visible', 'false');
-        
-        marker.appendChild(leftButton);
-        marker.appendChild(rightButton);
+    // Create image grids for ALL markers
+    createAllGrids: function() {
+        document.querySelectorAll('a-marker').forEach(marker => {
+            // Only create grid if it doesn't exist yet
+            if (!marker._imageGrid) this.addImageGridToMarker(marker);
+        });
     },
     
-    createButton: function(src, position, action, markerValue, className) {
-        const button = document.createElement('a-image');
-        button.setAttribute('class', className);
-        button.setAttribute('src', src);
-        button.setAttribute('position', position);
-        button.setAttribute('rotation', '-90 0 0');
-        button.setAttribute('scale', '0.6 0.6 0.6');
-        button.setAttribute('data-action', action);
-        button.setAttribute('ui-on-top', '');
-        button.setAttribute('gaze-interaction-handler', `action: ${action}; markerValue: ${markerValue}; fuseTimeout: 500`);
-        button.setAttribute('material', 'depthTest: false; transparent: true; opacity: 1;');
-        return button;
+    // Add a 3x3 image grid to a specific marker
+    addImageGridToMarker: function(marker) {
+        const markerValue = marker.getAttribute('value');
+        // Get all image content for this marker
+        const content = this.contentManager?.contentSequences?.[markerValue] || [];
+        // Extract just the image URLs
+        const imageSources = content
+            .filter(item => item.type === 'image')
+            .map(item => item.value || item.src);
+        
+        if (imageSources.length === 0) return; // No images? Skip this marker
+        
+        // Create container for the grid
+        const gridContainer = this.createGridContainer();
+        marker._imageGrid = gridContainer; // Store reference on marker
+        marker.appendChild(gridContainer); // Add to marker
+        
+        // Fill grid with images
+        this.createGridImages(gridContainer, imageSources, markerValue);
+    },
+    
+    // Create the grid container (invisible by default)
+    createGridContainer: function() {
+        const container = document.createElement('a-entity');
+        container.setAttribute('class', 'image-grid-container');
+        container.setAttribute('position', '0 0 0'); // Center on marker
+        container.setAttribute('rotation', '-90 0 0'); // Lay flat on table
+        container.setAttribute('visible', 'false'); // Hidden until marker found
+        return container;
+    },
+    
+    // Create images arranged in a 3x3 grid
+    createGridImages: function(container, imageSources, markerValue) {
+        const rows = 3, cols = 3; // 3x3 grid
+        const maxCellWidth = 0.3, maxCellHeight = 0.27; // Max size per image
+        const spacingX = maxCellWidth * 1.4, spacingY = maxCellHeight * 1.4; // Spacing between images
+        
+        // Create up to 9 images (rows * cols)
+        for (let i = 0; i < Math.min(imageSources.length, rows * cols); i++) {
+            const row = Math.floor(i / cols); // Which row (0, 1, 2)
+            const col = i % cols;             // Which column (0, 1, 2)
+            
+            // Calculate position: center images in grid
+            const x = (col - (cols - 1) / 2) * spacingX;
+            const y = -((row - (rows - 1) / 2) * spacingY);
+            
+            // Create this specific image in the grid
+            this.createGridImage(imageSources[i], i, x, y, container, markerValue, maxCellWidth, maxCellHeight);
+        }
+    },
+    
+    // Create a single image in the grid
+    createGridImage: function(imageSrc, index, x, y, container, markerValue, maxCellWidth, maxCellHeight) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // Allow cross-origin images
+        
+        // When image loads, create the A-Frame element
+        img.onload = () => {
+            // Calculate size while maintaining aspect ratio
+            const aspectRatio = img.naturalWidth / img.naturalHeight;
+            const { width, height } = this.calcImageSize(aspectRatio, maxCellWidth, maxCellHeight);
+            
+            // Center image in its grid cell
+            const offsetX = (maxCellWidth - width) / 2;
+            const offsetY = (maxCellHeight - height) / 2;
+            
+            // Create the clickable image element
+            const imageEl = document.createElement('a-image');
+            imageEl.setAttribute('class', 'image-grid-item');
+            imageEl.setAttribute('position', `${x + offsetX} ${y - offsetY} 0`);
+            imageEl.setAttribute('material', 'depthTest: false;'); // Always render on top
+            imageEl.setAttribute('visible', 'true');
+            imageEl.setAttribute('src', imageSrc);
+            imageEl.setAttribute('width', width);
+            imageEl.setAttribute('height', height);
+            imageEl.setAttribute('data-content-index', index); // Which image this is (0-8)
+            imageEl.setAttribute('data-marker-value', markerValue); // Which marker it belongs to
+            // Make it selectable with gaze interaction
+            imageEl.setAttribute('gaze-interaction-handler', 
+                `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
+            
+            container.appendChild(imageEl); // Add to grid container
+        };
+        
+        img.src = imageSrc; // Start loading the image
+    },
+    
+    // Calculate image size while keeping aspect ratio, fitting within max bounds
+    calcImageSize: function(aspectRatio, maxWidth, maxHeight) {
+        // If image is wider than tall (landscape)
+        if (aspectRatio > 1) {
+            return { width: maxWidth, height: maxWidth / aspectRatio };
+        } 
+        // If image is taller than wide (portrait)
+        else {
+            return { width: maxHeight * aspectRatio, height: maxHeight };
+        }
+    },
+    
+    // Cleanup when component is removed
+    remove: function() {
+        if (this.checkContentInterval) clearInterval(this.checkContentInterval);
+        this.el.removeEventListener('content-loaded', () => {});
     }
 });
-
-
-
-
-
-

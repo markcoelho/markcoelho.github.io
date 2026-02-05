@@ -2,12 +2,17 @@
 <!doctype HTML>
 <html>
 <head>
+    <!-- Mobile responsiveness -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- A-Frame core library -->
     <script src="js/aframe.min.js"></script>
+    <!-- A-Frame extra components -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
+    <!-- AR.js for augmented reality -->
     <script src="js/aframe-ar.js"></script>
     
-    <!-- Component Scripts -->
+    <!-- Custom components for the AR experience -->
     <script src="components/gaze-interaction-handler.js"></script>
     <script src="components/image-position-controller.js"></script>
     <script src="components/marker-navigation-ui.js"></script>
@@ -16,33 +21,43 @@
     <script src="components/marker-detection-handler.js"></script>
     
     <style>
+        /* Basic page styling - no scroll bars */
         body { margin: 0; overflow: hidden; position: fixed; width: 100%; height: 100%; font-family: monospace; }
+        /* Ensure canvas renders properly */
         .a-canvas { z-index: 1 !important; position: absolute !important; }
+        /* VR button on top */
         .a-enter-vr { z-index: 2 !important; }
     </style>
 </head>
 <body>
 
+<!-- Main A-Frame scene with AR configuration -->
 <a-scene renderer="sortObjects: true" vr-mode-ui="enabled: true" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
     
-    
+    <!-- Camera with gaze interaction controls -->
     <a-camera position="0 0 0" look-controls="enabled: false">
+        <!-- Loading spinner animation -->
         <a-image id="loading_animation" src="assets/icons/loading.png" position="0 0 -1" scale="0.05 0.05 0.05" rotation="0 0 0" animation="property: rotation; to:0 0 -360; dur: 1500; easing: linear; loop: true" visible="false"></a-image>
 
+        <!-- Red cursor ring for gaze interactions -->
         <a-entity cursor="fuse: false" position="0 0 -0.2"
             geometry="primitive: ring; radiusInner: 0.001; radiusOuter: 0.002;"
-            material="color: red; shader: flat; depthTest: false; transparent: true"
+            material="color: red; shader: flat; depthTest: false; transparent: true; opacity: 1;"
             render-order="1000000">
         </a-entity>
         
+        <!-- Raycaster for detecting interactions -->
         <a-entity id="raycaster" raycaster="objects: .zoom-button, .nav-button, #outsidecamera, .scroller; showLine: false; lineColor: red; far: 20"
             position="0 0 0" visible-in-vr-only></a-entity>
                   
-        <a-video opacity="1" id="arjs_feed" position="0 0 -50" width="83" height="83"></a-video>
+        <!-- AR video feed (shown when no marker detected) -->
+        <a-video id="arjs_feed" position="0 0 -50" width="83" height="83"></a-video>
 
+        <!-- Marker 0 - Main marker with hidden initial image -->
         <a-marker type="barcode" value="0">
             <a-image src="0.jpg" position="0 0 0" scale="1 1 1" visible="false"></a-image>
         </a-marker>
+        <!-- Additional markers 1-9 -->
         <a-marker type="barcode" value="1"></a-marker>
         <a-marker type="barcode" value="2"></a-marker>
         <a-marker type="barcode" value="3"></a-marker>
@@ -54,46 +69,41 @@
         <a-marker type="barcode" value="9"></a-marker>
     </a-camera>
 
+    <!-- Main content container that follows camera/marker -->
     <a-entity id="centerpiece" position="0 0 -5" rotation="0 0 0">
+        <!-- Main displayed image (changes based on marker) -->
         <a-image id="outsidecamera" src="0.jpg" position="0 0 0" scale="3 3 3"></a-image>
         
+        <!-- Navigation panel with control buttons -->
         <a-plane color="white" position="0 0 2" width="1.8" height="0.4" id="navigation" rotation="0 0 0">
-            <!-- Reset button moved closer -->
+            <!-- Reset button -->
             <a-image src="assets/icons/reset.png" class="reset" id="reset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
-            gaze-interaction-handler="action: reset; fuseTimeout: 1000" material="depthTest: false; transparent: true; opacity: 1"></a-image>
+            gaze-interaction-handler="action: reset; fuseTimeout: 1000" material="depthTest: false;"></a-image>
             
-            <!-- Ultra-compact cross pattern scrolling arrows (keeping your exact positions) -->
+            <!-- Cross pattern scrolling arrows -->
             <a-image src="assets/icons/up.png" class="scroller" id="scroller-top" position="0 0.1 0.1" scale="0.18 0.18 0.18" 
-                    material="depthTest: false; transparent: true; opacity: 1" data-direction="up"></a-image>
+                    material="depthTest: false;" data-direction="up"></a-image>
             
             <a-image src="assets/icons/right.png" class="scroller" id="scroller-right" position="0.2 0 0.1" scale="0.18 0.18 0.18" 
-                    material="depthTest: false; transparent: true; opacity: 1" data-direction="right"></a-image>
+                    material="depthTest: false;" data-direction="right"></a-image>
             
             <a-image src="assets/icons/down.png" class="scroller" id="scroller-bottom" position="0 -0.1 0.1" scale="0.18 0.18 0.18" 
-                    material="depthTest: false; transparent: true; opacity: 1" data-direction="down"></a-image>
+                    material="depthTest: false;" data-direction="down"></a-image>
             
             <a-image src="assets/icons/left.png" class="scroller" id="scroller-left" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
-                    material="depthTest: false; transparent: true; opacity: 1" data-direction="left"></a-image>
+                    material="depthTest: false;" data-direction="left"></a-image>
             
-            <!-- Zoom buttons moved closer (zoom-out to the right of zoom-in) -->
+            <!-- Zoom buttons -->
             <a-image class="zoom-button" src="assets/icons/zoom-in.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
-                    data-action="increase" material="depthTest: false; transparent: true; opacity: 1" 
+                    data-action="increase" material="depthTest: false;" 
                     gaze-interaction-handler="action: increase; fuseTimeout: 500"></a-image>
             
             <a-image class="zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
-                    data-action="decrease" material="depthTest: false; transparent: true; opacity: 1"
+                    data-action="decrease" material="depthTest: false;"
                     gaze-interaction-handler="action: decrease; fuseTimeout: 500"></a-image>
         </a-plane>
     </a-entity>
+    
 </a-scene>
 </body>
 </html>
-
-
-
-
-
-
-
-
-

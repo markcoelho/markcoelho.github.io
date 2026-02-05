@@ -7,10 +7,11 @@
             "central_side": [
                 {
                     "type": "image",
-                    "position": "marker_start",
-                    "scrolling": "false",
+                    "position": "marker",
+                    "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/0.jpg"
+                    "src": "bigimages/0.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -23,28 +24,32 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/1.1.jpg"
+                    "src": "bigimages/1.1.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
-                    "scrolling": "true",
-                    "zooming": "false",
-                    "src": "bigimages/1.2.jpg"
+                    "scrolling": "false",
+                    "zooming": "true",
+                    "src": "bigimages/1.2.jpg",
+                    "scale": 2
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/1.3.jpg"
+                    "src": "bigimages/1.3.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/1.4.jpg"
+                    "src": "bigimages/1.4.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -57,7 +62,8 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/2.jpg"
+                    "src": "bigimages/2.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -70,7 +76,8 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/3.jpg"
+                    "src": "bigimages/3.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -83,14 +90,16 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/4.1.jpg"
+                    "src": "bigimages/4.1.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/4.2.jpg"
+                    "src": "bigimages/4.2.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -103,14 +112,16 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/5.1.jpg"
+                    "src": "bigimages/5.1.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/5.2.jpg"
+                    "src": "bigimages/5.2.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -123,21 +134,24 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/6.1.jpg"
+                    "src": "bigimages/6.1.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/6.2.jpg"
+                    "src": "bigimages/6.2.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/6.3.jpg"
+                    "src": "bigimages/6.3.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -150,28 +164,32 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/7.1.jpg"
+                    "src": "bigimages/7.1.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/7.2.jpg"
+                    "src": "bigimages/7.2.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/7.3.jpg"
+                    "src": "bigimages/7.3.jpg",
+                    "scale": 1
                 },
                 {
                     "type": "image",
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/7.4.jpg"
+                    "src": "bigimages/7.4.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -184,7 +202,8 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/8.jpg"
+                    "src": "bigimages/8.jpg",
+                    "scale": 1
                 }
             ]
         },
@@ -197,7 +216,8 @@
                     "position": "marker_start",
                     "scrolling": "true",
                     "zooming": "true",
-                    "src": "bigimages/9.jpg"
+                    "src": "bigimages/9.jpg",
+                    "scale": 1
                 }
             ]
         }
