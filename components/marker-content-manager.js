@@ -33,24 +33,27 @@ AFRAME.registerComponent('marker-content-manager', {
         // Process each page/marker in the JSON
         jsonData.pages.forEach(page => {
             const marker = page.barcode_number.toString(); // Marker ID (0-9)
-            const centralSide = page.central_side || []; // Main content array
+            const centralSide = page.central_side || {}; // Now an object
+            const contentArray = centralSide.content || []; // Get content array from the object
             
             // Store narration audio URL if present
             if (page.narration) this.narrations[marker] = page.narration;
             
             // Process each content item for this marker
-            this.contentSequences[marker] = centralSide.map(item => ({
+            this.contentSequences[marker] = contentArray.map(item => ({
                 type: item.type,           // 'image', 'video', etc.
                 value: item.src || item.value, // URL or source
-                position: item.position,   // Position data (if any)
-                scrolling: item.scrolling === 'true', // Can user scroll? (boolean)
-                zooming: item.zooming === 'true',     // Can user zoom? (boolean)
+                scrolling: item.scrolling === "true", // Can user scroll? (boolean)
+                zooming: item.zooming === "true",     // Can user zoom? (boolean)
                 scale: item.scale || 1     // Custom scale factor (NEW: default 1)
             }));
             
             // Start at first content item (index 0)
             this.currentContentIndex[marker] = 0;
         });
+        
+        // Debug log to verify data loaded correctly
+        console.log("Content sequences loaded:", this.contentSequences);
     },
     
     // Get the currently selected content for a marker
