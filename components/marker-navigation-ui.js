@@ -1,38 +1,33 @@
 // marker-navigation-ui.js
-// Creates 3x3 image grids above markers for image selection
 AFRAME.registerComponent('marker-navigation-ui', {
-    schema: { contentLoaded: { default: false } }, // Tracks if content JSON is loaded
+    schema: { contentLoaded: { default: false } },
     
     init: function() {
-        this.contentManager = null; // Will store reference to content manager
+        this.contentManager = null;
         
-        // Check every 500ms if content JSON is loaded
         this.checkContentInterval = setInterval(() => {
             this.contentManager = this.el.sceneEl.components['marker-content-manager'];
-            // When content is loaded and we haven't created grids yet
             if (this.contentManager?.contentSequences && !this.data.contentLoaded) {
                 this.data.contentLoaded = true;
-                this.createAllGrids(); // Build grids for all markers
-                clearInterval(this.checkContentInterval); // Stop checking
+                this.createAllGrids();
+                clearInterval(this.checkContentInterval);
             }
         }, 500);
         
-        // Alternative way: listen for content-loaded event
         this.el.addEventListener('content-loaded', () => {
             this.data.contentLoaded = true;
             this.createAllGrids();
         });
     },
     
-    //check if central side has more than one image
+    // Check if marker has more than one image OR video
     hasMultipleImages: function(markerValue) {
         const content = this.contentManager?.contentSequences?.[markerValue] || [];
-        // Count only image type content
-        const imageCount = content.filter(item => item.type === 'image').length;
-        return imageCount > 1;
+        // Count both image and video types
+        const mediaCount = content.filter(item => item.type === 'image' || item.type === 'video').length;
+        return mediaCount > 1;
     },
     
-    //Set grid visibility for a specific marker
     setGridVisibility: function(markerValue, visible) {
         const marker = document.querySelector(`a-marker[value="${markerValue}"]`);
         if (!marker || !marker._imageGrid) return;
@@ -40,116 +35,140 @@ AFRAME.registerComponent('marker-navigation-ui', {
         marker._imageGrid.setAttribute('visible', visible);
     },
     
-    // Create image grids for ALL markers
+    // Create image grids for ALL markers - UPDATE THIS FUNCTION
     createAllGrids: function() {
         document.querySelectorAll('a-marker').forEach(marker => {
-            // Only create grid if it doesn't exist yet AND marker has images
             if (!marker._imageGrid) {
                 const markerValue = marker.getAttribute('value');
-                // Check if marker has any images at all
+                // Check if marker has any media (images OR videos)
                 const content = this.contentManager?.contentSequences?.[markerValue] || [];
-                const hasImages = content.some(item => item.type === 'image');
+                const hasMedia = content.some(item => item.type === 'image' || item.type === 'video');
                 
-                if (hasImages) {
+                if (hasMedia) {
                     this.addImageGridToMarker(marker);
                 }
             }
         });
     },
     
-    // Add a 3x3 image grid to a specific marker
+    // Add a 3x3 image grid to a specific marker - UPDATE THIS FUNCTION
     addImageGridToMarker: function(marker) {
         const markerValue = marker.getAttribute('value');
-        // Get all image content for this marker
+        // Get ALL content for this marker (both images and videos)
         const content = this.contentManager?.contentSequences?.[markerValue] || [];
-        // Extract just the image URLs
-        const imageSources = content
-            .filter(item => item.type === 'image')
-            .map(item => item.value || item.src);
         
-        if (imageSources.length === 0) return; // No images? Skip this marker
+        // Filter to get only image and video items
+        const mediaContent = content.filter(item => item.type === 'image' || item.type === 'video');
+        
+        if (mediaContent.length === 0) return; // No media? Skip this marker
         
         // Create container for the grid
         const gridContainer = this.createGridContainer();
-        marker._imageGrid = gridContainer; // Store reference on marker
+        marker._imageGrid = gridContainer;
         
-        // Set initial visibility based on image count
-        const shouldBeVisible = imageSources.length > 1;
+        // Set initial visibility based on media count
+        const shouldBeVisible = mediaContent.length > 1;
         gridContainer.setAttribute('visible', shouldBeVisible.toString());
         
-        marker.appendChild(gridContainer); // Add to marker
+        marker.appendChild(gridContainer);
         
-        // Fill grid with images
-        this.createGridImages(gridContainer, imageSources, markerValue);
+        // Fill grid with media (both images and videos)
+        this.createGridMedia(gridContainer, mediaContent, markerValue);
     },
     
-    // Create the grid container (invisible by default)
     createGridContainer: function() {
         const container = document.createElement('a-entity');
         container.setAttribute('class', 'image-grid-container');
-        container.setAttribute('position', '0 0 0'); // Center on marker
-        container.setAttribute('rotation', '-90 0 0'); // Lay flat on table
-        container.setInvisible(); // Start invisible
+        container.setAttribute('position', '0 0 0');
+        container.setAttribute('rotation', '-90 0 0');
+        container.setInvisible();
         return container;
     },
     
-    // Create images arranged in a 3x3 grid
-    createGridImages: function(container, imageSources, markerValue) {
-        const rows = 3, cols = 3; // 3x3 grid
-        const maxCellWidth = 0.3, maxCellHeight = 0.27; // Max size per image
-        const spacingX = maxCellWidth * 1.4, spacingY = maxCellHeight * 1.4; // Spacing between images
+    // NEW FUNCTION: Create grid items for both images and videos
+    createGridMedia: function(container, mediaContent, markerValue) {
+        const rows = 3, cols = 3;
+        const maxCellWidth = 0.3, maxCellHeight = 0.27;
+        const spacingX = maxCellWidth * 1.4, spacingY = maxCellHeight * 1.4;
         
-        // Create up to 9 images (rows * cols)
-        for (let i = 0; i < Math.min(imageSources.length, rows * cols); i++) {
-            const row = Math.floor(i / cols); // Which row (0, 1, 2)
-            const col = i % cols;             // Which column (0, 1, 2)
+        // Create up to 9 items (rows * cols)
+        for (let i = 0; i < Math.min(mediaContent.length, rows * cols); i++) {
+            const row = Math.floor(i / cols);
+            const col = i % cols;
             
-            // Calculate position: center images in grid
+            // Calculate position: center items in grid
             const x = (col - (cols - 1) / 2) * spacingX;
             const y = -((row - (rows - 1) / 2) * spacingY);
             
-            // Create this specific image in the grid
-            this.createGridImage(imageSources[i], i, x, y, container, markerValue, maxCellWidth, maxCellHeight);
+            const item = mediaContent[i];
+            const src = item.value || item.src;
+            
+            if (item.type === 'image') {
+                // Create image grid item
+                this.createGridImage(src, i, x, y, container, markerValue, maxCellWidth, maxCellHeight);
+            } else if (item.type === 'video') {
+                // Create video thumbnail for grid
+                this.createGridVideoThumbnail(src, i, x, y, container, markerValue, maxCellWidth, maxCellHeight);
+            }
         }
+    },
+    
+    // Create video thumbnails in grid
+    createGridVideoThumbnail: function(videoSrc, index, x, y, container, markerValue, maxCellWidth, maxCellHeight) {
+        const thumbnailEl = document.createElement('a-image');
+        thumbnailEl.setAttribute('class', 'image-grid-item');
+        thumbnailEl.setAttribute('position', `${x} ${y} 0`);
+        thumbnailEl.setAttribute('material', 'depthTest: false;');
+        thumbnailEl.setVisible();
+        
+        // Use a video thumbnail/icon
+        thumbnailEl.setAttribute('src', 'assets/icons/video-thumbnail.png');
+        thumbnailEl.setAttribute('width', maxCellWidth);
+        thumbnailEl.setAttribute('height', maxCellHeight);
+        thumbnailEl.setAttribute('data-content-index', index);
+        thumbnailEl.setAttribute('data-marker-value', markerValue);
+        thumbnailEl.setAttribute('data-media-type', 'video');
+        
+        // Make it selectable with gaze interaction
+        thumbnailEl.setAttribute('gaze-interaction-handler', 
+            `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
+        
+        container.appendChild(thumbnailEl);
     },
     
     // Create a single image in the grid
     createGridImage: function(imageSrc, index, x, y, container, markerValue, maxCellWidth, maxCellHeight) {
         const img = new Image();
-        img.crossOrigin = 'anonymous'; // Allow cross-origin images
+        img.crossOrigin = 'anonymous';
         
-        // When image loads, create the A-Frame element
         img.onload = () => {
-            // Calculate size while maintaining aspect ratio
             const aspectRatio = img.naturalWidth / img.naturalHeight;
             const { width, height } = calcImageSize(aspectRatio, maxCellWidth, maxCellHeight);
             
-            // Center image in its grid cell
             const offsetX = (maxCellWidth - width) / 2;
             const offsetY = (maxCellHeight - height) / 2;
             
-            // Create the clickable image element
             const imageEl = document.createElement('a-image');
             imageEl.setAttribute('class', 'image-grid-item');
             imageEl.setAttribute('position', `${x + offsetX} ${y - offsetY} 0`);
-            imageEl.setAttribute('material', 'depthTest: false;'); // Always render on top
+            imageEl.setAttribute('material', 'depthTest: false;');
             imageEl.setVisible();
             imageEl.setAttribute('src', imageSrc);
             imageEl.setAttribute('width', width);
             imageEl.setAttribute('height', height);
-            imageEl.setAttribute('data-content-index', index); // Which image this is (0-8)
-            imageEl.setAttribute('data-marker-value', markerValue); // Which marker it belongs to
-            // Make it selectable with gaze interaction
+            imageEl.setAttribute('data-content-index', index);
+            imageEl.setAttribute('data-marker-value', markerValue);
+            imageEl.setAttribute('data-media-type', 'image');
+            
             imageEl.setAttribute('gaze-interaction-handler', 
                 `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
             
-            container.appendChild(imageEl); // Add to grid container
+            container.appendChild(imageEl);
         };
         
-        img.src = imageSrc; // Start loading the image
+        img.src = imageSrc;
     },
     
-    // Cleanup when component is removed
     remove: function() {
         if (this.checkContentInterval) clearInterval(this.checkContentInterval);
         this.el.removeEventListener('content-loaded', () => {});

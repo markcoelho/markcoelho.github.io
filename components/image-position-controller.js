@@ -98,6 +98,11 @@ AFRAME.registerComponent('image-position-controller', {
         if (!contentManager || !this.centerImage) return;
         
         const content = contentManager.getMarkerContent(markerValue);
+
+         if (content?.type === 'video') {
+            return;
+        }
+
         const contentScale = content?.scale || 1; // Get scale from JSON (default 1)
         const baseScale = 3 * contentScale; // Base size (3 units) * scale factor
         
