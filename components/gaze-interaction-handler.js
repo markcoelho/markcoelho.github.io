@@ -157,13 +157,20 @@ AFRAME.registerComponent('gaze-interaction-handler', {
                 // Hide video, show image
                 const centerImage = getId('centerImage');
                 const centerVideo = getId('centerVideo');
+                const centerVideoControls = getId('centerVideoControls'); // ADD THIS
                 
                 centerImage.setVisible();
                 centerVideo.setInvisible();
+                pauseVideo(centerVideo);
+                
+                // ALSO HIDE VIDEO CONTROLS WHEN SWITCHING TO IMAGE
+                if (centerVideoControls) {
+                    centerVideoControls.setInvisible();
+                }
                 
                 // If imageController exists, setup the image
                 if (imageController) {
-                    imageController.setupImage(content.value, markerValue, 'navigation');
+                    imageController.setupImage(content.value, markerValue, 'centerControls');
                 } 
             } else if (content.type === 'video') {
                 // Call detectionHandler's showVideo function
