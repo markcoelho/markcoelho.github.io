@@ -49,20 +49,17 @@ AFRAME.registerComponent('marker-detection-handler', {
         //Show/hide image grid based on number of images
         this.updateGridVisibility(value, contentManager);
         
-        // UPDATE IMAGE: Change to this marker's image (if needed)
-        if (this.centerImage && contentManager) {
+        // UPDATE MEDIA: Change to this marker's image or video
+        if (contentManager) {
             const content = contentManager.getMarkerContent(value);
-            if (content?.type === 'image') {
-                const imageController = scene.components['image-position-controller'];
-                if (imageController) {
-                    // Check if we're already showing this marker's image
-                    const currentSrc = this.centerImage.getAttribute('src');
-                    if (currentSrc !== content.value) {
-                        // Only change image if it's different
-                        // Use 'marker' mode: preserves user's zoom/position settings
-                        imageController.setupImage(content.value, value, 'marker');
-                    }
-                    // If same image: keep current zoom/position (don't reset)
+            if (content) {
+                if (content.type === 'image') {
+                    // Handle image
+                    this.showImage(content.value, value, scene);
+                } else if (content.type === 'video') {
+                    // Handle video
+                    
+                    this.showVideo(content.value, value, scene);
                 }
             }
         }
@@ -73,17 +70,57 @@ AFRAME.registerComponent('marker-detection-handler', {
             positionBetweenCameraAndMarker(this.camera, marker, this.centerpiece);
         }
     },
+
+    showImage: function(src, markerValue, scene) {
+        const centerImage = getId('centerImage');
+        const centerVideo = getId('centerVideo');
+        
+        // Show image, hide video
+        centerImage.setVisible();
+        centerVideo.setInvisible();
+        
+        // Check if we're already showing this image
+        const currentSrc = centerImage.getAttribute('src');
+        if (currentSrc !== src) {
+            const imageController = scene.components['image-position-controller'];
+            if (imageController) {
+                // Use 'marker' mode: preserves user's zoom/position settings
+                imageController.setupImage(src, markerValue, 'marker');
+            }
+        }
+    },
+
+    showVideo: function(src, markerValue, scene) {
+        const centerImage = getId('centerImage');
+        const centerVideo = getId('centerVideo');
+        
+        // Show video, hide image
+        centerImage.setInvisible();
+        centerVideo.setVisible();
+        
+        // Set video source (won't autoplay)
+        centerVideo.setAttribute('src', src);
+        
+        // Set video to 16:9 aspect ratio (simple scaling)
+        centerVideo.setAttribute('width', 3 * 16/9); // width = 3 * (16/9)
+        centerVideo.setAttribute('height', 3); // height = 3
+        centerVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+        
+        // Position video at center
+        centerVideo.setAttribute('position', { x: 0, y: 0, z: 0 });
+    },
     
     //Update image grid visibility based on number of images
+    // marker-detection-handler.js
     updateGridVisibility: function(markerValue, contentManager) {
         const navUI = this.el.sceneEl.components['marker-navigation-ui'];
         if (!navUI) return;
         
-        // Check if marker has more than one image
-        const hasMultipleImages = navUI.hasMultipleImages(markerValue);
+        // Check if marker has more than one image OR video
+        const hasMultipleMedia = navUI.hasMultipleImages(markerValue);
         
-        // Set grid visibility based on image count
-        navUI.setGridVisibility(markerValue, hasMultipleImages);
+        // Set grid visibility based on media count
+        navUI.setGridVisibility(markerValue, hasMultipleMedia);
     },
     
     // Called when marker disappears from camera view
@@ -92,14 +129,33 @@ AFRAME.registerComponent('marker-detection-handler', {
     },
     
     // Show/hide controls based on current content settings
-    updateNavigationVisibility: function(markerValue, contentManager) {
-        const marker = document.querySelector(`a-marker[value="${markerValue}"]`);
-        if (!marker) return;
+    updateNavigationVisibility: function(marker, markerValue, contentManager) {
+        const content = contentManager?.getMarkerContent(markerValue);
+        const navigationPlane = getId('navigation');
         
-        const detectionHandler = this.scene.components['marker-detection-handler'];
-        // Try to use detection handler's method first
-        if (detectionHandler && detectionHandler.updateNavigationVisibility) {
-            detectionHandler.updateNavigationVisibility(marker, markerValue, contentManager);
+        if (navigationPlane) {
+            // Always hide controls for videos
+            if (content?.type === 'video') {
+                navigationPlane.setInvisible();
+                // Also hide individual controls
+                document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
+                    btn.setInvisible();
+                });
+            } 
+            // For images, check controls setting
+            else if (content?.type === 'image') {
+                if (content.controls === false) {
+                    navigationPlane.setInvisible();
+                    document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
+                        btn.setInvisible();
+                    });
+                } else {
+                    navigationPlane.setVisible();
+                    document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
+                        btn.setVisible();
+                    });
+                }
+            }
         }
     },
     

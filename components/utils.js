@@ -74,3 +74,4 @@ if (typeof Element !== 'undefined') {
 function getId(id) {
     return document.getElementById(id);
 }
+

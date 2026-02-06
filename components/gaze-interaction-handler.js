@@ -133,25 +133,52 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             const imageSrc = this.el.getAttribute('src');
             const markerValue = this.el.getAttribute('data-marker-value');
             const contentIndex = parseInt(this.el.getAttribute('data-content-index'));
+            const mediaType = this.el.getAttribute('data-media-type');
             
-            if (!imageSrc || !markerValue) return;
+            if (!markerValue) return;
             
             const scene = this.scene;
             const contentManager = scene.components['marker-content-manager'];
             const imageController = scene.components['image-position-controller'];
+            const detectionHandler = scene.components['marker-detection-handler'];
             
-            if (!contentManager || !imageController) return;
+            if (!contentManager || !detectionHandler) return;
             
-            // Update which image is selected for this marker
+            // Update which content is selected for this marker
             contentManager.currentContentIndex[markerValue] = contentIndex;
             
-            // Change main displayed image
-            imageController.setupImage(imageSrc, markerValue, 'navigation');
+            // Get the new content
+            const content = contentManager.getMarkerContent(markerValue);
             
-            // Show/hide controls based on new image settings
+            if (!content) return;
+            
+            // Immediately update the displayed media
+            if (content.type === 'image') {
+                // Hide video, show image
+                const centerImage = getId('centerImage');
+                const centerVideo = getId('centerVideo');
+                
+                centerImage.setVisible();
+                centerVideo.setInvisible();
+                
+                // If imageController exists, setup the image
+                if (imageController) {
+                    imageController.setupImage(content.value, markerValue, 'navigation');
+                } 
+            } else if (content.type === 'video') {
+                // Call detectionHandler's showVideo function
+                detectionHandler.showVideo(content.value, markerValue, scene);
+            }
+            
+            // Show/hide controls based on new content settings
             this.updateNavigationVisibility(markerValue, contentManager);
             
-            this.triggered = true; // Mark as triggered
+            // Also update grid visibility based on new content count
+            if (detectionHandler.updateGridVisibility) {
+                detectionHandler.updateGridVisibility(markerValue, contentManager);
+            }
+            
+            this.triggered = true;
         }
     },
     
@@ -164,7 +191,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         // Try to use detection handler's
         if (detectionHandler && detectionHandler.updateNavigationVisibility) {
             detectionHandler.updateNavigationVisibility(marker, markerValue, contentManager);
-        } 
+        }
     },
     
     // Clean up when component is removed
