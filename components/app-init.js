@@ -13,20 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Setup AR video feed (shows camera view when no marker is visible)
     // Wait 3 seconds for AR.js to initialize
     setTimeout(() => {
-        const arjsVideo = document.getElementById("arjs-video"); // AR.js internal video element
+        const arjsVideo = getId("arjs-video"); // AR.js internal video element
         if (arjsVideo?.srcObject) {
-            const arFeed = document.getElementById('arjs_feed'); // Our video element
+            const arFeed = getId('arjs_feed'); // Our video element
             // Copy the camera feed from AR.js to our video element
             arFeed.srcObject = arjsVideo.srcObject;
             arFeed.setAttribute('src', '#arjs-video'); // Set to use AR.js video
         }
     }, 3000);
 });
-
-// Helper function: Gets an entity's position in 3D world coordinates
-// (Used by other components for positioning)
-function getWorldPosition(entity) {
-    const position = new THREE.Vector3(); // Create 3D vector
-    entity.object3D.getWorldPosition(position); // Get position from Three.js object
-    return position; // Return the position
-}

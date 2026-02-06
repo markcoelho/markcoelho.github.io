@@ -24,11 +24,36 @@ AFRAME.registerComponent('marker-navigation-ui', {
         });
     },
     
+    //check if central side has more than one image
+    hasMultipleImages: function(markerValue) {
+        const content = this.contentManager?.contentSequences?.[markerValue] || [];
+        // Count only image type content
+        const imageCount = content.filter(item => item.type === 'image').length;
+        return imageCount > 1;
+    },
+    
+    //Set grid visibility for a specific marker
+    setGridVisibility: function(markerValue, visible) {
+        const marker = document.querySelector(`a-marker[value="${markerValue}"]`);
+        if (!marker || !marker._imageGrid) return;
+        
+        marker._imageGrid.setAttribute('visible', visible);
+    },
+    
     // Create image grids for ALL markers
     createAllGrids: function() {
         document.querySelectorAll('a-marker').forEach(marker => {
-            // Only create grid if it doesn't exist yet
-            if (!marker._imageGrid) this.addImageGridToMarker(marker);
+            // Only create grid if it doesn't exist yet AND marker has images
+            if (!marker._imageGrid) {
+                const markerValue = marker.getAttribute('value');
+                // Check if marker has any images at all
+                const content = this.contentManager?.contentSequences?.[markerValue] || [];
+                const hasImages = content.some(item => item.type === 'image');
+                
+                if (hasImages) {
+                    this.addImageGridToMarker(marker);
+                }
+            }
         });
     },
     
@@ -47,6 +72,11 @@ AFRAME.registerComponent('marker-navigation-ui', {
         // Create container for the grid
         const gridContainer = this.createGridContainer();
         marker._imageGrid = gridContainer; // Store reference on marker
+        
+        // Set initial visibility based on image count
+        const shouldBeVisible = imageSources.length > 1;
+        gridContainer.setAttribute('visible', shouldBeVisible.toString());
+        
         marker.appendChild(gridContainer); // Add to marker
         
         // Fill grid with images
@@ -59,7 +89,7 @@ AFRAME.registerComponent('marker-navigation-ui', {
         container.setAttribute('class', 'image-grid-container');
         container.setAttribute('position', '0 0 0'); // Center on marker
         container.setAttribute('rotation', '-90 0 0'); // Lay flat on table
-        container.setAttribute('visible', 'false'); // Hidden until marker found
+        container.setInvisible(); // Start invisible
         return container;
     },
     
@@ -92,7 +122,7 @@ AFRAME.registerComponent('marker-navigation-ui', {
         img.onload = () => {
             // Calculate size while maintaining aspect ratio
             const aspectRatio = img.naturalWidth / img.naturalHeight;
-            const { width, height } = this.calcImageSize(aspectRatio, maxCellWidth, maxCellHeight);
+            const { width, height } = calcImageSize(aspectRatio, maxCellWidth, maxCellHeight);
             
             // Center image in its grid cell
             const offsetX = (maxCellWidth - width) / 2;
@@ -103,7 +133,7 @@ AFRAME.registerComponent('marker-navigation-ui', {
             imageEl.setAttribute('class', 'image-grid-item');
             imageEl.setAttribute('position', `${x + offsetX} ${y - offsetY} 0`);
             imageEl.setAttribute('material', 'depthTest: false;'); // Always render on top
-            imageEl.setAttribute('visible', 'true');
+            imageEl.setVisible();
             imageEl.setAttribute('src', imageSrc);
             imageEl.setAttribute('width', width);
             imageEl.setAttribute('height', height);
@@ -117,18 +147,6 @@ AFRAME.registerComponent('marker-navigation-ui', {
         };
         
         img.src = imageSrc; // Start loading the image
-    },
-    
-    // Calculate image size while keeping aspect ratio, fitting within max bounds
-    calcImageSize: function(aspectRatio, maxWidth, maxHeight) {
-        // If image is wider than tall (landscape)
-        if (aspectRatio > 1) {
-            return { width: maxWidth, height: maxWidth / aspectRatio };
-        } 
-        // If image is taller than wide (portrait)
-        else {
-            return { width: maxHeight * aspectRatio, height: maxHeight };
-        }
     },
     
     // Cleanup when component is removed

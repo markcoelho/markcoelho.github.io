@@ -19,6 +19,7 @@
     <script src="components/marker-content-manager.js"></script>
     <script src="components/app-init.js"></script>
     <script src="components/marker-detection-handler.js"></script>
+    <script src="components/utils.js"></script>
     
     <style>
         /* Basic page styling - no scroll bars */
@@ -47,33 +48,23 @@
         </a-entity>
         
         <!-- Raycaster for detecting interactions -->
-        <a-entity id="raycaster" raycaster="objects: .zoom-button, .nav-button, #outsidecamera, .scroller; showLine: false; lineColor: red; far: 20"
+        <a-entity id="raycaster" raycaster="objects: .zoom-button, .nav-button, #centerImage, .scroller; showLine: false; lineColor: red; far: 20"
             position="0 0 0" visible-in-vr-only></a-entity>
                   
         <!-- AR video feed (shown when no marker detected) -->
-        <a-video id="arjs_feed" position="0 0 -50" width="83" height="83"></a-video>
-
-        <!-- Marker 0 - Main marker with hidden initial image -->
-        <a-marker type="barcode" value="0">
-            <a-image src="0.jpg" position="0 0 0" scale="1 1 1" visible="false"></a-image>
-        </a-marker>
-        <!-- Additional markers 1-9 -->
-        <a-marker type="barcode" value="1"></a-marker>
-        <a-marker type="barcode" value="2"></a-marker>
-        <a-marker type="barcode" value="3"></a-marker>
-        <a-marker type="barcode" value="4"></a-marker>
-        <a-marker type="barcode" value="5"></a-marker>
-        <a-marker type="barcode" value="6"></a-marker>
-        <a-marker type="barcode" value="7"></a-marker>
-        <a-marker type="barcode" value="8"></a-marker>
-        <a-marker type="barcode" value="9"></a-marker>
+        <a-video id="arjs_feed" position="0 0 -50" width="83" height="83" render-order="0"></a-video>
+        
+        <!-- MARKERS WILL BE CREATED DYNAMICALLY HERE -->
+        <!-- No hardcoded markers needed anymore -->
     </a-camera>
 
     <!-- Main content container that follows camera/marker -->
     <a-entity id="centerpiece" position="0 0 -5" rotation="0 0 0">
         <!-- Main displayed image (changes based on marker) -->
-        <a-image id="outsidecamera" src="0.jpg" position="0 0 0" scale="3 3 3"></a-image>
-        
+        <a-image id="centerImage" src="" position="0 0 0" scale="3 3 3" render-order="1"  visible="true"></a-image>
+        <!-- Main displayed video (changes based on marker) -->
+        <a-video id="centerVideo" src="assets/video/video-test.mp4" position="0 0 0" scale="3 3 3" render-order="1" visible="false"></a-image>
+
         <!-- Navigation panel with control buttons -->
         <a-plane color="white" position="0 0 2" width="1.8" height="0.4" id="navigation" rotation="0 0 0">
             <!-- Reset button -->
