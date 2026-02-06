@@ -2,7 +2,7 @@
 // Controls image movement, zoom, and resets for the main displayed image
 AFRAME.registerComponent('image-position-controller', {
     init: function() {
-        this.outsideCamera = document.getElementById('outsidecamera'); // Main image element
+        this.centerImage = getId('centerImage'); // Main image element
         this.scrollerElements = document.querySelectorAll('.scroller'); // Arrow buttons
         this.initialStates = {}; // Stores original image states per marker
         this.currentMarker = null; // Which marker we're currently viewing
@@ -18,11 +18,11 @@ AFRAME.registerComponent('image-position-controller', {
     
     setupEventListeners: function() {
         // Track when cursor is over the main image
-        this.outsideCamera.addEventListener('raycaster-intersected', () => {
+        this.centerImage.addEventListener('raycaster-intersected', () => {
             this.isImageIntersected = true;
             this.checkForDoubleIntersection(); // Check if should start moving
         });
-        this.outsideCamera.addEventListener('raycaster-intersected-cleared', () => {
+        this.centerImage.addEventListener('raycaster-intersected-cleared', () => {
             this.isImageIntersected = false;
             this.stopMovement(); // Stop moving when cursor leaves
         });
@@ -65,12 +65,12 @@ AFRAME.registerComponent('image-position-controller', {
     // Move the image based on which arrows are active
     continuousMove: function() {
         // Stop if: no image, no active arrows, or cursor left image
-        if (!this.outsideCamera || this.activeScrollers.size === 0 || !this.isImageIntersected) {
+        if (!this.centerImage || this.activeScrollers.size === 0 || !this.isImageIntersected) {
             this.stopMovement();
             return;
         }
         
-        const currentPos = this.outsideCamera.getAttribute('position');
+        const currentPos = this.centerImage.getAttribute('position');
         let moveX = 0, moveY = 0;
         
         // Map arrow IDs to movement directions
@@ -85,7 +85,7 @@ AFRAME.registerComponent('image-position-controller', {
         this.activeScrollers.forEach(id => moves[id]?.());
         
         // Update image position
-        this.outsideCamera.setAttribute('position', {
+        this.centerImage.setAttribute('position', {
             x: currentPos.x + moveX,
             y: currentPos.y + moveY,
             z: currentPos.z
@@ -95,13 +95,48 @@ AFRAME.registerComponent('image-position-controller', {
     // Main function to change/setup the displayed image
     setupImage: function(imageSrc, markerValue, callSource = 'default') {
         const contentManager = this.el.sceneEl.components['marker-content-manager'];
-        if (!contentManager || !this.outsideCamera) return;
+        if (!contentManager || !this.centerImage) return;
         
-        const content = contentManager.getCurrentContentForMarker(markerValue);
+        const content = contentManager.getMarkerContent(markerValue);
         const contentScale = content?.scale || 1; // Get scale from JSON (default 1)
         const baseScale = 3 * contentScale; // Base size (3 units) * scale factor
         
-        // RESET: Return to original position/size
+        // Get navigation plane element
+        const navigationPlane = getId('navigation');
+        
+        // Check if controls are enabled for this specific content
+        const controlsEnabled = contentManager.getControlsEnabled(markerValue);
+        
+        // Set navigation visibility based on controls setting
+        if (navigationPlane) {
+            if (controlsEnabled) {
+                navigationPlane.setVisible();
+                
+                // Also make sure zoom buttons and scrollers are visible
+                document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
+                    btn.setVisible();
+                });
+            } else {
+                navigationPlane.setInvisible();
+                
+                // Also hide individual controls
+                document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
+                    btn.setInvisible();
+                });
+                
+                //If controls are disabled, reset zoom and position
+                // Use the same reset logic as the reset button
+                if (content?.type === 'image') {
+                    this.currentMarker = markerValue;
+                    this.userScaleMultiplier = 1; // Reset zoom multiplier
+                    
+                    // Call resetImage which will center the image and reset to original scale
+                    this.resetImage(markerValue, content.value, contentManager);
+                }
+            }
+        }
+        
+        // RESET: Return to original position/size (for reset button)
         if (callSource === 'reset') {
             this.currentMarker && this.resetImage(this.currentMarker, content?.value, contentManager);
             return;
@@ -113,7 +148,7 @@ AFRAME.registerComponent('image-position-controller', {
         }
         
         // Skip if it's the same image (unless it's a new marker detection)
-        const currentSrc = this.outsideCamera.getAttribute('src');
+        const currentSrc = this.centerImage.getAttribute('src');
         if (imageSrc && currentSrc === imageSrc && callSource !== 'marker') return;
         
         // Load and display the new image
@@ -127,8 +162,8 @@ AFRAME.registerComponent('image-position-controller', {
         
         img.onload = () => {
             const aspect = img.naturalWidth / img.naturalHeight; // Image aspect ratio
-            const currentPos = this.outsideCamera.getAttribute('position');
-            const currentScale = this.outsideCamera.getAttribute('scale').x;
+            const currentPos = this.centerImage.getAttribute('position');
+            const currentScale = this.centerImage.getAttribute('scale').x;
             
             // Calculate zoom multiplier: current size ÷ original size
             // This preserves user's zoom when switching images
@@ -141,10 +176,10 @@ AFRAME.registerComponent('image-position-controller', {
             const finalScale = baseScale * this.userScaleMultiplier; // Apply user's zoom
             
             // Update the displayed image
-            this.outsideCamera.setAttribute('src', src);
-            this.outsideCamera.setAttribute('width', baseScale);
-            this.outsideCamera.setAttribute('height', baseScale / aspect); // Maintain aspect
-            this.outsideCamera.setAttribute('scale', { x: finalScale, y: finalScale, z: finalScale });
+            this.centerImage.setAttribute('src', src);
+            this.centerImage.setAttribute('width', baseScale);
+            this.centerImage.setAttribute('height', baseScale / aspect); // Maintain aspect
+            this.centerImage.setAttribute('scale', { x: finalScale, y: finalScale, z: finalScale });
             
             // Store original state for this marker (for reset/zoom calculations)
             if (callSource === 'marker' || callSource === 'navigation') {
@@ -168,16 +203,16 @@ AFRAME.registerComponent('image-position-controller', {
         img.crossOrigin = 'anonymous';
         
         img.onload = () => {
-            const content = contentManager.getCurrentContentForMarker(markerValue);
+            const content = contentManager.getMarkerContent(markerValue);
             const contentScale = content?.scale || 1;
             const baseScale = 3 * contentScale;
             const aspect = img.naturalWidth / img.naturalHeight;
             
             // Reset to center with original size
-            this.outsideCamera.setAttribute('position', { x: 0, y: 0, z: 0 }); // Center
-            this.outsideCamera.setAttribute('width', baseScale);
-            this.outsideCamera.setAttribute('height', baseScale / aspect);
-            this.outsideCamera.setAttribute('scale', { 
+            this.centerImage.setAttribute('position', { x: 0, y: 0, z: 0 }); // Center
+            this.centerImage.setAttribute('width', baseScale);
+            this.centerImage.setAttribute('height', baseScale / aspect);
+            this.centerImage.setAttribute('scale', { 
                 x: baseScale,  // Original width
                 y: baseScale,  // Original height
                 z: baseScale 
