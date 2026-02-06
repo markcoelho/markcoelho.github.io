@@ -7,12 +7,58 @@ AFRAME.registerComponent('marker-detection-handler', {
         this.centerImage = getId('centerImage'); // Main image
         this.centerpiece = getId('centerpiece');     // Content container
         this.camera = document.querySelector('a-camera');             // User's camera
-        this.navigationPlane = getId('navigation'); // Control panel
+        this.navigationPlane = getId('centerControls'); // Control panel
+        
+        // Setup video control event listeners
+        this.setupVideoControls();
         
         // Wait for markers to be created dynamically
         this.el.sceneEl.addEventListener('markers-created', () => {
             this.setupMarkerEventListeners();
         });
+    },
+
+    setupVideoControls: function() {
+        const restartBtn = getId('restart');
+        const muteBtn = getId('mute');
+        const centerVideo = getId('centerVideo');
+        
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => {
+                if (centerVideo) {
+                    try {
+                        const material = centerVideo.components?.material?.material;
+                        if (material?.map?.image) {
+                            material.map.image.currentTime = 0; // Restart video
+                            material.map.image.play();
+                        }
+                    } catch (e) {
+                        console.warn('Could not restart video:', e);
+                    }
+                }
+            });
+        }
+        
+        if (muteBtn) {
+            muteBtn.addEventListener('click', () => {
+                if (centerVideo) {
+                    try {
+                        const material = centerVideo.components?.material?.material;
+                        if (material?.map?.image) {
+                            material.map.image.muted = !material.map.image.muted;
+                            // Change icon based on mute state
+                            muteBtn.setAttribute('src', 
+                                material.map.image.muted ? 
+                                'assets/icons/unmute.png' : 
+                                'assets/icons/mute.png'
+                            );
+                        }
+                    } catch (e) {
+                        console.warn('Could not toggle mute:', e);
+                    }
+                }
+            });
+        }
     },
     
     // Setup event listeners AFTER markers are created
@@ -74,10 +120,17 @@ AFRAME.registerComponent('marker-detection-handler', {
     showImage: function(src, markerValue, scene) {
         const centerImage = getId('centerImage');
         const centerVideo = getId('centerVideo');
+        const centerVideoControls = getId('centerVideoControls'); // ADD THIS
         
         // Show image, hide video
         centerImage.setVisible();
         centerVideo.setInvisible();
+        pauseVideo(centerVideo);
+        
+        // ALSO HIDE VIDEO CONTROLS WHEN HIDING VIDEO
+        if (centerVideoControls) {
+            centerVideoControls.setInvisible();
+        }
         
         // Check if we're already showing this image
         const currentSrc = centerImage.getAttribute('src');
@@ -93,21 +146,47 @@ AFRAME.registerComponent('marker-detection-handler', {
     showVideo: function(src, markerValue, scene) {
         const centerImage = getId('centerImage');
         const centerVideo = getId('centerVideo');
+        const centerVideoControls = getId('centerVideoControls');
         
         // Show video, hide image
         centerImage.setInvisible();
         centerVideo.setVisible();
+        playVideo(centerVideo);
         
-        // Set video source (won't autoplay)
+        // Set video source
         centerVideo.setAttribute('src', src);
         
-        // Set video to 16:9 aspect ratio (simple scaling)
-        centerVideo.setAttribute('width', 3 * 16/9); // width = 3 * (16/9)
-        centerVideo.setAttribute('height', 3); // height = 3
+        // GET SCALE AND CONTROLS FROM CONTENT MANAGER
+        const contentManager = scene.components['marker-content-manager'];
+        const content = contentManager?.getMarkerContent(markerValue);
+        const contentScale = content?.scale || 1; // Default to 1 if not specified
+        const hasControls = content?.controls === true || content?.controls === "true"; // Check if controls enabled
+        
+        // Apply scale to video size
+        const baseSize = 3 * contentScale; // Multiply base size by scale
+        centerVideo.setAttribute('width', baseSize * 16/9); // width = baseSize * (16/9)
+        centerVideo.setAttribute('height', baseSize); // height = baseSize
         centerVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
         
         // Position video at center
         centerVideo.setAttribute('position', { x: 0, y: 0, z: 0 });
+        
+        // SHOW/HIDE VIDEO CONTROLS
+        if (centerVideoControls) {
+            if (hasControls) {
+                centerVideoControls.setVisible();
+            } else {
+                centerVideoControls.setInvisible();
+            }
+        }
+        
+        // Always hide image controls when showing video
+        const centerControls = getId('centerControls');
+        if (centerControls) {
+            centerControls.setInvisible();
+        }
+        
+        console.log(`Video ${src} loaded for marker ${markerValue} with scale ${contentScale}, controls: ${hasControls}`);
     },
     
     //Update image grid visibility based on number of images
@@ -131,7 +210,7 @@ AFRAME.registerComponent('marker-detection-handler', {
     // Show/hide controls based on current content settings
     updateNavigationVisibility: function(marker, markerValue, contentManager) {
         const content = contentManager?.getMarkerContent(markerValue);
-        const navigationPlane = getId('navigation');
+        const navigationPlane = getId('centerControls');
         
         if (navigationPlane) {
             // Always hide controls for videos

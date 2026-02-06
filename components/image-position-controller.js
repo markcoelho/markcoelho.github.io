@@ -107,7 +107,7 @@ AFRAME.registerComponent('image-position-controller', {
         const baseScale = 3 * contentScale; // Base size (3 units) * scale factor
         
         // Get navigation plane element
-        const navigationPlane = getId('navigation');
+        const navigationPlane = getId('centerControls');
         
         // Check if controls are enabled for this specific content
         const controlsEnabled = contentManager.getControlsEnabled(markerValue);
@@ -148,7 +148,7 @@ AFRAME.registerComponent('image-position-controller', {
         }
         
         // MARKER/NAVIGATION: Track which marker we're viewing
-        if (callSource === 'marker' || callSource === 'navigation') {
+        if (callSource === 'marker' || callSource === 'centerControls') {
             this.currentMarker = markerValue;
         }
         
@@ -187,7 +187,7 @@ AFRAME.registerComponent('image-position-controller', {
             this.centerImage.setAttribute('scale', { x: finalScale, y: finalScale, z: finalScale });
             
             // Store original state for this marker (for reset/zoom calculations)
-            if (callSource === 'marker' || callSource === 'navigation') {
+            if (callSource === 'marker' || callSource === 'centerControls') {
                 this.initialStates[markerValue] = {
                     position: currentPos, // Keep current position
                     scale: { x: baseScale, y: baseScale, z: baseScale }, // Original size

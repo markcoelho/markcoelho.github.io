@@ -66,8 +66,8 @@
         <a-video id="centerVideo" src="" position="0 0 0" scale="3 3 3" render-order="1" visible="false"></a-video>
 
         <!-- Navigation panel with control buttons -->
-        <a-plane color="white" position="0 0 2" width="1.8" height="0.4" id="navigation" rotation="0 0 0">
-            <!-- Reset button -->
+        <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="centerControls" rotation="0 0 0">
+            <!-- image reset button -->
             <a-image src="assets/icons/reset.png" class="reset" id="reset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
             gaze-interaction-handler="action: reset; fuseTimeout: 1000" material="depthTest: false;"></a-image>
             
@@ -93,6 +93,16 @@
                     data-action="decrease" material="depthTest: false;"
                     gaze-interaction-handler="action: decrease; fuseTimeout: 500"></a-image>
         </a-plane>
+
+        <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="centerVideoControls" rotation="0 0 0">
+            <!-- video restart button -->
+            <a-image src="assets/icons/reset.png" class="restart" id="restart" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
+            gaze-interaction-handler="action: restart; fuseTimeout: 1000" material="depthTest: false;"></a-image>
+            <!-- video mute button -->
+            <a-image src="assets/icons/mute.png" class="mute" id="mute" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
+            material="depthTest: false;"></a-image>
+        </a-plane>
+        
     </a-entity>
     
 </a-scene>

@@ -75,3 +75,32 @@ function getId(id) {
     return document.getElementById(id);
 }
 
+
+function pauseVideo(aframeVideoElement) {
+    if (!aframeVideoElement) return false;
+    try {
+        const material = aframeVideoElement.components?.material?.material;
+        if (material?.map?.image) {
+            material.map.image.pause();
+            return true;
+        }
+        return false;
+    } catch (e) {
+        console.warn('Could not pause video:', e);
+        return false;
+    }
+}
+
+function playVideo(aframeVideoElement) {
+    if (!aframeVideoElement) return false;
+    try {
+        const material = aframeVideoElement.components?.material?.material;
+        if (material?.map?.image) {
+            return material.map.image.play();
+        }
+        return false;
+    } catch (e) {
+        console.warn('Could not play video:', e);
+        return false;
+    }
+}
