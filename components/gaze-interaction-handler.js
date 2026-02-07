@@ -44,6 +44,9 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         else if (this.el.classList.contains('mute')) this.buttonType = 'mute';
         else if (this.el.classList.contains('fast-backward')) this.buttonType = 'fast-backward';
         else if (this.el.classList.contains('fast-forward')) this.buttonType = 'fast-forward';
+        else if (this.el.classList.contains('model-zoom-button')) this.buttonType = 'model-zoom';
+        else if (this.el.classList.contains('3dreset')) this.buttonType = 'model-reset';
+        else if (this.el.classList.contains('roller')) this.buttonType = 'model-roll';
         else if (this.el.classList.contains('image-grid-item') && this.el.tagName.toLowerCase() === 'a-image') 
             this.buttonType = 'grid-image';
         else this.buttonType = 'other';
@@ -52,7 +55,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     // Show loading for certain buttons
     showLoading: function() {
         if (!this.loading) return;
-        const show = ['zoom', 'restart', 'mute', 'fast-backward', 'fast-forward'].includes(this.buttonType) ||
+        const show = ['zoom', 'model-zoom', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset'].includes(this.buttonType) ||
                     ((this.buttonType === 'grid-image' || this.buttonType === 'reset') && !this.triggered);
         if (show) this.loading.setVisible();
     },
@@ -60,7 +63,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     // Start gaze timer
     startFuse: function() {
         if (this.isFusing || !this.intersected || 
-            (['grid-image', 'reset', 'restart', 'mute', 'fast-backward', 'fast-forward'].includes(this.buttonType) && this.triggered)) 
+            (['grid-image', 'reset', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset'].includes(this.buttonType) && this.triggered)) 
             return;
         
         this.isFusing = true;
@@ -69,9 +72,10 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             this.isFusing = false;
             
             if (this.intersected) {
-                if (this.buttonType === 'zoom') {
+                // Auto-repeat for zoom buttons (both image and 3D model)
+                if (this.buttonType === 'zoom' || this.buttonType === 'model-zoom') {
                     this.startFuse(); // Auto-repeat for zoom
-                } else if (['grid-image', 'reset', 'restart', 'mute', 'fast-backward', 'fast-forward'].includes(this.buttonType)) {
+                } else if (['grid-image', 'reset', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset'].includes(this.buttonType)) {
                     this.triggered = true;
                     this.loading?.setInvisible();
                 }
@@ -90,7 +94,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     
     // Execute button action
     triggerAction: function() {
-        // Zoom buttons
+        // Image Zoom buttons
         if (this.buttonType === 'zoom') {
             const centerImage = getId('centerImage');
             if (!centerImage) return;
@@ -105,7 +109,32 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             return;
         } 
         
-        // Reset button
+        // 3D Model Zoom buttons - WORK EXACTLY LIKE IMAGE ZOOM
+        if (this.buttonType === 'model-zoom') {
+            const centerModel = getId('centerModel');
+            if (!centerModel || !centerModel.getAttribute('visible')) return;
+            
+            const currentScale = centerModel.getAttribute('scale').x;
+            const zoomMultiplier = this.data.zoomFactor;
+            
+            let newScale;
+            if (this.data.action === '3dincrease') {
+                newScale = Math.min(10, currentScale * (1 + zoomMultiplier));
+            } else {
+                newScale = Math.max(0.1, currentScale * (1 - zoomMultiplier));
+            }
+            
+            centerModel.setAttribute('scale', { 
+                x: newScale, 
+                y: newScale, 
+                z: newScale 
+            });
+            
+            console.log(`3D model zoom ${this.data.action}: ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
+            return;
+        }
+        
+        // Reset button (for images)
         if (this.buttonType === 'reset' && !this.triggered) {
             const scene = this.scene;
             const contentManager = scene.components['marker-content-manager'];
@@ -119,6 +148,41 @@ AFRAME.registerComponent('gaze-interaction-handler', {
                 const content = contentManager.getMarkerContent(currentMarker);
                 if (content?.type === 'image') {
                     imageController.setupImage(content.value, currentMarker, 'reset');
+                }
+            });
+            
+            this.triggered = true;
+        }
+        
+        // 3D Model Reset button
+        if (this.buttonType === 'model-reset' && !this.triggered) {
+            const centerModel = getId('centerModel');
+            const scene = this.scene;
+            const contentManager = scene.components['marker-content-manager'];
+            
+            if (!centerModel || !centerModel.getAttribute('visible') || !contentManager) {
+                this.triggered = true;
+                return;
+            }
+            
+            // Find which marker has the 3D model
+            const markers = document.querySelectorAll('a-marker');
+            markers.forEach(marker => {
+                const currentMarker = marker.getAttribute('value');
+                const content = contentManager.getMarkerContent(currentMarker);
+                if (content?.type === '3d') {
+                    const contentScale = content.scale || 1;
+                    
+                    // Reset scale and position
+                    centerModel.setAttribute('scale', { 
+                        x: contentScale, 
+                        y: contentScale, 
+                        z: contentScale 
+                    });
+                    
+                    centerModel.setAttribute('position', { x: 0, y: 0, z: 0 });
+                    
+                    console.log(`3D model reset to scale: ${contentScale}`);
                 }
             });
             
@@ -186,24 +250,29 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             
             if (!content) return;
             
+            // Handle different media types
             if (content.type === 'image') {
                 const centerImage = getId('centerImage');
                 const centerVideo = getId('centerVideo');
+                const centerModel = getId('centerModel');
                 const centerVideoControls = getId('centerVideoControls');
+                const center3dControls = getId('center3dControls');
                 
                 centerImage.setVisible();
                 centerVideo.setInvisible();
+                centerModel.setInvisible();
                 pauseVideo(centerVideo);
                 
-                if (centerVideoControls) {
-                    centerVideoControls.setInvisible();
-                }
+                if (centerVideoControls) centerVideoControls.setInvisible();
+                if (center3dControls) center3dControls.setInvisible();
                 
                 if (imageController) {
                     imageController.setupImage(content.value, markerValue, 'centerControls');
                 } 
             } else if (content.type === 'video') {
                 detectionHandler.showVideo(content.value, markerValue, scene);
+            } else if (content.type === '3d') {
+                detectionHandler.show3DModel(content.value, markerValue, scene);
             }
             
             this.updateNavigationVisibility(markerValue, contentManager);

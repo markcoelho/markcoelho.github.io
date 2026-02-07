@@ -23,7 +23,9 @@ AFRAME.registerComponent('marker-navigation-ui', {
     // Check if marker has multiple media items
     hasMultipleImages: function(markerValue) {
         const content = this.contentManager?.contentSequences?.[markerValue] || [];
-        const mediaCount = content.filter(item => item.type === 'image' || item.type === 'video').length;
+        const mediaCount = content.filter(item => 
+            item.type === 'image' || item.type === 'video' || item.type === '3d'
+        ).length;
         return mediaCount > 1;
     },
     
@@ -54,7 +56,10 @@ AFRAME.registerComponent('marker-navigation-ui', {
         const markerValue = marker.getAttribute('value');
         const content = this.contentManager?.contentSequences?.[markerValue] || [];
         
-        const mediaContent = content.filter(item => item.type === 'image' || item.type === 'video');
+        const mediaContent = content.filter(item => 
+            item.type === 'image' || item.type === 'video' || item.type === '3d'
+        );
+    
         
         if (mediaContent.length === 0) return;
         
@@ -98,8 +103,30 @@ AFRAME.registerComponent('marker-navigation-ui', {
                 this.createGridImage(src, i, x, y, container, markerValue, maxCellWidth, maxCellHeight);
             } else if (item.type === 'video') {
                 this.createGridVideoThumbnail(src, i, x, y, container, markerValue, maxCellWidth, maxCellHeight);
+            } else if (item.type === '3d') {
+                this.createGrid3DThumbnail(src, i, x, y, container, markerValue, maxCellWidth, maxCellHeight);
             }
         }
+    },
+
+    createGrid3DThumbnail: function(modelSrc, index, x, y, container, markerValue, maxCellWidth, maxCellHeight) {
+        const thumbnailEl = document.createElement('a-image');
+        thumbnailEl.setAttribute('class', 'image-grid-item');
+        thumbnailEl.setAttribute('position', `${x} ${y} 0`);
+        thumbnailEl.setAttribute('material', 'depthTest: false;');
+        thumbnailEl.setVisible();
+        
+        thumbnailEl.setAttribute('src', 'assets/icons/model-thumbnail.png');
+        thumbnailEl.setAttribute('width', maxCellWidth);
+        thumbnailEl.setAttribute('height', maxCellHeight);
+        thumbnailEl.setAttribute('data-content-index', index);
+        thumbnailEl.setAttribute('data-marker-value', markerValue);
+        thumbnailEl.setAttribute('data-media-type', '3d');
+        
+        thumbnailEl.setAttribute('gaze-interaction-handler', 
+            `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
+        
+        container.appendChild(thumbnailEl);
     },
     
     // Create video thumbnail in grid
