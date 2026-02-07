@@ -7,6 +7,7 @@ AFRAME.registerComponent('marker-detection-handler', {
         this.centerpiece = getId('centerpiece');
         this.camera = document.querySelector('a-camera');
         this.navigationPlane = getId('centerControls');
+        this.currentMarker = null;
         
         this.setupVideoControls();
         
@@ -68,6 +69,7 @@ AFRAME.registerComponent('marker-detection-handler', {
     // Marker detected
     onMarkerFound: function(marker) {
         const value = marker.getAttribute('value');
+        this.currentMarker = value;
         
         console.log(`Marker ${value} found`);
         
