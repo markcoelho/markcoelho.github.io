@@ -112,3 +112,61 @@ function playVideo(aframeVideoElement) {
         return false;
     }
 }
+
+
+// Continuous movement controller
+class ContinuousMovementController {
+  constructor(moveInterval = 50) {
+    this.activeControls = new Set();
+    this.timer = null;
+    this.moveInterval = moveInterval;
+    this.callback = null;
+  }
+  
+  start(callback) {
+    if (this.timer) return;
+    this.callback = callback;
+    this.timer = setInterval(() => {
+      if (this.activeControls.size > 0 && this.callback) {
+        this.callback(this.activeControls);
+      } else {
+        this.stop();
+      }
+    }, this.moveInterval);
+  }
+  
+  stop() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    this.activeControls.clear();
+  }
+  
+  addControl(id) {
+    this.activeControls.add(id);
+  }
+  
+  removeControl(id) {
+    this.activeControls.delete(id);
+  }
+  
+  hasControls() {
+    return this.activeControls.size > 0;
+  }
+}
+
+// Movement mappings (shared between files)
+const IMAGE_MOVEMENTS = {
+  'scroller-top': [0, -0.1, 0],
+  'scroller-right': [-0.1, 0, 0],
+  'scroller-bottom': [0, 0.1, 0],
+  'scroller-left': [0.1, 0, 0]
+};
+
+const MODEL_ROTATIONS = {
+  'roller-up': () => ({ y: 0, z: -1 }),
+  'roller-down': () => ({ y: 0, z: 1 }),
+  'roller-left': () => ({ y: 1, z: 0 }),
+  'roller-right': () => ({ y: -1, z: 0 })
+};
