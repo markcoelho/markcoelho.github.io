@@ -88,6 +88,11 @@ onMarkerFound: function(marker) {
         this.playAudio(value, contentManager.narrations[value]);
     }
     
+    // Handle surround content
+    if (contentManager) {
+        this.updateSurroundContent(value, contentManager.getSurroundContent(value));
+    }
+    
     this.updateNavigationVisibility(marker, value, contentManager);
     this.updateGridVisibility(value, contentManager);
     
@@ -113,6 +118,61 @@ onMarkerFound: function(marker) {
     
     if (this.centerpiece && this.camera) {
         positionBetweenCameraAndMarker(this.camera, marker, this.centerpiece);
+    }
+},
+
+updateSurroundContent: function(markerValue, surroundSrc) {
+    const video360 = document.querySelector('a-videosphere');
+    const image360 = document.querySelector('a-sphere');
+    
+    if (!video360 || !image360) {
+        console.error("360 video or image elements not found");
+        return;
+    }
+    
+    // Hide both initially
+    video360.setAttribute('visible', 'false');
+    image360.setAttribute('visible', 'false');
+    
+    // Check if surround content exists
+    if (!surroundSrc || surroundSrc.trim() === '') {
+        console.log(`No surround content for marker ${markerValue}`);
+        return;
+    }
+    
+    console.log(`Setting surround content for marker ${markerValue}: ${surroundSrc}`);
+    
+    // Check file extension to determine if it's video or image
+    const extension = surroundSrc.split('.').pop().toLowerCase();
+    const isVideo = ['mp4', 'webm', 'ogg', 'mov'].includes(extension);
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
+    
+    if (isVideo) {
+        // It's a video
+        video360.setAttribute('src', surroundSrc);
+        video360.setAttribute('visible', 'true');
+        console.log(`360 video set to: ${surroundSrc}`);
+        
+        // Try to play the video
+        try {
+            const videoElement = video360.components.material.material.map.image;
+            if (videoElement) {
+                videoElement.play().catch(e => {
+                    console.warn("Could not auto-play 360 video:", e);
+                });
+            }
+        } catch (e) {
+            console.warn("Could not access video element:", e);
+        }
+    } 
+    else if (isImage) {
+        // It's an image
+        image360.setAttribute('src', surroundSrc);
+        image360.setAttribute('visible', 'true');
+        console.log(`360 image set to: ${surroundSrc}`);
+    }
+    else {
+        console.warn(`Unknown surround file type for ${surroundSrc}`);
     }
 },
 
