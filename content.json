@@ -25,7 +25,7 @@
                 },
                 {
                     "type": "video",
-                    "controls": "true",
+                    "controls": "false",
                     "src": "assets/video/video-test.mp4",
                     "scale": 1
                 },
@@ -37,7 +37,7 @@
                 },
                 {
                     "type": "image",
-                    "controls": "true",
+                    "controls": "false",
                     "src": "assets/images/1.4.jpg",
                     "scale": 1
                 }
