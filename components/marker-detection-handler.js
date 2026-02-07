@@ -249,6 +249,6 @@ AFRAME.registerComponent('marker-detection-handler', {
         // Play the audio
         this.currentPlayingAudio = this.audioElements[markerValue];
         this.currentPlayingAudio.currentTime = 0; // Start from beginning
-        // Note: audio.play() would normally go here
+        this.currentPlayingAudio.play();
     }
 });

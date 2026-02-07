@@ -21,6 +21,11 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         
         // When cursor enters this element
         this.el.addEventListener('raycaster-intersected', () => {
+            // Exit if element has 'not-interactive' class
+            if (this.el.classList.contains('not-interactive')) {
+                return;
+            }
+
             this.intersected = true;
             this.triggered = false;  // Reset for new interaction
             
@@ -44,6 +49,10 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     determineButtonType: function() {
         if (this.el.classList.contains('zoom-button')) return this.buttonType = 'zoom';
         if (this.el.classList.contains('reset')) return this.buttonType = 'reset';
+        if (this.el.classList.contains('restart')) return this.buttonType = 'restart';
+        if (this.el.classList.contains('mute')) return this.buttonType = 'mute';
+        if (this.el.classList.contains('fast-backward')) return this.buttonType = 'fast-backward';
+        if (this.el.classList.contains('fast-forward')) return this.buttonType = 'fast-forward';
         if (this.el.classList.contains('image-grid-item') && this.el.tagName.toLowerCase() === 'a-image') 
             return this.buttonType = 'grid-image';
         this.buttonType = 'other';
@@ -53,6 +62,10 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     showLoading: function() {
         if (!this.loading) return;
         const show = this.buttonType === 'zoom' || 
+                    this.buttonType === 'restart' ||
+                    this.buttonType === 'mute' ||
+                    this.buttonType === 'fast-backward' ||
+                    this.buttonType === 'fast-forward' ||
                     ((this.buttonType === 'grid-image' || this.buttonType === 'reset') && !this.triggered);
         if (show) this.loading.setVisible();
     },
@@ -62,7 +75,11 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         // Don't start if already running, or if cursor left, or already triggered
         if (this.isFusing || !this.intersected || 
             (this.buttonType === 'grid-image' && this.triggered) ||
-            (this.buttonType === 'reset' && this.triggered)) return;
+            (this.buttonType === 'reset' && this.triggered) ||
+            (this.buttonType === 'restart' && this.triggered) ||
+            (this.buttonType === 'mute' && this.triggered) ||
+            (this.buttonType === 'fast-backward' && this.triggered) ||
+            (this.buttonType === 'fast-forward' && this.triggered)) return;
         
         this.isFusing = true;
         this.timer = setTimeout(() => {
@@ -74,7 +91,11 @@ AFRAME.registerComponent('gaze-interaction-handler', {
                 if (this.buttonType === 'zoom') {
                     this.startFuse(); // Zoom buttons repeat automatically
                 } else if (this.buttonType === 'grid-image' || 
-                         this.buttonType === 'reset') {
+                         this.buttonType === 'reset' ||
+                         this.buttonType === 'restart' ||
+                         this.buttonType === 'mute' ||
+                         this.buttonType === 'fast-backward' ||
+                         this.buttonType === 'fast-forward') {
                     this.triggered = true;           // Mark as done
                     this.loading?.setInvisible(); // Hide loading
                 }
@@ -127,6 +148,48 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             
             this.triggered = true; // Mark as triggered to prevent repeats
         }
+        // RESTART BUTTON - Restart video
+        else if (this.buttonType === 'restart' && !this.triggered) {
+            const centerVideo = getId('centerVideo');
+            if (centerVideo) {
+                try {
+                    const material = centerVideo.components?.material?.material;
+                    if (material?.map?.image) {
+                        material.map.image.currentTime = 0; // Restart to beginning
+                        material.map.image.play();
+                    }
+                } catch (e) {
+                    console.warn('Could not restart video:', e);
+                }
+            }
+            this.triggered = true;
+        }
+        // MUTE BUTTON - Toggle video mute
+        else if (this.buttonType === 'mute' && !this.triggered) {
+            const centerVideo = getId('centerVideo');
+            const muteButton = this.el; // This button element
+            
+            if (centerVideo) {
+                try {
+                    const material = centerVideo.components?.material?.material;
+                    if (material?.map?.image) {
+                        material.map.image.muted = !material.map.image.muted;
+                        
+                        // Change icon based on mute state
+                        const isMuted = material.map.image.muted;
+                        muteButton.setAttribute('src', 
+                            isMuted ? 'assets/icons/unmute.png' : 'assets/icons/mute.png'
+                        );
+                        
+                        // Update button data for next click
+                        this.data.action = isMuted ? 'unmute' : 'mute';
+                    }
+                } catch (e) {
+                    console.warn('Could not toggle mute:', e);
+                }
+            }
+            this.triggered = true;
+        }
         // GRID IMAGE BUTTON - Select image from 3x3 grid
         else if (this.buttonType === 'grid-image' && !this.triggered) {
             // Get data from the clicked grid image
@@ -157,7 +220,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
                 // Hide video, show image
                 const centerImage = getId('centerImage');
                 const centerVideo = getId('centerVideo');
-                const centerVideoControls = getId('centerVideoControls'); // ADD THIS
+                const centerVideoControls = getId('centerVideoControls');
                 
                 centerImage.setVisible();
                 centerVideo.setInvisible();
@@ -185,6 +248,40 @@ AFRAME.registerComponent('gaze-interaction-handler', {
                 detectionHandler.updateGridVisibility(markerValue, contentManager);
             }
             
+            this.triggered = true;
+        }
+        // FAST-BACKWARD BUTTON - Skip video backward
+        else if (this.buttonType === 'fast-backward' && !this.triggered) {
+            const centerVideo = getId('centerVideo');
+            if (centerVideo) {
+                try {
+                    const material = centerVideo.components?.material?.material;
+                    if (material?.map?.image) {
+                        const video = material.map.image;
+                        // Skip backward by 10 seconds, but not before 0
+                        video.currentTime = Math.max(0, video.currentTime - 10);
+                    }
+                } catch (e) {
+                    console.warn('Could not skip video backward:', e);
+                }
+            }
+            this.triggered = true;
+        }
+        // FAST-FORWARD BUTTON - Skip video forward
+        else if (this.buttonType === 'fast-forward' && !this.triggered) {
+            const centerVideo = getId('centerVideo');
+            if (centerVideo) {
+                try {
+                    const material = centerVideo.components?.material?.material;
+                    if (material?.map?.image) {
+                        const video = material.map.image;
+                        // Skip forward by 10 seconds, but not beyond duration
+                        video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    }
+                } catch (e) {
+                    console.warn('Could not skip video forward:', e);
+                }
+            }
             this.triggered = true;
         }
     },

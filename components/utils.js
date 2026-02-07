@@ -52,10 +52,27 @@ function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
     });
 }
 
+
 // Extend all DOM Simple visibility helper functions
 if (typeof Element !== 'undefined') {
     Element.prototype.setVisible = function(isVisible = true) {
         this.setAttribute('visible', isVisible);
+        
+        // Add or remove "not-interactive" class based on visibility
+        if (isVisible) {
+            this.classList.remove('not-interactive');
+            // Also remove from all children
+            this.querySelectorAll('.not-interactive').forEach(child => {
+                child.classList.remove('not-interactive');
+            });
+        } else {
+            this.classList.add('not-interactive');
+            // Also add to all children
+            this.querySelectorAll('*').forEach(child => {
+                child.classList.add('not-interactive');
+            });
+        }
+        
         return this;
     };
     
@@ -66,9 +83,26 @@ if (typeof Element !== 'undefined') {
     Element.prototype.toggleVisible = function() {
         const isCurrentlyVisible = this.getAttribute('visible');
         this.setAttribute('visible', !isCurrentlyVisible);
+        
+        // Toggle the "not-interactive" class
+        if (!isCurrentlyVisible) {
+            this.classList.remove('not-interactive');
+            // Also remove from all children
+            this.querySelectorAll('.not-interactive').forEach(child => {
+                child.classList.remove('not-interactive');
+            });
+        } else {
+            this.classList.add('not-interactive');
+            // Also add to all children
+            this.querySelectorAll('*').forEach(child => {
+                child.classList.add('not-interactive');
+            });
+        }
+        
         return this;
     };
 }
+
 
 // Shortcut for getElementById
 function getId(id) {
