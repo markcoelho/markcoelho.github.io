@@ -90,7 +90,7 @@ AFRAME.registerComponent('image-position-controller', {
         
         const content = contentManager.getMarkerContent(markerValue);
         
-        if (content?.type === 'video') return;
+        if (content?.type === 'video' || content?.type === '3d') return;
         
         const contentScale = content?.scale || 1;
         const baseScale = 3 * contentScale;

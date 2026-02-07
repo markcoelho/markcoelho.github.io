@@ -67601,7 +67601,7 @@ var CANVAS_HOVER_CLASS = 'a-mouse-cursor-hover';
  * @member {object} fuseTimeout - Timeout to trigger fuse-click.
  * @member {Element} cursorDownEl - Entity that was last mousedowned during current click.
  * @member {object} intersection - Attributes of the current intersection event, including
- *         3D- and 2D-space coordinates. See: http://threejs.org/docs/api/core/Raycaster.html
+ *         model- and 2D-space coordinates. See: http://threejs.org/docs/api/core/Raycaster.html
  * @member {Element} intersectedEl - Currently-intersected entity. Used to keep track to
  *         emit events when unintersecting.
  */

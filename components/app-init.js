@@ -3,11 +3,11 @@
 document.addEventListener("DOMContentLoaded", () => {
     const scene = document.querySelector('a-scene');
     
-    // Attach custom components
     scene.setAttribute('image-position-controller', '');
     scene.setAttribute('marker-navigation-ui', '');
     scene.setAttribute('marker-content-manager', '');
     scene.setAttribute('marker-detection-handler', '');
+    scene.setAttribute('model-controller', '');
     
     // Setup AR video feed
     setTimeout(() => {

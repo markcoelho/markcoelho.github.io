@@ -14,6 +14,8 @@
     <script src="components/app-init.js"></script>
     <script src="components/marker-detection-handler.js"></script>
     <script src="components/utils.js"></script>
+    <script src="components/model-controller.js"></script>
+
     <style>
         body { margin: 0; overflow: hidden; position: fixed; width: 100%; height: 100%; font-family: monospace; }
         .a-canvas { z-index: 1 !important; position: absolute !important; }
@@ -45,9 +47,10 @@
 
     <!-- Main content container -->
     <a-entity id="centerpiece" position="0 0 -5">
-        <!-- Main image/video display -->
+        <!-- Main image/video/model display -->
         <a-image id="centerImage" src="" scale="3 3 3" render-order="1" visible="true"></a-image>
         <a-video id="centerVideo" src="" scale="3 3 3" render-order="1" visible="false"></a-video>
+        <a-entity id="centerModel" gltf-model="" scale="1 1 1" render-order="1" visible="false"></a-entity>
 
         <!-- Image controls -->
         <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="centerControls">
@@ -86,6 +89,31 @@
                     data-action="forward" material="depthTest: false;"
                     gaze-interaction-handler="action: forward; fuseTimeout: 500"></a-image>
         </a-plane>
+
+        <!-- 3D controls -->
+        <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="center3dControls">
+            <a-image src="assets/icons/reset.png" class="3dreset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
+                    gaze-interaction-handler="action: 3dreset; fuseTimeout: 1000" material="depthTest: false;"></a-image>
+            
+            <!-- Scrolling arrows -->
+            <a-image src="assets/icons/up.png" class="roller" id="roller-up" position="0 0.1 0.1" scale="0.18 0.18 0.18" 
+                    material="depthTest: false;" data-direction="3dup"></a-image>
+            <a-image src="assets/icons/right.png" class="roller" id="roller-right" position="0.2 0 0.1" scale="0.18 0.18 0.18" 
+                    material="depthTest: false;" data-direction="3dright"></a-image>
+            <a-image src="assets/icons/down.png" class="roller" id="roller-down" position="0 -0.1 0.1" scale="0.18 0.18 0.18" 
+                    material="depthTest: false;" data-direction="3ddown"></a-image>
+            <a-image src="assets/icons/left.png" class="roller" id="roller-left" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
+                    material="depthTest: false;" data-direction="3dleft"></a-image>
+            
+            <!-- Zoom controls -->
+            <a-image class="model-zoom-button" src="assets/icons/zoom-in.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
+                    data-action="3dincrease" material="depthTest: false;" 
+                    gaze-interaction-handler="action: 3dincrease; fuseTimeout: 500"></a-image>
+            <a-image class="model-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
+                    data-action="3ddecrease" material="depthTest: false;"
+                    gaze-interaction-handler="action: 3ddecrease; fuseTimeout: 500"></a-image>
+        </a-plane>
+
     </a-entity>
 </a-scene>
 </body>
