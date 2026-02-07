@@ -1,23 +1,28 @@
-// image-position-controller.js
+// image-position-controller.js - Compressed Version
 AFRAME.registerComponent('image-position-controller', {
-    init: function() {
-        this.centerImage = getId('centerImage');
-        this.scrollerElements = document.querySelectorAll('.scroller');
-        this.initialStates = {};
-        this.currentMarker = null;
-        this.userScaleMultiplier = 1;
-        
-        this.activeScrollers = new Set();
-        this.moveInterval = null;
-        this.isImageIntersected = false;
-        
-        this.setupEventListeners();
+    schema: {
+        moveSpeed: { default: 0.1 },
+        moveInterval: { default: 50 }
     },
     
-    setupEventListeners: function() {
+    init: function() {
+        this.centerImage = getId('centerImage');
+        this.scrollers = document.querySelectorAll('.scroller');
+        this.states = {};
+        this.currentMarker = null;
+        this.scaleMultiplier = 1;
+        this.activeScrollers = new Set();
+        this.isImageIntersected = false;
+        this.moveTimer = null;
+        
+        this.setupListeners();
+    },
+    
+    setupListeners: function() {
+        // Image intersection
         this.centerImage.addEventListener('raycaster-intersected', () => {
             this.isImageIntersected = true;
-            this.checkForDoubleIntersection();
+            this.checkMovement();
         });
         
         this.centerImage.addEventListener('raycaster-intersected-cleared', () => {
@@ -25,11 +30,12 @@ AFRAME.registerComponent('image-position-controller', {
             this.stopMovement();
         });
         
-        this.scrollerElements.forEach(scroller => {
+        // Scroller intersection
+        this.scrollers.forEach(scroller => {
             scroller.addEventListener('raycaster-intersected', (evt) => {
                 if (evt.target.classList.contains('not-interactive')) return;
                 this.activeScrollers.add(evt.target.id);
-                this.checkForDoubleIntersection();
+                this.checkMovement();
             });
             
             scroller.addEventListener('raycaster-intersected-cleared', (evt) => {
@@ -39,131 +45,117 @@ AFRAME.registerComponent('image-position-controller', {
         });
     },
     
-    // Start movement if both image and arrow are looked at
-    checkForDoubleIntersection: function() {
-        if (this.isImageIntersected && this.activeScrollers.size > 0 && !this.moveInterval) {
+    checkMovement: function() {
+        if (this.isImageIntersected && this.activeScrollers.size > 0 && !this.moveTimer) {
             this.startMovement();
         }
     },
     
     startMovement: function() {
-        this.moveInterval = setInterval(() => this.continuousMove(), 50);
+        this.moveTimer = setInterval(() => this.moveImage(), this.data.moveInterval);
     },
     
     stopMovement: function() {
-        if (this.moveInterval) {
-            clearInterval(this.moveInterval);
-            this.moveInterval = null;
+        if (this.moveTimer) {
+            clearInterval(this.moveTimer);
+            this.moveTimer = null;
         }
     },
     
-    // Move image based on active arrows
-    continuousMove: function() {
+    moveImage: function() {
         if (!this.centerImage || this.activeScrollers.size === 0 || !this.isImageIntersected) {
             this.stopMovement();
             return;
         }
         
-        const currentPos = this.centerImage.getAttribute('position');
-        let moveX = 0, moveY = 0;
-        
+        const pos = this.centerImage.getAttribute('position');
         const moves = {
-            'scroller-top': () => moveY -= 0.1,
-            'scroller-right': () => moveX -= 0.1,
-            'scroller-bottom': () => moveY += 0.1,
-            'scroller-left': () => moveX += 0.1
+            'scroller-top': [0, -this.data.moveSpeed],
+            'scroller-right': [-this.data.moveSpeed, 0],
+            'scroller-bottom': [0, this.data.moveSpeed],
+            'scroller-left': [this.data.moveSpeed, 0]
         };
         
-        this.activeScrollers.forEach(id => moves[id]?.());
+        let moveX = 0, moveY = 0;
+        this.activeScrollers.forEach(id => {
+            if (moves[id]) {
+                moveX += moves[id][0];
+                moveY += moves[id][1];
+            }
+        });
         
         this.centerImage.setAttribute('position', {
-            x: currentPos.x + moveX,
-            y: currentPos.y + moveY,
-            z: currentPos.z
+            x: pos.x + moveX,
+            y: pos.y + moveY,
+            z: pos.z
         });
     },
     
-    // Setup or change displayed image
-    setupImage: function(imageSrc, markerValue, callSource = 'default') {
-        const contentManager = this.el.sceneEl.components['marker-content-manager'];
-        if (!contentManager || !this.centerImage) return;
+    setupImage: function(imageSrc, markerValue, source = 'default') {
+        const content = this.getContent(markerValue);
+        if (!content || content.type === 'video' || content.type === '3d') return;
         
-        const content = contentManager.getMarkerContent(markerValue);
-        
-        if (content?.type === 'video' || content?.type === '3d') return;
-        
-        const contentScale = content?.scale || 1;
+        const contentScale = content.scale || 1;
         const baseScale = 3 * contentScale;
+        const controlsEnabled = content.controls !== false;
         
-        const navigationPlane = getId('centerControls');
-        const controlsEnabled = contentManager.getControlsEnabled(markerValue);
+        this.toggleControls(controlsEnabled);
         
-        if (navigationPlane) {
-            if (controlsEnabled) {
-                navigationPlane.setVisible();
-                document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
-                    btn.setVisible();
-                });
-            } else {
-                navigationPlane.setInvisible();
-                document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
-                    btn.setInvisible();
-                });
-                
-                if (content?.type === 'image') {
-                    this.currentMarker = markerValue;
-                    this.userScaleMultiplier = 1;
-                    this.resetImage(markerValue, content.value, contentManager);
-                }
-            }
-        }
-        
-        // Reset button action
-        if (callSource === 'reset') {
-            this.currentMarker && this.resetImage(this.currentMarker, content?.value, contentManager);
+        if (source === 'reset') {
+            this.resetImage(markerValue, content.value);
             return;
         }
         
-        // Track current marker
-        if (callSource === 'marker' || callSource === 'centerControls') {
+        if (source === 'marker' || source === 'centerControls') {
             this.currentMarker = markerValue;
         }
         
-        // Skip if same image (unless new marker)
         const currentSrc = this.centerImage.getAttribute('src');
-        if (imageSrc && currentSrc === imageSrc && callSource !== 'marker') return;
+        if (imageSrc && currentSrc === imageSrc && source !== 'marker') return;
         
-        this.loadAndApplyImage(imageSrc, markerValue, baseScale, callSource);
+        this.loadImage(imageSrc, markerValue, baseScale, source);
     },
     
-    // Load and apply image with sizing
-    loadAndApplyImage: function(src, markerValue, baseScale, callSource) {
+    getContent: function(markerValue) {
+        const manager = this.el.sceneEl.components['marker-content-manager'];
+        return manager?.getMarkerContent(markerValue);
+    },
+    
+    toggleControls: function(enabled) {
+        const plane = getId('centerControls');
+        if (!plane) return;
+        
+        if (enabled) {
+            plane.setVisible();
+            document.querySelectorAll('.zoom-button, .scroller').forEach(btn => btn.setVisible());
+        } else {
+            plane.setInvisible();
+            document.querySelectorAll('.zoom-button, .scroller').forEach(btn => btn.setInvisible());
+        }
+    },
+    
+    loadImage: function(src, markerValue, baseScale, source) {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         
         img.onload = () => {
             const aspect = img.naturalWidth / img.naturalHeight;
-            const currentPos = this.centerImage.getAttribute('position');
-            const currentScale = this.centerImage.getAttribute('scale').x;
             
-            // Preserve user zoom
-            if (this.initialStates[markerValue]) {
-                this.userScaleMultiplier = currentScale / this.initialStates[markerValue].scale.x;
-            } else if (callSource === 'default') {
-                this.userScaleMultiplier = 1;
+            // Preserve user zoom when switching between images
+            if (this.states[markerValue] && source !== 'marker') {
+                this.scaleMultiplier = this.centerImage.getAttribute('scale').x / this.states[markerValue].scale.x;
+            } else {
+                this.scaleMultiplier = 1;
             }
             
-            const finalScale = baseScale * this.userScaleMultiplier;
+            const finalScale = baseScale * this.scaleMultiplier;
             
-            this.centerImage.setAttribute('src', src);
-            this.centerImage.setAttribute('width', baseScale);
-            this.centerImage.setAttribute('height', baseScale / aspect);
-            this.centerImage.setAttribute('scale', { x: finalScale, y: finalScale, z: finalScale });
+            // Apply all attributes at once for smoother transition
+            this.applyImageAttributes(src, baseScale, aspect, finalScale);
             
-            // Store original state
-            if (callSource === 'marker' || callSource === 'centerControls') {
-                this.initialStates[markerValue] = {
-                    position: currentPos,
+            if (source === 'marker' || source === 'centerControls') {
+                this.states[markerValue] = {
+                    position: { x: 0, y: 0, z: 0 },
                     scale: { x: baseScale, y: baseScale, z: baseScale },
                     width: baseScale,
                     height: baseScale / aspect
@@ -174,32 +166,38 @@ AFRAME.registerComponent('image-position-controller', {
         img.src = src;
     },
     
-    // Reset image to center with original size
-    resetImage: function(markerValue, imageSrc, contentManager) {
-        this.userScaleMultiplier = 1;
+    applyImageAttributes: function(src, width, aspect, scale) {
+        this.centerImage.setAttribute('src', src);
+        this.centerImage.setAttribute('width', width);
+        this.centerImage.setAttribute('height', width / aspect);
+        this.centerImage.setAttribute('scale', { x: scale, y: scale, z: scale });
+    },
+    
+    resetImage: function(markerValue, imageSrc) {
+        this.scaleMultiplier = 1;
         
         const img = new Image();
         img.crossOrigin = 'anonymous';
         
         img.onload = () => {
-            const content = contentManager.getMarkerContent(markerValue);
+            const content = this.getContent(markerValue);
             const contentScale = content?.scale || 1;
             const baseScale = 3 * contentScale;
             const aspect = img.naturalWidth / img.naturalHeight;
             
+            // Apply reset position and scale in single operation
             this.centerImage.setAttribute('position', { x: 0, y: 0, z: 0 });
-            this.centerImage.setAttribute('width', baseScale);
-            this.centerImage.setAttribute('height', baseScale / aspect);
-            this.centerImage.setAttribute('scale', { 
-                x: baseScale, y: baseScale, z: baseScale 
-            });
+            this.applyImageAttributes(imageSrc, baseScale, aspect, baseScale);
             
-            this.initialStates[markerValue] = {
-                position: { x: 0, y: 0, z: 0 },
-                scale: { x: baseScale, y: baseScale, z: baseScale },
-                width: baseScale,
-                height: baseScale / aspect
-            };
+            // Update stored state
+            if (markerValue) {
+                this.states[markerValue] = {
+                    position: { x: 0, y: 0, z: 0 },
+                    scale: { x: baseScale, y: baseScale, z: baseScale },
+                    width: baseScale,
+                    height: baseScale / aspect
+                };
+            }
         };
         
         img.src = imageSrc;
