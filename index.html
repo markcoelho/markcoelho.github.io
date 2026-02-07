@@ -92,6 +92,8 @@
             <a-image class="zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
                     data-action="decrease" material="depthTest: false;"
                     gaze-interaction-handler="action: decrease; fuseTimeout: 500"></a-image>
+
+
         </a-plane>
 
         <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="centerVideoControls" rotation="0 0 0">
@@ -100,7 +102,14 @@
             gaze-interaction-handler="action: restart; fuseTimeout: 1000" material="depthTest: false;"></a-image>
             <!-- video mute button -->
             <a-image src="assets/icons/mute.png" class="mute" id="mute" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
-            material="depthTest: false;"></a-image>
+            gaze-interaction-handler="action: mute; fuseTimeout: 1000"material="depthTest: false;"></a-image>
+            <!-- forward backward buttons -->
+            <a-image class="fast-backward" src="assets/icons/fastbackward.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
+                    data-action="backward" material="depthTest: false;" 
+                    gaze-interaction-handler="action: backward; fuseTimeout: 500"></a-image>
+            <a-image class="fast-forward" src="assets/icons/fastforward.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
+                    data-action="forward" material="depthTest: false;"
+                    gaze-interaction-handler="action: forward; fuseTimeout: 500"></a-image>
         </a-plane>
         
     </a-entity>

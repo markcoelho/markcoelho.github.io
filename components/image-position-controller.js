@@ -31,6 +31,11 @@ AFRAME.registerComponent('image-position-controller', {
         this.scrollerElements.forEach(scroller => {
             // When cursor enters an arrow
             scroller.addEventListener('raycaster-intersected', (evt) => {
+                // Exit if scroller has 'not-interactive' class
+                if (evt.target.classList.contains('not-interactive')) {
+                    return;
+                }
+
                 this.activeScrollers.add(evt.target.id); // Add arrow to active set
                 this.checkForDoubleIntersection(); // Check if should start moving
             });
