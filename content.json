@@ -25,13 +25,13 @@
                 },
                 {
                     "type": "video",
-                    "controls": "false",
+                    "controls": "true",
                     "src": "assets/video/video-test.mp4",
                     "scale": 1
                 },
                 {
                     "type": "3d",
-                    "controls": "false",
+                    "controls": "true",
                     "src": "assets/models/ship_example.glb",
                     "scale": 0.1
                 },

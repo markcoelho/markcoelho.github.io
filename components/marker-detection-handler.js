@@ -67,44 +67,54 @@ AFRAME.registerComponent('marker-detection-handler', {
     },
     
     // Marker detected
-    onMarkerFound: function(marker) {
-        const value = marker.getAttribute('value');
-        this.currentMarker = value;
+    // Marker detected
+onMarkerFound: function(marker) {
+    const value = marker.getAttribute('value');
+    this.currentMarker = value;
+    
+    console.log(`=== MARKER ${value} FOUND ===`);
+    
+    if (this.currentPlayingAudio) {
+        this.currentPlayingAudio.pause();
+        this.currentPlayingAudio.currentTime = 0;
+    }
+    
+    const scene = this.el.sceneEl;
+    const contentManager = scene.components['marker-content-manager'];
+    
+    console.log(`Content manager exists: ${!!contentManager}`);
+    
+    if (contentManager?.narrations?.[value]) {
+        this.playAudio(value, contentManager.narrations[value]);
+    }
+    
+    this.updateNavigationVisibility(marker, value, contentManager);
+    this.updateGridVisibility(value, contentManager);
+    
+    if (contentManager) {
+        const content = contentManager.getMarkerContent(value);
+        console.log(`Retrieved content for ${value}:`, content);
         
-        console.log(`Marker ${value} found`);
-        
-        if (this.currentPlayingAudio) {
-            this.currentPlayingAudio.pause();
-            this.currentPlayingAudio.currentTime = 0;
-        }
-        
-        const scene = this.el.sceneEl;
-        const contentManager = scene.components['marker-content-manager'];
-        
-        if (contentManager?.narrations?.[value]) {
-            this.playAudio(value, contentManager.narrations[value]);
-        }
-        
-        this.updateNavigationVisibility(marker, value, contentManager);
-        this.updateGridVisibility(value, contentManager);
-        
-        if (contentManager) {
-            const content = contentManager.getMarkerContent(value);
-            if (content) {
-                if (content.type === 'image') {
-                    this.showImage(content.value, value, scene);
-                } else if (content.type === 'video') {
-                    this.showVideo(content.value, value, scene);
-                } else if (content.type === '3d') {
-                    this.show3DModel(content.value, value, scene);
-                }
+        if (content) {
+            if (content.type === 'image') {
+                console.log('Showing image');
+                this.showImage(content.value, value, scene);
+            } else if (content.type === 'video') {
+                console.log('Showing video');
+                this.showVideo(content.value, value, scene);
+            } else if (content.type === '3d') {
+                console.log('Showing 3D model');
+                this.show3DModel(content.value, value, scene);
             }
+        } else {
+            console.error(`No content found for marker ${value}`);
         }
-        
-        if (this.centerpiece && this.camera) {
-            positionBetweenCameraAndMarker(this.camera, marker, this.centerpiece);
-        }
-    },
+    }
+    
+    if (this.centerpiece && this.camera) {
+        positionBetweenCameraAndMarker(this.camera, marker, this.centerpiece);
+    }
+},
 
     showImage: function(src, markerValue, scene) {
         const centerImage = getId('centerImage');
@@ -186,54 +196,75 @@ AFRAME.registerComponent('marker-detection-handler', {
     // In marker-detection-handler.js
     // In marker-detection-handler.js show3DModel function:
     show3DModel: function(src, markerValue, scene) {
-        const centerImage = getId('centerImage');
-        const centerVideo = getId('centerVideo');
-        const centerModel = getId('centerModel');
-        const centerVideoControls = getId('centerVideoControls');
-        const center3dControls = getId('center3dControls');
+    console.log(`Attempting to show 3D model for marker ${markerValue}, src: ${src}`);
+    
+    const centerImage = getId('centerImage');
+    const centerVideo = getId('centerVideo');
+    const centerModel = getId('centerModel');
+    const centerVideoControls = getId('centerVideoControls');
+    const center3dControls = getId('center3dControls');
+    
+    // First, make sure the model element is properly set up
+    if (!centerModel) {
+        console.error('centerModel element not found!');
+        return;
+    }
+    
+    // Hide other media
+    centerImage.setInvisible();
+    centerVideo.setInvisible();
+    centerModel.setVisible();
+    pauseVideo(centerVideo);
+    
+    // Hide video controls
+    if (centerVideoControls) {
+        centerVideoControls.setInvisible();
+    }
+    
+    // Set the model source FIRST - this is critical
+    console.log(`Setting gltf-model to: ${src}`);
+    centerModel.setAttribute('gltf-model', src);
+    
+    // Get content information
+    const contentManager = scene.components['marker-content-manager'];
+    let content = null;
+    let controlsEnabled = false;
+    let originalScale = 1;
+    
+    if (contentManager) {
+        content = contentManager.getMarkerContent(markerValue);
+        console.log(`Content for marker ${markerValue}:`, content);
         
-        centerImage.setInvisible();
-        centerVideo.setInvisible();
-        centerModel.setVisible();
-        pauseVideo(centerVideo);
-        
-        if (centerVideoControls) {
-            centerVideoControls.setInvisible();
+        if (content) {
+            // Check controls setting (supports both string "true"/"false" and boolean)
+            controlsEnabled = content.controls === "true" || content.controls === true;
+            originalScale = content.scale || 1;
+            console.log(`Controls enabled: ${controlsEnabled}, Original scale: ${originalScale}`);
         }
+    }
+    
+    // Get model controller
+    const modelController = scene.components['model-controller'];
+    
+    // Get the scale to apply
+    let targetScale = originalScale;
+    
+    if (modelController && modelController.getUserScale) {
+        // Get user-adjusted scale if available
+        const userScale = modelController.getUserScale(markerValue);
+        console.log(`User scale for marker ${markerValue}: ${userScale}`);
         
-        // Show 3D controls
-        if (center3dControls) {
-            center3dControls.setVisible();
+        targetScale = userScale || originalScale;
+        
+        // Set current marker in controller
+        if (modelController.setCurrentMarker) {
+            modelController.setCurrentMarker(markerValue, originalScale);
         }
-        
-        // Set the model source
-        centerModel.setAttribute('gltf-model', src);
-        
-        const contentManager = scene.components['marker-content-manager'];
-        const content = contentManager?.getMarkerContent(markerValue);
-        const modelController = scene.components['model-controller'];
-        
-        // Get the scale to apply
-        let targetScale = 1; // Default
-        
-        if (modelController && modelController.getUserScale) {
-            // Get scale from controller
-            targetScale = modelController.getUserScale(markerValue);
-            
-            // IMPORTANT: Also set this as the current marker
-            if (content && modelController.setCurrentMarker) {
-                const originalScale = content.scale || 1;
-                modelController.setCurrentMarker(markerValue, originalScale);
-            }
-            
-            console.log(`3D model using scale from controller: ${targetScale} for marker ${markerValue}`);
-        } else if (content) {
-            // Fallback to original scale from content
-            targetScale = content.scale || 1;
-            console.log(`3D model using fallback scale: ${targetScale} for marker ${markerValue}`);
-        }
-        
-        // Apply scale
+    }
+    
+    // Apply scale after a small delay to ensure model is loaded
+    setTimeout(() => {
+        console.log(`Applying scale: ${targetScale} to 3D model`);
         centerModel.setAttribute('scale', { 
             x: targetScale, 
             y: targetScale, 
@@ -242,14 +273,37 @@ AFRAME.registerComponent('marker-detection-handler', {
         
         // Position the model
         centerModel.setAttribute('position', { x: 0, y: 0, z: 0 });
-        
-        const centerControls = getId('centerControls');
-        if (centerControls) {
-            centerControls.setInvisible();
+        centerModel.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+    }, 100);
+    
+    // Handle 3D controls visibility
+    setTimeout(() => {
+        if (center3dControls) {
+            console.log(`Setting 3D controls visibility: ${controlsEnabled ? 'visible' : 'invisible'}`);
+            if (controlsEnabled) {
+                center3dControls.setVisible();
+                // Make individual control buttons visible
+                document.querySelectorAll('.model-zoom-button, .roller, .3dreset').forEach(btn => {
+                    btn.setVisible();
+                });
+            } else {
+                center3dControls.setInvisible();
+                // Make individual control buttons invisible
+                document.querySelectorAll('.model-zoom-button, .roller, .3dreset').forEach(btn => {
+                    btn.setInvisible();
+                });
+            }
         }
-        
-        console.log(`3D Model ${src} loaded, scale: ${targetScale}`);
-    },
+    }, 150);
+    
+    // Hide image controls
+    const centerControls = getId('centerControls');
+    if (centerControls) {
+        centerControls.setInvisible();
+    }
+    
+    console.log(`3D Model loading initiated for ${src}`);
+},
     
     // Update grid visibility
     updateGridVisibility: function(markerValue, contentManager) {
@@ -266,41 +320,43 @@ AFRAME.registerComponent('marker-detection-handler', {
     },
     
     // Show/hide controls based on content
-    updateNavigationVisibility: function(marker, markerValue, contentManager) {
-        const content = contentManager?.getMarkerContent(markerValue);
-        const navigationPlane = getId('centerControls');
-        const threeDControls = getId('center3dControls'); // Get 3D controls
-        
-        if (navigationPlane) {
-            if (content?.type === 'video' || content?.type === '3d') {
-                navigationPlane.setInvisible();
-                document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
-                    btn.setInvisible();
-                });
-            } else if (content?.type === 'image') {
-                if (content.controls === false) {
-                    navigationPlane.setInvisible();
-                    document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
-                        btn.setInvisible();
-                    });
-                } else {
-                    navigationPlane.setVisible();
-                    document.querySelectorAll('.zoom-button, .scroller').forEach(btn => {
-                        btn.setVisible();
-                    });
-                }
-            }
+    // Show/hide controls based on content
+// Show/hide controls based on content
+updateNavigationVisibility: function(marker, markerValue, contentManager) {
+    const content = contentManager?.getMarkerContent(markerValue);
+    console.log(`updateNavigationVisibility for ${markerValue}:`, content);
+    
+    if (!content) return;
+    
+    const navigationPlane = getId('centerControls');
+    const threeDControls = getId('center3dControls');
+    const videoControls = getId('centerVideoControls');
+    
+    // Always hide all control planes initially
+    if (navigationPlane) navigationPlane.setInvisible();
+    if (threeDControls) threeDControls.setInvisible();
+    if (videoControls) videoControls.setInvisible();
+    
+    // Show appropriate controls based on content type
+    if (content.type === 'image') {
+        const controlsEnabled = content.controls === "true" || content.controls === true;
+        if (controlsEnabled && navigationPlane) {
+            navigationPlane.setVisible();
         }
-        
-        // Handle 3D controls visibility based on content type
-        if (threeDControls) {
-            if (content?.type === '3d') {
-                threeDControls.setVisible();
-            } else {
-                threeDControls.setInvisible();
-            }
+    } 
+    else if (content.type === 'video') {
+        const controlsEnabled = content.controls === "true" || content.controls === true;
+        if (controlsEnabled && videoControls) {
+            videoControls.setVisible();
         }
-    },
+    }
+    else if (content.type === '3d') {
+        const controlsEnabled = content.controls === "true" || content.controls === true;
+        if (controlsEnabled && threeDControls) {
+            threeDControls.setVisible();
+        }
+    }
+},
     
     // Play narration audio
     playAudio: function(markerValue, url) {
