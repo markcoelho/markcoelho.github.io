@@ -140,26 +140,17 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             const contentManager = scene.components['marker-content-manager'];
             const imageController = scene.components['image-position-controller'];
             const detectionHandler = scene.components['marker-detection-handler'];
-
-            if (!imageController || !contentManager) return;
+            
             if (!imageController || !contentManager || !detectionHandler) return;
-
-            const markers = document.querySelectorAll('a-marker');
-            markers.forEach(marker => {
-                const currentMarker = marker.getAttribute('value');
-                const content = contentManager.getMarkerContent(currentMarker);
-                if (content?.type === 'image') {
-                    imageController.setupImage(content.value, currentMarker, 'reset');
-                }
-            });
+            
             // Use the currently detected marker
             const currentMarker = detectionHandler.currentMarker;
-
+            
             if (!currentMarker) {
                 console.log('No marker is currently active');
                 return;
             }
-
+            
             // Only reset the current marker's image
             const content = contentManager.getMarkerContent(currentMarker);
             if (content?.type === 'image') {
@@ -167,7 +158,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             } else {
                 console.log('Current content is not an image, cannot reset');
             }
-
+            
             this.triggered = true;
         }
         
@@ -340,4 +331,3 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         this.el.removeEventListener('raycaster-intersected-cleared', () => {});
     }
 });
-
