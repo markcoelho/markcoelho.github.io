@@ -4,6 +4,7 @@
         {
             "barcode_number": 0,
             "narration": "assets/audio/m0.mp3",
+            "surround": "",
             "central_side": [
                 {
                     "type": "image",
@@ -16,6 +17,7 @@
         {
             "barcode_number": 1,
             "narration": "assets/audio/m1.mp3",
+            "surround": "assets/360/360-image-test.jpg",
             "central_side": [
                 {
                     "type": "image",
@@ -46,6 +48,7 @@
         {
             "barcode_number": 2,
             "narration": "assets/audio/m2.mp3",
+            "surround": "assets/360/360-video-test.mp4",
             "central_side": [
                 {
                     "type": "image",
@@ -58,6 +61,7 @@
         {
             "barcode_number": 3,
             "narration": "",
+            "surround": "",
             "central_side": [
                 {
                     "type": "image",
@@ -70,6 +74,7 @@
         {
             "barcode_number": 4,
             "narration": "",
+            "surround": "",
             "central_side": [
                 {
                     "type": "image",
@@ -88,6 +93,7 @@
         {
             "barcode_number": 5,
             "narration": "",
+            "surround": "",
             "central_side": [
                 {
                     "type": "image",
@@ -106,6 +112,7 @@
         {
             "barcode_number": 6,
             "narration": "",
+            "surround": "",
             "central_side": [
                 {
                     "type": "image",
@@ -130,6 +137,7 @@
         {
             "barcode_number": 7,
             "narration": "",
+            "surround": "",
             "central_side": [
                 {
                     "type": "image",
@@ -160,6 +168,7 @@
         {
             "barcode_number": 8,
             "narration": "",
+            "surround": "",
             "central_side": [
                 {
                     "type": "image",
@@ -172,6 +181,7 @@
         {
             "barcode_number": 9,
             "narration": "",
+            "surround": "",
             "central_side": [
                 {
                     "type": "image",

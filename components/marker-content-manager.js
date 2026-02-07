@@ -7,9 +7,11 @@ AFRAME.registerComponent('marker-content-manager', {
         this.contentSequences = {};
         this.currentContentIndex = {};
         this.narrations = {};
+        this.surroundContent = {};
         
         this.loadContentFromJSON();
     },
+    
     
     // Load content from JSON file
     loadContentFromJSON: function() {
@@ -27,12 +29,15 @@ AFRAME.registerComponent('marker-content-manager', {
         this.contentSequences = {};
         this.narrations = {};
         this.currentContentIndex = {};
+        this.surroundContent = {}; 
 
         jsonData.pages.forEach(page => {
             const marker = page.barcode_number.toString();
             const centralSide = page.central_side;
             
             if (page.narration) this.narrations[marker] = page.narration;
+            
+            this.surroundContent[marker] = page.surround || "";
             
             this.contentSequences[marker] = centralSide.map(item => ({
                 type: item.type,
@@ -45,6 +50,7 @@ AFRAME.registerComponent('marker-content-manager', {
         });
         
         console.log("Content sequences loaded:", this.contentSequences);
+        console.log("Surround content loaded:", this.surroundContent);
     },
     
     // Create markers based on content.json
@@ -99,5 +105,9 @@ AFRAME.registerComponent('marker-content-manager', {
     // Get narration audio
     getNarration: function(marker) {
         return this.narrations[marker] || null;
+    },
+
+    getSurroundContent: function(marker) {
+        return this.surroundContent[marker] || "";
     }
 });
