@@ -1,18 +1,12 @@
 <!-- index.html -->
-<!doctype HTML>
+
+<!DOCTYPE html>
 <html>
 <head>
-    <!-- Mobile responsiveness -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <!-- A-Frame core library -->
     <script src="js/aframe.min.js"></script>
-    <!-- A-Frame extra components -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
-    <!-- AR.js for augmented reality -->
     <script src="js/aframe-ar.js"></script>
-    
-    <!-- Custom components for the AR experience -->
     <script src="components/gaze-interaction-handler.js"></script>
     <script src="components/image-position-controller.js"></script>
     <script src="components/marker-navigation-ui.js"></script>
@@ -20,90 +14,71 @@
     <script src="components/app-init.js"></script>
     <script src="components/marker-detection-handler.js"></script>
     <script src="components/utils.js"></script>
-    
     <style>
-        /* Basic page styling - no scroll bars */
         body { margin: 0; overflow: hidden; position: fixed; width: 100%; height: 100%; font-family: monospace; }
-        /* Ensure canvas renders properly */
         .a-canvas { z-index: 1 !important; position: absolute !important; }
-        /* VR button on top */
         .a-enter-vr { z-index: 2 !important; }
     </style>
 </head>
 <body>
-
-<!-- Main A-Frame scene with AR configuration -->
 <a-scene renderer="sortObjects: true" vr-mode-ui="enabled: true" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
     
-    <!-- Camera with gaze interaction controls -->
     <a-camera position="0 0 0" look-controls="enabled: false">
-        <!-- Loading spinner animation -->
-        <a-image id="loading_animation" src="assets/icons/loading.png" position="0 0 -1" scale="0.05 0.05 0.05" rotation="0 0 0" animation="property: rotation; to:0 0 -360; dur: 1500; easing: linear; loop: true" visible="false"></a-image>
-
-        <!-- Red cursor ring for gaze interactions -->
+        <!-- Loading spinner -->
+        <a-image id="loading_animation" src="assets/icons/loading.png" position="0 0 -1" scale="0.05 0.05 0.05" 
+                 animation="property: rotation; to:0 0 -360; dur: 1500; easing: linear; loop: true" visible="false"></a-image>
+        
+        <!-- Gaze cursor -->
         <a-entity cursor="fuse: false" position="0 0 -0.2"
             geometry="primitive: ring; radiusInner: 0.001; radiusOuter: 0.002;"
-            material="color: red; shader: flat; depthTest: false; transparent: true; opacity: 1;"
+            material="color: red; shader: flat; depthTest: false; transparent: true;"
             render-order="1000000">
         </a-entity>
         
-        <!-- Raycaster for detecting interactions -->
-        <a-entity id="raycaster" raycaster="objects: .zoom-button, .nav-button, #centerImage, .scroller; showLine: false; lineColor: red; far: 20"
+        <!-- Raycaster for interactions -->
+        <a-entity id="raycaster" raycaster="objects: .zoom-button, .nav-button, #centerImage, .scroller; showLine: false;"
             position="0 0 0" visible-in-vr-only></a-entity>
                   
-        <!-- AR video feed (shown when no marker detected) -->
+        <!-- AR video feed -->
         <a-video id="arjs_feed" position="0 0 -50" width="83" height="83" render-order="0"></a-video>
-        
-        <!-- MARKERS WILL BE CREATED DYNAMICALLY HERE -->
-        <!-- No hardcoded markers needed anymore -->
     </a-camera>
 
-    <!-- Main content container that follows camera/marker -->
-    <a-entity id="centerpiece" position="0 0 -5" rotation="0 0 0">
-        <!-- Main displayed image (changes based on marker) -->
-        <a-image id="centerImage" src="" position="0 0 0" scale="3 3 3" render-order="1"  visible="true"></a-image>
-        <!-- Main displayed video (changes based on marker) -->
-        <a-video id="centerVideo" src="" position="0 0 0" scale="3 3 3" render-order="1" visible="false"></a-video>
+    <!-- Main content container -->
+    <a-entity id="centerpiece" position="0 0 -5">
+        <!-- Main image/video display -->
+        <a-image id="centerImage" src="" scale="3 3 3" render-order="1" visible="true"></a-image>
+        <a-video id="centerVideo" src="" scale="3 3 3" render-order="1" visible="false"></a-video>
 
-        <!-- Navigation panel with control buttons -->
-        <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="centerControls" rotation="0 0 0">
-            <!-- image reset button -->
-            <a-image src="assets/icons/reset.png" class="reset" id="reset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
-            gaze-interaction-handler="action: reset; fuseTimeout: 1000" material="depthTest: false;"></a-image>
+        <!-- Image controls -->
+        <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="centerControls">
+            <a-image src="assets/icons/reset.png" class="reset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
+                    gaze-interaction-handler="action: reset; fuseTimeout: 1000" material="depthTest: false;"></a-image>
             
-            <!-- Cross pattern scrolling arrows -->
+            <!-- Scrolling arrows -->
             <a-image src="assets/icons/up.png" class="scroller" id="scroller-top" position="0 0.1 0.1" scale="0.18 0.18 0.18" 
                     material="depthTest: false;" data-direction="up"></a-image>
-            
             <a-image src="assets/icons/right.png" class="scroller" id="scroller-right" position="0.2 0 0.1" scale="0.18 0.18 0.18" 
                     material="depthTest: false;" data-direction="right"></a-image>
-            
             <a-image src="assets/icons/down.png" class="scroller" id="scroller-bottom" position="0 -0.1 0.1" scale="0.18 0.18 0.18" 
                     material="depthTest: false;" data-direction="down"></a-image>
-            
             <a-image src="assets/icons/left.png" class="scroller" id="scroller-left" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
                     material="depthTest: false;" data-direction="left"></a-image>
             
-            <!-- Zoom buttons -->
+            <!-- Zoom controls -->
             <a-image class="zoom-button" src="assets/icons/zoom-in.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
                     data-action="increase" material="depthTest: false;" 
                     gaze-interaction-handler="action: increase; fuseTimeout: 500"></a-image>
-            
             <a-image class="zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
                     data-action="decrease" material="depthTest: false;"
                     gaze-interaction-handler="action: decrease; fuseTimeout: 500"></a-image>
-
-
         </a-plane>
 
-        <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="centerVideoControls" rotation="0 0 0">
-            <!-- video restart button -->
-            <a-image src="assets/icons/reset.png" class="restart" id="restart" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
-            gaze-interaction-handler="action: restart; fuseTimeout: 1000" material="depthTest: false;"></a-image>
-            <!-- video mute button -->
-            <a-image src="assets/icons/mute.png" class="mute" id="mute" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
-            gaze-interaction-handler="action: mute; fuseTimeout: 1000"material="depthTest: false;"></a-image>
-            <!-- forward backward buttons -->
+        <!-- Video controls -->
+        <a-plane visible="false" color="white" position="0 0 2" width="1.8" height="0.4" id="centerVideoControls">
+            <a-image src="assets/icons/reset.png" class="restart" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
+                    gaze-interaction-handler="action: restart; fuseTimeout: 1000" material="depthTest: false;"></a-image>
+            <a-image src="assets/icons/mute.png" class="mute" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
+                    gaze-interaction-handler="action: mute; fuseTimeout: 1000" material="depthTest: false;"></a-image>
             <a-image class="fast-backward" src="assets/icons/fastbackward.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
                     data-action="backward" material="depthTest: false;" 
                     gaze-interaction-handler="action: backward; fuseTimeout: 500"></a-image>
@@ -111,9 +86,7 @@
                     data-action="forward" material="depthTest: false;"
                     gaze-interaction-handler="action: forward; fuseTimeout: 500"></a-image>
         </a-plane>
-        
     </a-entity>
-    
 </a-scene>
 </body>
 </html>
