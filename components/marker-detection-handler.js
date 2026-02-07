@@ -181,12 +181,13 @@ AFRAME.registerComponent('marker-detection-handler', {
         console.log(`Video ${src} loaded, scale: ${contentScale}, controls: ${hasControls}`);
     },
 
+    // In marker-detection-handler.js
     show3DModel: function(src, markerValue, scene) {
         const centerImage = getId('centerImage');
         const centerVideo = getId('centerVideo');
         const centerModel = getId('centerModel');
         const centerVideoControls = getId('centerVideoControls');
-        const center3dControls = getId('center3dControls'); // Get 3D controls
+        const center3dControls = getId('center3dControls');
         
         centerImage.setInvisible();
         centerVideo.setInvisible();
@@ -202,16 +203,30 @@ AFRAME.registerComponent('marker-detection-handler', {
             center3dControls.setVisible();
         }
         
+        // Set the model source
         centerModel.setAttribute('gltf-model', src);
         
         const contentManager = scene.components['marker-content-manager'];
         const content = contentManager?.getMarkerContent(markerValue);
-        const contentScale = content?.scale || 1;
+        const modelController = scene.components['model-controller'];
         
+        // Get the scale to apply - ALWAYS use the scale from model controller
+        let targetScale = 1; // Default
+        
+        if (modelController && modelController.getUserScale) {
+            targetScale = modelController.getUserScale(markerValue);
+            console.log(`3D model using scale from controller: ${targetScale} for marker ${markerValue}`);
+        } else if (content) {
+            // Fallback to original scale from content
+            targetScale = content.scale || 1;
+            console.log(`3D model using fallback scale: ${targetScale} for marker ${markerValue}`);
+        }
+        
+        // Apply scale
         centerModel.setAttribute('scale', { 
-            x: contentScale, 
-            y: contentScale, 
-            z: contentScale 
+            x: targetScale, 
+            y: targetScale, 
+            z: targetScale 
         });
         
         // Position the model
@@ -222,7 +237,7 @@ AFRAME.registerComponent('marker-detection-handler', {
             centerControls.setInvisible();
         }
         
-        console.log(`3D Model ${src} loaded, scale: ${contentScale}`);
+        console.log(`3D Model ${src} loaded, scale: ${targetScale}`);
     },
     
     // Update grid visibility

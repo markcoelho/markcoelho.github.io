@@ -230,6 +230,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         }
         
         // Grid image selection
+        // In gaze-interaction-handler.js, update the grid image selection section:
         if (this.buttonType === 'grid-image' && !this.triggered) {
             const imageSrc = this.el.getAttribute('src');
             const markerValue = this.el.getAttribute('data-marker-value');
@@ -272,6 +273,15 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             } else if (content.type === 'video') {
                 detectionHandler.showVideo(content.value, markerValue, scene);
             } else if (content.type === '3d') {
+                // For 3D models selected from grid, use original scale from content.json
+                const modelController = scene.components['model-controller'];
+                const originalScale = content.scale || 1;
+                
+                if (modelController && modelController.handleGridSelection) {
+                    modelController.handleGridSelection(markerValue, originalScale);
+                }
+                
+                // Show the 3D model - this will now use the scale we just set
                 detectionHandler.show3DModel(content.value, markerValue, scene);
             }
             
