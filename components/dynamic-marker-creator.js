@@ -59,8 +59,6 @@ AFRAME.registerComponent('dynamic-marker-creator', {
         
         if (detectionHandler?.onMarkerFound) {
             detectionHandler.onMarkerFound(marker);
-        } else {
-            this.handleMarkerDetection(markerValue);
         }
     },
     
@@ -70,22 +68,6 @@ AFRAME.registerComponent('dynamic-marker-creator', {
         
         if (detectionHandler?.onMarkerLost) {
             detectionHandler.onMarkerLost(marker);
-        }
-    },
-    
-    // Fallback detection handler
-    handleMarkerDetection: function(markerValue) {
-        console.log(`Marker ${markerValue} detected`);
-        
-        const scene = this.el.sceneEl;
-        const contentManager = scene.components['marker-content-manager'];
-        const imageController = scene.components['image-position-controller'];
-        
-        if (!contentManager || !imageController) return;
-        
-        const content = contentManager.getMarkerContent(markerValue);
-        if (content?.type === 'image') {
-            imageController.setupImage(content.value, markerValue, 'marker');
         }
     },
     
