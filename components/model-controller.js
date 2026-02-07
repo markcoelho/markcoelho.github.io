@@ -14,7 +14,9 @@ AFRAME.registerComponent('model-controller', {
         this.originalScales = {}; // Store original scale from content.json per marker
         this.modelRotations = {}; // Store user-adjusted rotation per marker
         
-          this.rotationController = new ContinuousMovementController(this.data.rotationInterval);
+        // Rotation control variables
+        this.activeRollers = new Set();
+        this.rotateInterval = null;
         
         // Track which marker has 3D content from ANY source (marker detection OR grid selection)
         this.el.sceneEl.addEventListener('markerFound', (evt) => {
@@ -94,36 +96,61 @@ AFRAME.registerComponent('model-controller', {
     },
     
     setupRollerListeners: function() {
-    const rollers = document.querySelectorAll('.roller');
-    
-    rollers.forEach(roller => {
-        roller.addEventListener('raycaster-intersected', (evt) => {
-        if (roller.classList.contains('not-interactive')) return;
-        this.rotationController.addControl(roller.id);
-        this.rotationController.start((activeControls) => this.continuousRotate(activeControls));
-        });
+        // Get all roller buttons
+        const rollers = document.querySelectorAll('.roller');
         
-        roller.addEventListener('raycaster-intersected-cleared', (evt) => {
-        this.rotationController.removeControl(roller.id);
+        rollers.forEach(roller => {
+            roller.addEventListener('raycaster-intersected', (evt) => {
+                if (roller.classList.contains('not-interactive')) return;
+                
+                this.activeRollers.add(roller.id);
+                this.startRotation();
+            });
+            
+            roller.addEventListener('raycaster-intersected-cleared', (evt) => {
+                this.activeRollers.delete(roller.id);
+                if (this.activeRollers.size === 0) this.stopRotation();
+            });
         });
-    });
+    },
+    
+    startRotation: function() {
+        if (this.rotateInterval) return; // Already rotating
+        
+        this.rotateInterval = setInterval(() => this.continuousRotate(), this.data.rotationInterval);
+        console.log('Started model rotation');
+    },
+    
+    stopRotation: function() {
+        if (this.rotateInterval) {
+            clearInterval(this.rotateInterval);
+            this.rotateInterval = null;
+        }
+        console.log('Stopped model rotation');
     },
     
     // Rotate model based on active rollers
-    continuousRotate: function(activeControls) {
-        if (!this.centerModel || !this.centerModel.getAttribute('visible')) return;
+    continuousRotate: function() {
+        if (!this.centerModel || !this.centerModel.getAttribute('visible') || this.activeRollers.size === 0) {
+            this.stopRotation();
+            return;
+        }
         
         const currentRotation = this.centerModel.getAttribute('rotation');
         let rotateY = 0, rotateZ = 0;
         
-        activeControls.forEach(id => {
-            const rotation = MODEL_ROTATIONS[id]?.();
-            if (rotation) {
-            rotateY += rotation.y * this.data.rotationStep;
-            rotateZ += rotation.z * this.data.rotationStep;
-            }
-        });
+        // Define rotation directions
+        const rotations = {
+            'roller-up': () => rotateZ -= this.data.rotationStep,    // Rotate up = negative Y
+            'roller-down': () => rotateZ += this.data.rotationStep,  // Rotate down = positive Y
+            'roller-left': () => rotateY += this.data.rotationStep,  // Rotate left = positive Z
+            'roller-right': () => rotateY -= this.data.rotationStep  // Rotate right = negative Z
+        };
         
+        // Apply rotations from all active rollers
+        this.activeRollers.forEach(id => rotations[id]?.());
+        
+        // Apply the rotation
         this.centerModel.setAttribute('rotation', {
             x: currentRotation.x,
             y: currentRotation.y + rotateY,
@@ -192,6 +219,6 @@ AFRAME.registerComponent('model-controller', {
     },
     
     remove: function() {
-        this.rotationController.stop();
+        this.stopRotation();
     }
 });

@@ -95,32 +95,42 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     // Execute button action
     triggerAction: function() {
         // Image Zoom buttons
-        if (this.buttonType === 'zoom' || this.buttonType === 'model-zoom') {
-            const isModelZoom = this.buttonType === 'model-zoom';
-            const targetElement = isModelZoom ? getId('centerModel') : getId('centerImage');
+        if (this.buttonType === 'zoom') {
+            const centerImage = getId('centerImage');
+            if (!centerImage) return;
             
-            if (!targetElement) return;
-            if (isModelZoom && !targetElement.getAttribute('visible')) return;
+            const currentScale = centerImage.getAttribute('scale').x;
+            const zoomMultiplier = this.data.zoomFactor;
+            let newScale = this.data.action === 'increase' 
+                ? currentScale * (1 + zoomMultiplier)
+                : Math.max(0.1, currentScale * (1 - zoomMultiplier));
             
-            const currentScale = targetElement.getAttribute('scale').x;
+            centerImage.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
+            return;
+        } 
+        
+        // 3D Model Zoom buttons - WORK EXACTLY LIKE IMAGE ZOOM
+        if (this.buttonType === 'model-zoom') {
+            const centerModel = getId('centerModel');
+            if (!centerModel || !centerModel.getAttribute('visible')) return;
+            
+            const currentScale = centerModel.getAttribute('scale').x;
             const zoomMultiplier = this.data.zoomFactor;
             
             let newScale;
-            if ((this.data.action === 'increase' || this.data.action === '3dincrease')) {
+            if (this.data.action === '3dincrease') {
                 newScale = currentScale * (1 + zoomMultiplier);
             } else {
-                newScale = Math.max(0.01, currentScale * (1 - zoomMultiplier));
+                newScale = currentScale * (1 - zoomMultiplier);
             }
             
-            targetElement.setAttribute('scale', { 
+            centerModel.setAttribute('scale', { 
                 x: newScale, 
                 y: newScale, 
                 z: newScale 
             });
             
-            if (isModelZoom) {
-                console.log(`3D model zoom ${this.data.action}: ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
-            }
+            console.log(`3D model zoom ${this.data.action}: ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
             return;
         }
         
@@ -130,17 +140,26 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             const contentManager = scene.components['marker-content-manager'];
             const imageController = scene.components['image-position-controller'];
             const detectionHandler = scene.components['marker-detection-handler'];
-            
+
+            if (!imageController || !contentManager) return;
             if (!imageController || !contentManager || !detectionHandler) return;
-            
+
+            const markers = document.querySelectorAll('a-marker');
+            markers.forEach(marker => {
+                const currentMarker = marker.getAttribute('value');
+                const content = contentManager.getMarkerContent(currentMarker);
+                if (content?.type === 'image') {
+                    imageController.setupImage(content.value, currentMarker, 'reset');
+                }
+            });
             // Use the currently detected marker
             const currentMarker = detectionHandler.currentMarker;
-            
+
             if (!currentMarker) {
                 console.log('No marker is currently active');
                 return;
             }
-            
+
             // Only reset the current marker's image
             const content = contentManager.getMarkerContent(currentMarker);
             if (content?.type === 'image') {
@@ -148,7 +167,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             } else {
                 console.log('Current content is not an image, cannot reset');
             }
-            
+
             this.triggered = true;
         }
         
@@ -321,3 +340,4 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         this.el.removeEventListener('raycaster-intersected-cleared', () => {});
     }
 });
+
