@@ -182,6 +182,7 @@ AFRAME.registerComponent('marker-detection-handler', {
     },
 
     // In marker-detection-handler.js
+    // In marker-detection-handler.js show3DModel function:
     show3DModel: function(src, markerValue, scene) {
         const centerImage = getId('centerImage');
         const centerVideo = getId('centerVideo');
@@ -210,11 +211,19 @@ AFRAME.registerComponent('marker-detection-handler', {
         const content = contentManager?.getMarkerContent(markerValue);
         const modelController = scene.components['model-controller'];
         
-        // Get the scale to apply - ALWAYS use the scale from model controller
+        // Get the scale to apply
         let targetScale = 1; // Default
         
         if (modelController && modelController.getUserScale) {
+            // Get scale from controller
             targetScale = modelController.getUserScale(markerValue);
+            
+            // IMPORTANT: Also set this as the current marker
+            if (content && modelController.setCurrentMarker) {
+                const originalScale = content.scale || 1;
+                modelController.setCurrentMarker(markerValue, originalScale);
+            }
+            
             console.log(`3D model using scale from controller: ${targetScale} for marker ${markerValue}`);
         } else if (content) {
             // Fallback to original scale from content

@@ -119,9 +119,9 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             
             let newScale;
             if (this.data.action === '3dincrease') {
-                newScale = Math.min(10, currentScale * (1 + zoomMultiplier));
+                newScale = currentScale * (1 + zoomMultiplier);
             } else {
-                newScale = Math.max(0.1, currentScale * (1 - zoomMultiplier));
+                newScale = currentScale * (1 - zoomMultiplier);
             }
             
             centerModel.setAttribute('scale', { 
@@ -156,35 +156,12 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         
         // 3D Model Reset button
         if (this.buttonType === 'model-reset' && !this.triggered) {
-            const centerModel = getId('centerModel');
             const scene = this.scene;
-            const contentManager = scene.components['marker-content-manager'];
+            const modelController = scene.components['model-controller'];
             
-            if (!centerModel || !centerModel.getAttribute('visible') || !contentManager) {
-                this.triggered = true;
-                return;
+            if (modelController) {
+                modelController.resetModel();
             }
-            
-            // Find which marker has the 3D model
-            const markers = document.querySelectorAll('a-marker');
-            markers.forEach(marker => {
-                const currentMarker = marker.getAttribute('value');
-                const content = contentManager.getMarkerContent(currentMarker);
-                if (content?.type === '3d') {
-                    const contentScale = content.scale || 1;
-                    
-                    // Reset scale and position
-                    centerModel.setAttribute('scale', { 
-                        x: contentScale, 
-                        y: contentScale, 
-                        z: contentScale 
-                    });
-                    
-                    centerModel.setAttribute('position', { x: 0, y: 0, z: 0 });
-                    
-                    console.log(`3D model reset to scale: ${contentScale}`);
-                }
-            });
             
             this.triggered = true;
         }
