@@ -11,84 +11,66 @@ AFRAME.registerComponent('image-position-controller', {
         this.states = {};
         this.currentMarker = null;
         this.scaleMultiplier = 1;
-        this.activeScrollers = new Set();
         this.isImageIntersected = false;
-        this.moveTimer = null;
+        this.movementController = new ContinuousMovementController(this.data.moveInterval);
         
         this.setupListeners();
     },
     
     setupListeners: function() {
-        // Image intersection
-        this.centerImage.addEventListener('raycaster-intersected', () => {
-            this.isImageIntersected = true;
-            this.checkMovement();
+    // Image intersection
+    this.centerImage.addEventListener('raycaster-intersected', () => {
+        this.isImageIntersected = true;
+        this.checkMovement();
+    });
+    
+    this.centerImage.addEventListener('raycaster-intersected-cleared', () => {
+        this.isImageIntersected = false;
+        this.movementController.stop();
+    });
+    
+    // Scroller intersection
+    this.scrollers.forEach(scroller => {
+        scroller.addEventListener('raycaster-intersected', (evt) => {
+        if (evt.target.classList.contains('not-interactive')) return;
+        this.movementController.addControl(evt.target.id);
+        this.checkMovement();
         });
         
-        this.centerImage.addEventListener('raycaster-intersected-cleared', () => {
-            this.isImageIntersected = false;
-            this.stopMovement();
+        scroller.addEventListener('raycaster-intersected-cleared', (evt) => {
+        this.movementController.removeControl(evt.target.id);
         });
-        
-        // Scroller intersection
-        this.scrollers.forEach(scroller => {
-            scroller.addEventListener('raycaster-intersected', (evt) => {
-                if (evt.target.classList.contains('not-interactive')) return;
-                this.activeScrollers.add(evt.target.id);
-                this.checkMovement();
-            });
-            
-            scroller.addEventListener('raycaster-intersected-cleared', (evt) => {
-                this.activeScrollers.delete(evt.target.id);
-                if (this.activeScrollers.size === 0) this.stopMovement();
-            });
-        });
+    });
     },
     
     checkMovement: function() {
-        if (this.isImageIntersected && this.activeScrollers.size > 0 && !this.moveTimer) {
-            this.startMovement();
-        }
+    if (this.isImageIntersected && this.movementController.hasControls()) {
+        this.movementController.start((activeControls) => this.moveImage(activeControls));
+    }
     },
     
-    startMovement: function() {
-        this.moveTimer = setInterval(() => this.moveImage(), this.data.moveInterval);
-    },
+    moveImage: function(activeControls) {
+    if (!this.centerImage) return;
     
-    stopMovement: function() {
-        if (this.moveTimer) {
-            clearInterval(this.moveTimer);
-            this.moveTimer = null;
-        }
-    },
+    const pos = this.centerImage.getAttribute('position');
+    let moveX = 0, moveY = 0;
     
-    moveImage: function() {
-        if (!this.centerImage || this.activeScrollers.size === 0 || !this.isImageIntersected) {
-            this.stopMovement();
-            return;
+    activeControls.forEach(id => {
+        if (IMAGE_MOVEMENTS[id]) {
+        moveX += IMAGE_MOVEMENTS[id][0];
+        moveY += IMAGE_MOVEMENTS[id][1];
         }
-        
-        const pos = this.centerImage.getAttribute('position');
-        const moves = {
-            'scroller-top': [0, -this.data.moveSpeed],
-            'scroller-right': [-this.data.moveSpeed, 0],
-            'scroller-bottom': [0, this.data.moveSpeed],
-            'scroller-left': [this.data.moveSpeed, 0]
-        };
-        
-        let moveX = 0, moveY = 0;
-        this.activeScrollers.forEach(id => {
-            if (moves[id]) {
-                moveX += moves[id][0];
-                moveY += moves[id][1];
-            }
-        });
-        
-        this.centerImage.setAttribute('position', {
-            x: pos.x + moveX,
-            y: pos.y + moveY,
-            z: pos.z
-        });
+    });
+    
+    this.centerImage.setAttribute('position', {
+        x: pos.x + moveX,
+        y: pos.y + moveY,
+        z: pos.z
+    });
+    },
+
+    remove: function() {
+    this.movementController.stop();
     },
     
     setupImage: function(imageSrc, markerValue, source = 'default') {
@@ -204,6 +186,6 @@ AFRAME.registerComponent('image-position-controller', {
     },
     
     remove: function() {
-        this.stopMovement();
+        this.movementController.stop();
     }
 });

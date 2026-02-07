@@ -95,42 +95,32 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     // Execute button action
     triggerAction: function() {
         // Image Zoom buttons
-        if (this.buttonType === 'zoom') {
-            const centerImage = getId('centerImage');
-            if (!centerImage) return;
+        if (this.buttonType === 'zoom' || this.buttonType === 'model-zoom') {
+            const isModelZoom = this.buttonType === 'model-zoom';
+            const targetElement = isModelZoom ? getId('centerModel') : getId('centerImage');
             
-            const currentScale = centerImage.getAttribute('scale').x;
-            const zoomMultiplier = this.data.zoomFactor;
-            let newScale = this.data.action === 'increase' 
-                ? currentScale * (1 + zoomMultiplier)
-                : Math.max(0.1, currentScale * (1 - zoomMultiplier));
+            if (!targetElement) return;
+            if (isModelZoom && !targetElement.getAttribute('visible')) return;
             
-            centerImage.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
-            return;
-        } 
-        
-        // 3D Model Zoom buttons - WORK EXACTLY LIKE IMAGE ZOOM
-        if (this.buttonType === 'model-zoom') {
-            const centerModel = getId('centerModel');
-            if (!centerModel || !centerModel.getAttribute('visible')) return;
-            
-            const currentScale = centerModel.getAttribute('scale').x;
+            const currentScale = targetElement.getAttribute('scale').x;
             const zoomMultiplier = this.data.zoomFactor;
             
             let newScale;
-            if (this.data.action === '3dincrease') {
+            if ((this.data.action === 'increase' || this.data.action === '3dincrease')) {
                 newScale = currentScale * (1 + zoomMultiplier);
             } else {
-                newScale = currentScale * (1 - zoomMultiplier);
+                newScale = Math.max(0.01, currentScale * (1 - zoomMultiplier));
             }
             
-            centerModel.setAttribute('scale', { 
+            targetElement.setAttribute('scale', { 
                 x: newScale, 
                 y: newScale, 
                 z: newScale 
             });
             
-            console.log(`3D model zoom ${this.data.action}: ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
+            if (isModelZoom) {
+                console.log(`3D model zoom ${this.data.action}: ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
+            }
             return;
         }
         
