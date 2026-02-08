@@ -159,31 +159,32 @@ AFRAME.registerComponent('model-controller', {
     },
     
     // Reset model to original scale and rotation from content.json
-    resetModel: function() {
-        if (!this.centerModel || !this.centerModel.getAttribute('visible') || !this.currentMarker) {
-            console.log('Cannot reset: 3D model not visible or no current marker');
-            return;
-        }
+    // model-controller.js - updated resetModel function
+resetModel: function() {
+    if (!this.centerModel || !this.centerModel.getAttribute('visible') || !this.currentMarker) {
+        console.log('Cannot reset: 3D model not visible or no current marker');
+        return;
+    }
+
+    // Get original scale for current marker
+    const originalScale = this.originalScales[this.currentMarker] || 1;
     
-        // Get original scale for current marker
-        const originalScale = this.originalScales[this.currentMarker] || 1;
-        
-        // Reset to original scale from content.json
-        this.centerModel.setAttribute('scale', { 
-            x: originalScale, 
-            y: originalScale, 
-            z: originalScale 
-        });
-        
-        this.centerModel.setAttribute('position', { x: 0, y: 0, z: 0 });
-        this.centerModel.setAttribute('rotation', { x: 0, y: 0, z: 0 });
-        
-        // Update stored scale and rotation to original
-        this.modelScales[this.currentMarker] = originalScale;
-        this.modelRotations[this.currentMarker] = { x: 0, y: 0, z: 0 };
-        
-        console.log(`3D model reset to original scale and rotation: ${originalScale}`);
-    },
+    // Reset both scale and rotation to original
+    this.centerModel.setAttribute('scale', { 
+        x: originalScale, 
+        y: originalScale, 
+        z: originalScale 
+    });
+    
+    // Reset rotation to zero
+    this.centerModel.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+    
+    // Update stored scale and rotation to original
+    this.modelScales[this.currentMarker] = originalScale;
+    this.modelRotations[this.currentMarker] = { x: 0, y: 0, z: 0 };
+    
+    console.log(`3D model reset to original scale: ${originalScale} and rotation: 0,0,0`);
+},
     
     // Get user scale for marker (or original if not modified yet)
     getUserScale: function(markerValue) {

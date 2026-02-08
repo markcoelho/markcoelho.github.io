@@ -306,6 +306,13 @@ updateSurroundContent: function(markerValue, surroundSrc) {
     // Get model controller
     const modelController = scene.components['model-controller'];
     
+    // Get saved rotation for this marker
+    let savedRotation = { x: 0, y: 0, z: 0 };
+    if (modelController && modelController.modelRotations && modelController.modelRotations[markerValue]) {
+        savedRotation = modelController.modelRotations[markerValue];
+        console.log(`Found saved rotation for marker ${markerValue}:`, savedRotation);
+    }
+    
     // Get the scale to apply
     let targetScale = originalScale;
     
@@ -322,18 +329,20 @@ updateSurroundContent: function(markerValue, surroundSrc) {
         }
     }
     
-    // Apply scale after a small delay to ensure model is loaded
+    // Apply scale and saved rotation after a small delay to ensure model is loaded
     setTimeout(() => {
-        console.log(`Applying scale: ${targetScale} to 3D model`);
+        console.log(`Applying scale: ${targetScale} and rotation:`, savedRotation, `to 3D model`);
         centerModel.setAttribute('scale', { 
             x: targetScale, 
             y: targetScale, 
             z: targetScale 
         });
         
-        // Position the model
+        // Position the model (keep at origin)
         centerModel.setAttribute('position', { x: 0, y: 0, z: 0 });
-        centerModel.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+        
+        // Apply saved rotation instead of resetting to 0,0,0
+        centerModel.setAttribute('rotation', savedRotation);
     }, 100);
     
     // Handle 3D controls visibility
