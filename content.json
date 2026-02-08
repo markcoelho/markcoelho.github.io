@@ -14,8 +14,8 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/0.jpg",
+                "type": "video",
+                "src": "assets/video/video-test2.mp4",
                 "scale": 1
             }
         },
@@ -50,8 +50,8 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/1.1.jpg",
+                "type": "",
+                "src": "",
                 "scale": 1
             }
         },
@@ -68,9 +68,9 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/2.jpg",
-                "scale": 1
+                "type": "3d",
+                "src": "assets/models/ship_example.glb",
+                "scale": 0.01
             }
         },
         {
@@ -86,9 +86,9 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/3.jpg",
-                "scale": 1
+                "type": "3d",
+                "src": "assets/models/ship_example.glb",
+                "scale": 0.01
             }
         },
         {
@@ -110,8 +110,8 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/4.1.jpg",
+                "type": "",
+                "src": "",
                 "scale": 1
             }
         },
@@ -134,8 +134,8 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/5.1.jpg",
+                "type": "",
+                "src": "",
                 "scale": 1
             }
         },
@@ -164,8 +164,8 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/6.1.jpg",
+                "type": "",
+                "src": "",
                 "scale": 1
             }
         },
@@ -200,8 +200,8 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/7.1.jpg",
+                "type": "",
+                "src": "",
                 "scale": 1
             }
         },
@@ -218,8 +218,8 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/8.jpg",
+                "type": "",
+                "src": "",
                 "scale": 1
             }
         },
@@ -236,8 +236,8 @@
                 }
             ],
             "marker": {
-                "type": "image",
-                "src": "assets/images/9.jpg",
+                "type": "",
+                "src": "",
                 "scale": 1
             }
         }

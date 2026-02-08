@@ -1,5 +1,3 @@
-
-// marker-content-manager.js
 AFRAME.registerComponent('marker-content-manager', {
     init: function() {
         this.centerImage = getId('centerImage');
@@ -11,7 +9,6 @@ AFRAME.registerComponent('marker-content-manager', {
         
         this.loadContentFromJSON();
     },
-    
     
     // Load content from JSON file
     loadContentFromJSON: function() {
@@ -25,33 +22,45 @@ AFRAME.registerComponent('marker-content-manager', {
     },
     
     // Process JSON into internal structures
-    processJSONData: function(jsonData) {
-        this.contentSequences = {};
-        this.narrations = {};
-        this.currentContentIndex = {};
-        this.surroundContent = {}; 
+    // In marker-content-manager.js, update processJSONData:
+processJSONData: function(jsonData) {
+    this.contentSequences = {};
+    this.narrations = {};
+    this.currentContentIndex = {};
+    this.surroundContent = {}; 
+    this.markerData = {}; // Add this to store marker data
 
-        jsonData.pages.forEach(page => {
-            const marker = page.barcode_number.toString();
-            const centralSide = page.central_side;
-            
-            if (page.narration) this.narrations[marker] = page.narration;
-            
-            this.surroundContent[marker] = page.surround || "";
-            
-            this.contentSequences[marker] = centralSide.map(item => ({
-                type: item.type,
-                value: item.src || item.value,
-                controls: item.controls === "true",
-                scale: item.scale || 1
-            }));
-            
-            this.currentContentIndex[marker] = 0;
-        });
+    jsonData.pages.forEach(page => {
+        const marker = page.barcode_number.toString();
+        const centralSide = page.central_side;
         
-        console.log("Content sequences loaded:", this.contentSequences);
-        console.log("Surround content loaded:", this.surroundContent);
-    },
+        if (page.narration) this.narrations[marker] = page.narration;
+        
+        this.surroundContent[marker] = page.surround || "";
+        
+        // Store marker data if it exists
+        if (page.marker) {
+            this.markerData[marker] = {
+                type: page.marker.type,
+                src: page.marker.src,
+                scale: page.marker.scale || 1
+            };
+        }
+        
+        this.contentSequences[marker] = centralSide.map(item => ({
+            type: item.type,
+            value: item.src || item.value,
+            controls: item.controls === "true",
+            scale: item.scale || 1
+        }));
+        
+        this.currentContentIndex[marker] = 0;
+    });
+    
+    console.log("Content sequences loaded:", this.contentSequences);
+    console.log("Marker data loaded:", this.markerData); // Log marker data
+    console.log("Surround content loaded:", this.surroundContent);
+},
     
     // Create markers based on content.json
     createDynamicMarkers: function() {
@@ -64,7 +73,7 @@ AFRAME.registerComponent('marker-content-manager', {
             this.createMarkerElement(markerValue, camera);
         });
         
-        console.log(`Created ${markerNumbers.length} markers`);
+        console.log(`Created ${markerNumbers.length} markers with content entities`);
         
         this.el.sceneEl.emit('markers-created');
     },
@@ -75,10 +84,35 @@ AFRAME.registerComponent('marker-content-manager', {
         markerEl.setAttribute('type', 'barcode');
         markerEl.setAttribute('value', markerValue);
         
+        // Create image element
         const imageEl = document.createElement('a-image');
+        imageEl.setAttribute('id', `marker-${markerValue}-image`);
         imageEl.setAttribute('src', '');
+        imageEl.setAttribute('scale', '3 3 3');
+        imageEl.setAttribute('render-order', '1');
         imageEl.setAttribute('visible', 'false');
+        imageEl.setAttribute('class', 'content-entity');
         markerEl.appendChild(imageEl);
+        
+        // Create video element
+        const videoEl = document.createElement('a-video');
+        videoEl.setAttribute('id', `marker-${markerValue}-video`);
+        videoEl.setAttribute('src', '');
+        videoEl.setAttribute('scale', '3 3 3');
+        videoEl.setAttribute('render-order', '1');
+        videoEl.setAttribute('visible', 'false');
+        videoEl.setAttribute('class', 'content-entity');
+        markerEl.appendChild(videoEl);
+        
+        // Create 3D model element
+        const modelEl = document.createElement('a-entity');
+        modelEl.setAttribute('id', `marker-${markerValue}-model`);
+        modelEl.setAttribute('gltf-model', '');
+        modelEl.setAttribute('scale', '1 1 1');
+        modelEl.setAttribute('render-order', '1');
+        modelEl.setAttribute('visible', 'false');
+        modelEl.setAttribute('class', 'content-entity');
+        markerEl.appendChild(modelEl);
         
         parent.appendChild(markerEl);
         
@@ -107,7 +141,60 @@ AFRAME.registerComponent('marker-content-manager', {
         return this.narrations[marker] || null;
     },
 
+    // Get surround content
     getSurroundContent: function(marker) {
         return this.surroundContent[marker] || "";
+    },
+    
+    // Helper method to get image element for a specific marker
+    getImageElement: function(markerValue) {
+        return document.querySelector(`#marker-${markerValue}-image`);
+    },
+    
+    // Helper method to get video element for a specific marker
+    getVideoElement: function(markerValue) {
+        return document.querySelector(`#marker-${markerValue}-video`);
+    },
+    
+    // Helper method to get model element for a specific marker
+    getModelElement: function(markerValue) {
+        return document.querySelector(`#marker-${markerValue}-model`);
+    },
+    
+    // Helper method to hide all content entities for a specific marker
+    hideAllContentForMarker: function(markerValue) {
+        const contentEntities = document.querySelectorAll(`#marker-${markerValue}-image, #marker-${markerValue}-video, #marker-${markerValue}-model`);
+        contentEntities.forEach(entity => {
+            entity.setAttribute('visible', 'false');
+        });
+    },
+
+    getMarkerData: function(markerValue) {
+    return this.markerData[markerValue] || null;
+},
+    
+    // Helper method to show specific content type for a marker
+    showContentForMarker: function(markerValue, contentType, src) {
+        this.hideAllContentForMarker(markerValue);
+        
+        switch(contentType) {
+            case 'image':
+                const imgEl = this.getImageElement(markerValue);
+                imgEl.setAttribute('src', src);
+                imgEl.setAttribute('visible', 'true');
+                break;
+                
+            case 'video':
+                const videoEl = this.getVideoElement(markerValue);
+                videoEl.setAttribute('src', src);
+                videoEl.setAttribute('visible', 'true');
+                break;
+                
+            case '3d':
+                const modelEl = this.getModelElement(markerValue);
+                modelEl.setAttribute('gltf-model', src);
+                modelEl.setAttribute('visible', 'true');
+                break;
+        }
     }
 });
