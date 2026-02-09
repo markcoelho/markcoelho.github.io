@@ -68,6 +68,7 @@ AFRAME.registerComponent('marker-detection-handler', {
     
     // Marker detected
     // Marker detected
+// In the onMarkerFound function, after handling left content:
 onMarkerFound: function(marker) {
     const value = marker.getAttribute('value');
     this.currentMarker = value;
@@ -96,6 +97,27 @@ onMarkerFound: function(marker) {
         this.updateSurroundContent(value, contentManager.getSurroundContent(value));
     }
     
+    // Position centerpiece (leftpiece and rightpiece will be positioned automatically)
+    if (this.centerpiece && this.camera) {
+        positionBetweenCameraAndMarker(this.camera, marker, this.centerpiece);
+    }
+    
+    // Handle left-side content
+    if (contentManager) {
+        const leftContent = contentManager.getLeftSideContent(value);
+        if (leftContent) {
+            this.showLeftPieceContent(leftContent, value, scene);
+        }
+    }
+    
+    // Handle right-side content
+    if (contentManager) {
+        const rightContent = contentManager.getRightSideContent(value);
+        if (rightContent) {
+            this.showRightPieceContent(rightContent, value, scene);
+        }
+    }
+    
     this.updateNavigationVisibility(marker, value, contentManager);
     this.updateGridVisibility(value, contentManager);
     
@@ -118,9 +140,267 @@ onMarkerFound: function(marker) {
             console.error(`No content found for marker ${value}`);
         }
     }
+},
+
+// Add showRightPieceContent function (similar to showLeftPieceContent):
+showRightPieceContent: function(content, markerValue, scene) {
+    console.log(`Showing right piece content for marker ${markerValue}:`, content);
     
-    if (this.centerpiece && this.camera) {
-        positionBetweenCameraAndMarker(this.camera, marker, this.centerpiece);
+    const rightImage = getId('rightImage');
+    const rightVideo = getId('rightVideo');
+    const rightModel = getId('rightModel');
+    
+    // Hide all right piece content initially
+    if (rightImage) rightImage.setAttribute('visible', 'false');
+    if (rightVideo) rightVideo.setAttribute('visible', 'false');
+    if (rightModel) rightModel.setAttribute('visible', 'false');
+    
+    const contentScale = content.scale || 1;
+    const baseSize = 3 * contentScale;
+    
+    switch(content.type) {
+        case 'image':
+            if (rightImage) {
+                // Create a temporary image to get natural dimensions
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                
+                img.onload = () => {
+                    // Calculate aspect ratio
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
+                    
+                    // Determine dimensions based on aspect ratio
+                    let width, height;
+                    if (aspectRatio >= 1) {
+                        // Landscape or square
+                        width = baseSize;
+                        height = baseSize / aspectRatio;
+                    } else {
+                        // Portrait
+                        width = baseSize * aspectRatio;
+                        height = baseSize;
+                    }
+                    
+                    // Set attributes
+                    rightImage.setAttribute('src', content.value);
+                    rightImage.setAttribute('width', width);
+                    rightImage.setAttribute('height', height);
+                    rightImage.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    rightImage.setAttribute('visible', 'true');
+                    
+                    console.log(`Right image loaded: ${img.naturalWidth}x${img.naturalHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
+                };
+                
+                img.onerror = () => {
+                    console.error(`Failed to load right image: ${content.value}`);
+                };
+                
+                img.src = content.value;
+            }
+            break;
+            
+        case 'video':
+            if (rightVideo) {
+                // Create a temporary video element to get dimensions
+                const videoElement = document.createElement('video');
+                videoElement.preload = 'metadata';
+                
+                videoElement.onloadedmetadata = () => {
+                    // Calculate aspect ratio
+                    const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+                    
+                    // Determine dimensions based on aspect ratio (16:9 is standard for video)
+                    let width, height;
+                    if (aspectRatio >= 1) {
+                        // Landscape or square
+                        width = baseSize;
+                        height = baseSize / aspectRatio;
+                    } else {
+                        // Portrait video (uncommon but possible)
+                        width = baseSize * aspectRatio;
+                        height = baseSize;
+                    }
+                    
+                    // Set attributes
+                    rightVideo.setAttribute('src', content.value);
+                    rightVideo.setAttribute('width', width);
+                    rightVideo.setAttribute('height', height);
+                    rightVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    rightVideo.setAttribute('visible', 'true');
+                    
+                    // Try to play the video
+                    try {
+                        const material = rightVideo.components?.material?.material;
+                        if (material?.map?.image) {
+                            material.map.image.play().catch(e => {
+                                console.warn("Could not auto-play right video:", e);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn("Could not play right video:", e);
+                    }
+                    
+                    console.log(`Right video loaded: ${videoElement.videoWidth}x${videoElement.videoHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
+                };
+                
+                videoElement.onerror = () => {
+                    console.error(`Failed to load right video: ${content.value}`);
+                    // Fallback to default 16:9 ratio
+                    rightVideo.setAttribute('src', content.value);
+                    rightVideo.setAttribute('width', baseSize * 16/9);
+                    rightVideo.setAttribute('height', baseSize);
+                    rightVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    rightVideo.setAttribute('visible', 'true');
+                };
+                
+                videoElement.src = content.value;
+            }
+            break;
+            
+        case '3d':
+            if (rightModel) {
+                rightModel.setAttribute('gltf-model', content.value);
+                rightModel.setAttribute('scale', { 
+                    x: contentScale, 
+                    y: contentScale, 
+                    z: contentScale 
+                });
+                rightModel.setAttribute('visible', 'true');
+                
+                console.log(`Right 3D model loaded: ${content.value}, scale: ${contentScale}`);
+            }
+            break;
+    }
+},
+
+
+showLeftPieceContent: function(content, markerValue, scene) {
+    console.log(`Showing left piece content for marker ${markerValue}:`, content);
+    
+    const leftImage = getId('leftImage');
+    const leftVideo = getId('leftVideo');
+    const leftModel = getId('leftModel');
+    
+    // Hide all left piece content initially
+    if (leftImage) leftImage.setAttribute('visible', 'false');
+    if (leftVideo) leftVideo.setAttribute('visible', 'false');
+    if (leftModel) leftModel.setAttribute('visible', 'false');
+    
+    const contentScale = content.scale || 1;
+    const baseSize = 3 * contentScale;
+    
+    switch(content.type) {
+        case 'image':
+            if (leftImage) {
+                // Create a temporary image to get natural dimensions
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                
+                img.onload = () => {
+                    // Calculate aspect ratio
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
+                    
+                    // Determine dimensions based on aspect ratio
+                    let width, height;
+                    if (aspectRatio >= 1) {
+                        // Landscape or square
+                        width = baseSize;
+                        height = baseSize / aspectRatio;
+                    } else {
+                        // Portrait
+                        width = baseSize * aspectRatio;
+                        height = baseSize;
+                    }
+                    
+                    // Set attributes
+                    leftImage.setAttribute('src', content.value);
+                    leftImage.setAttribute('width', width);
+                    leftImage.setAttribute('height', height);
+                    leftImage.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    leftImage.setAttribute('visible', 'true');
+                    
+                    console.log(`Left image loaded: ${img.naturalWidth}x${img.naturalHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
+                };
+                
+                img.onerror = () => {
+                    console.error(`Failed to load left image: ${content.value}`);
+                };
+                
+                img.src = content.value;
+            }
+            break;
+            
+        case 'video':
+            if (leftVideo) {
+                // Create a temporary video element to get dimensions
+                const videoElement = document.createElement('video');
+                videoElement.preload = 'metadata';
+                
+                videoElement.onloadedmetadata = () => {
+                    // Calculate aspect ratio
+                    const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+                    
+                    // Determine dimensions based on aspect ratio (16:9 is standard for video)
+                    let width, height;
+                    if (aspectRatio >= 1) {
+                        // Landscape or square
+                        width = baseSize;
+                        height = baseSize / aspectRatio;
+                    } else {
+                        // Portrait video (uncommon but possible)
+                        width = baseSize * aspectRatio;
+                        height = baseSize;
+                    }
+                    
+                    // Set attributes
+                    leftVideo.setAttribute('src', content.value);
+                    leftVideo.setAttribute('width', width);
+                    leftVideo.setAttribute('height', height);
+                    leftVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    leftVideo.setAttribute('visible', 'true');
+                    
+                    // Try to play the video
+                    try {
+                        const material = leftVideo.components?.material?.material;
+                        if (material?.map?.image) {
+                            material.map.image.play().catch(e => {
+                                console.warn("Could not auto-play left video:", e);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn("Could not play left video:", e);
+                    }
+                    
+                    console.log(`Left video loaded: ${videoElement.videoWidth}x${videoElement.videoHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
+                };
+                
+                videoElement.onerror = () => {
+                    console.error(`Failed to load left video: ${content.value}`);
+                    // Fallback to default 16:9 ratio
+                    leftVideo.setAttribute('src', content.value);
+                    leftVideo.setAttribute('width', baseSize * 16/9);
+                    leftVideo.setAttribute('height', baseSize);
+                    leftVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    leftVideo.setAttribute('visible', 'true');
+                };
+                
+                videoElement.src = content.value;
+            }
+            break;
+            
+        case '3d':
+            if (leftModel) {
+                leftModel.setAttribute('gltf-model', content.value);
+                leftModel.setAttribute('scale', { 
+                    x: contentScale, 
+                    y: contentScale, 
+                    z: contentScale 
+                });
+                leftModel.setAttribute('visible', 'true');
+                
+                console.log(`Left 3D model loaded: ${content.value}, scale: ${contentScale}`);
+            }
+            break;
     }
 },
 
