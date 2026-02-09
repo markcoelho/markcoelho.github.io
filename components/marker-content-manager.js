@@ -23,12 +23,15 @@ AFRAME.registerComponent('marker-content-manager', {
     
     // Process JSON into internal structures
     // In marker-content-manager.js, update processJSONData:
+// In marker-content-manager.js, update processJSONData:
 processJSONData: function(jsonData) {
     this.contentSequences = {};
     this.narrations = {};
     this.currentContentIndex = {};
     this.surroundContent = {}; 
-    this.markerData = {}; // Add this to store marker data
+    this.markerData = {};
+    this.leftSideContent = {};
+    this.rightSideContent = {}; // Add this for right side content
 
     jsonData.pages.forEach(page => {
         const marker = page.barcode_number.toString();
@@ -47,6 +50,26 @@ processJSONData: function(jsonData) {
             };
         }
         
+        // Store left_side content if it exists
+        if (page.left_side) {
+            this.leftSideContent[marker] = {
+                type: page.left_side.type,
+                value: page.left_side.src || page.left_side.value,
+                controls: page.left_side.controls === "true",
+                scale: page.left_side.scale || 1
+            };
+        }
+        
+        // Store right_side content if it exists
+        if (page.right_side) {
+            this.rightSideContent[marker] = {
+                type: page.right_side.type,
+                value: page.right_side.src || page.right_side.value,
+                controls: page.right_side.controls === "true",
+                scale: page.right_side.scale || 1
+            };
+        }
+        
         this.contentSequences[marker] = centralSide.map(item => ({
             type: item.type,
             value: item.src || item.value,
@@ -58,9 +81,17 @@ processJSONData: function(jsonData) {
     });
     
     console.log("Content sequences loaded:", this.contentSequences);
-    console.log("Marker data loaded:", this.markerData); // Log marker data
+    console.log("Marker data loaded:", this.markerData);
+    console.log("Left side content loaded:", this.leftSideContent);
+    console.log("Right side content loaded:", this.rightSideContent); // Log right side content
     console.log("Surround content loaded:", this.surroundContent);
 },
+
+// Add getter for right side content
+getRightSideContent: function(marker) {
+    return this.rightSideContent[marker];
+},
+
     
     // Create markers based on content.json
     createDynamicMarkers: function() {
@@ -168,6 +199,10 @@ processJSONData: function(jsonData) {
             entity.setAttribute('visible', 'false');
         });
     },
+
+    getLeftSideContent: function(marker) {
+    return this.leftSideContent[marker];
+},
 
     getMarkerData: function(markerValue) {
     return this.markerData[markerValue] || null;

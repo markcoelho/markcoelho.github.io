@@ -8,14 +8,24 @@
             "central_side": [
                 {
                     "type": "image",
-                    "controls": "false",
+                    "controls": "true",
                     "src": "assets/images/0.jpg",
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "3d",
+                "src": "assets/models/ship_example.glb",
+                "scale": 0.05
+            },
+            "right_side": {
+                "type": "3d",
+                "src": "assets/models/ship_example.glb",
+                "scale": 0.1
+            },
             "marker": {
                 "type": "video",
-                "src": "assets/video/video-test2.mp4",
+                "src": "assets/video/video-test.mp4",
                 "scale": 1
             }
         },
@@ -49,6 +59,17 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "image",
+                "controls": "false",
+                "src": "assets/images/0.jpg",
+                "scale": 1
+            },
+            "right_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
             "marker": {
                 "type": "",
                 "src": "",
@@ -67,6 +88,16 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "3d",
+                "src": "assets/models/ship_example.glb",
+                "scale": 0.05
+            },
+            "right_side": {
+                "type": "3d",
+                "src": "assets/models/ship_example.glb",
+                "scale": 0.1
+            },
             "marker": {
                 "type": "3d",
                 "src": "assets/models/ship_example.glb",
@@ -85,6 +116,16 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
+            "right_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
             "marker": {
                 "type": "3d",
                 "src": "assets/models/ship_example.glb",
@@ -109,6 +150,16 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
+            "right_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
             "marker": {
                 "type": "",
                 "src": "",
@@ -133,6 +184,16 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
+            "right_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
             "marker": {
                 "type": "",
                 "src": "",
@@ -163,6 +224,16 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
+            "right_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
             "marker": {
                 "type": "",
                 "src": "",
@@ -199,6 +270,16 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
+            "right_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
             "marker": {
                 "type": "",
                 "src": "",
@@ -217,6 +298,16 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
+            "right_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
             "marker": {
                 "type": "",
                 "src": "",
@@ -235,6 +326,16 @@
                     "scale": 1
                 }
             ],
+            "left_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
+            "right_side": {
+                "type": "",
+                "src": "",
+                "scale": 1
+            },
             "marker": {
                 "type": "",
                 "src": "",

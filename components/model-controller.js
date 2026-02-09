@@ -9,6 +9,7 @@ AFRAME.registerComponent('model-controller', {
     
     init: function() {
         this.centerModel = getId('centerModel');
+        this.leftModel = getId('leftModel');
         this.currentMarker = null;
         this.modelScales = {}; // Store user-adjusted scale per marker
         this.originalScales = {}; // Store original scale from content.json per marker

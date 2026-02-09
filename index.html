@@ -121,6 +121,24 @@
         </a-plane>
 
     </a-entity>
+
+
+        <!-- Left content container -->
+        <a-entity id="leftpiece" position="-8 0 -5">
+                <!-- Left image/video/model display -->
+                <a-image id="leftImage" src="" scale="3 3 3" render-order="1" visible="false"></a-image>
+                <a-video id="leftVideo" src="" scale="3 3 3" render-order="1" visible="false"></a-video>
+                <a-entity id="leftModel" gltf-model="" scale="1 1 1" render-order="1" visible="false"></a-entity>
+        </a-entity>
+
+        <!-- Left content container -->
+        <a-entity id="rightpiece" position="0 0 -5">
+                <!-- Right image/video/model display -->
+                <a-image id="rightImage" src="" scale="3 3 3" render-order="1" visible="false"></a-image>
+                <a-video id="rightVideo" src="" scale="3 3 3" render-order="1" visible="false"></a-video>
+                <a-entity id="rightModel" gltf-model="" scale="1 1 1" render-order="1" visible="false"></a-entity>
+        </a-entity>
+
 </a-scene>
 </body>
 </html>

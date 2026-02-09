@@ -17,6 +17,7 @@ function calcImageSize(aspectRatio, maxWidth, maxHeight) {
 }
 
 // Position panel between camera and marker
+// Position panel between camera and marker
 function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
     const markerPos = getWorldPosition(marker);
     const cameraPos = getWorldPosition(camera);
@@ -32,7 +33,81 @@ function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
     
     contentPanel.setAttribute('position', { x: centerPos.x, y: 0, z: centerPos.z });
     contentPanel.setAttribute('rotation', { x: 0, y: yRot, z: 0 });
+    
+    // Position leftpiece if it exists
+    const leftpiece = getId('leftpiece');
+    if (leftpiece && contentPanel.id === 'centerpiece') {
+        // Calculate perpendicular vector to the direction from camera to centerpiece
+        const perpX = direction.z;  // Perpendicular in XZ plane for left
+        const perpZ = -direction.x; // Perpendicular in XZ plane for left
+        
+        // Left offset (2 units to the left)
+        const leftOffset = 2;
+        const offsetX = perpX * leftOffset;
+        const offsetZ = perpZ * leftOffset;
+        
+        // Camera offset (1 unit toward the camera)
+        const cameraOffset = 1;
+        const towardCameraX = -direction.x * cameraOffset;
+        const towardCameraZ = -direction.z * cameraOffset;
+        
+        // Combined offset: left + toward camera
+        const totalOffsetX = offsetX + towardCameraX;
+        const totalOffsetZ = offsetZ + towardCameraZ;
+        
+        // Set leftpiece position (to the left of centerpiece and closer to camera)
+        leftpiece.setAttribute('position', {
+            x: centerPos.x + totalOffsetX,
+            y: 0,
+            z: centerPos.z + totalOffsetZ
+        });
+        
+        // Rotate leftpiece to face camera
+        leftpiece.setAttribute('rotation', {
+            x: 0,
+            y: yRot - 90, // Rotated 90 degrees left
+            z: 0
+        });
+    }
+    
+    // Position rightpiece if it exists
+    const rightpiece = getId('rightpiece');
+    if (rightpiece && contentPanel.id === 'centerpiece') {
+        // Calculate perpendicular vector in opposite direction for right
+        const perpX = -direction.z;  // Perpendicular in XZ plane for right
+        const perpZ = direction.x;   // Perpendicular in XZ plane for right
+        
+        // Right offset (2 units to the right)
+        const rightOffset = 2;
+        const offsetX = perpX * rightOffset;
+        const offsetZ = perpZ * rightOffset;
+        
+        // Camera offset (1 unit toward the camera)
+        const cameraOffset = 1;
+        const towardCameraX = -direction.x * cameraOffset;
+        const towardCameraZ = -direction.z * cameraOffset;
+        
+        // Combined offset: right + toward camera
+        const totalOffsetX = offsetX + towardCameraX;
+        const totalOffsetZ = offsetZ + towardCameraZ;
+        
+        // Set rightpiece position (to the right of centerpiece and closer to camera)
+        rightpiece.setAttribute('position', {
+            x: centerPos.x + totalOffsetX,
+            y: 0,
+            z: centerPos.z + totalOffsetZ
+        });
+        
+        // Rotate rightpiece to face camera
+        rightpiece.setAttribute('rotation', {
+            x: 0,
+            y: yRot + 90, // Rotated 90 degrees right
+            z: 0
+        });
+    }
 }
+
+
 
 // Visibility helper functions
 if (typeof Element !== 'undefined') {
