@@ -25,11 +25,13 @@
 <body>
 <a-scene renderer="sortObjects: true" vr-mode-ui="enabled: true" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
     
-    <a-camera position="0 0 0" look-controls="enabled: false"  cursor="fuse: false" >
+    <a-camera position="0 0 0" look-controls="enabled: false"  >
         <!-- Loading spinner -->
         <a-image id="loading_animation" src="assets/icons/loading.png" position="0 0 -1" scale="0.05 0.05 0.05" 
                  animation="property: rotation; to:0 0 -360; dur: 1500; easing: linear; loop: true" visible="false"></a-image>
         
+        <a-cursor></a-cursor>
+
         <!-- Gaze cursor 
         <a-entity cursor="fuse: false" position="0 0 -0.2"
             geometry="primitive: ring; radiusInner: 0.001; radiusOuter: 0.002;"
