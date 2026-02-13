@@ -1,346 +1,660 @@
 {
-    "narrator": "assets/narrator/modelo.glb",
-    "pages": [
+  "narrator": "assets/narrator/modelo.glb",
+  "pages": [
+    {
+      "barcode_number": 0,
+      "narration": "assets/audio/m0.mp3",
+      "surround": "",
+      "marker_navigation": "true",
+      "central_side": [
         {
-            "barcode_number": 0,
-            "narration": "assets/audio/m0.mp3",
-            "surround": "",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/0.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "3d",
-                "src": "assets/models/ship_example.glb",
-                "scale": 0.05
-            },
-            "right_side": {
-                "type": "3d",
-                "src": "assets/models/ship_example.glb",
-                "scale": 0.1
-            },
-            "marker": {
-                "type": "video",
-                "src": "assets/video/video-test.mp4",
-                "scale": 1
-            }
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/0.jpg",
+          "scale": 1,
+          "audio": ""
         },
         {
-            "barcode_number": 1,
-            "narration": "assets/audio/m1.mp3",
-            "surround": "assets/360/360-image-test.jpg",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/1.1.jpg",
-                    "scale": 1
-                },
-                {
-                    "type": "video",
-                    "controls": "true",
-                    "src": "assets/video/video-test.mp4",
-                    "scale": 1
-                },
-                {
-                    "type": "3d",
-                    "controls": "true",
-                    "src": "assets/models/ship_example.glb",
-                    "scale": 0.1
-                },
-                {
-                    "type": "image",
-                    "controls": "false",
-                    "src": "assets/images/1.4.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "image",
-                "controls": "false",
-                "src": "assets/images/0.jpg",
-                "scale": 1
-            },
-            "right_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "marker": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            }
-        },
-        {
-            "barcode_number": 2,
-            "narration": "assets/audio/m2.mp3",
-            "surround": "assets/360/360-video-test.mp4",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/2.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "3d",
-                "src": "assets/models/ship_example.glb",
-                "scale": 0.05
-            },
-            "right_side": {
-                "type": "3d",
-                "src": "assets/models/ship_example.glb",
-                "scale": 0.1
-            },
-            "marker": {
-                "type": "3d",
-                "src": "assets/models/ship_example.glb",
-                "scale": 0.01
-            }
-        },
-        {
-            "barcode_number": 3,
-            "narration": "",
-            "surround": "",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/3.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "right_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "marker": {
-                "type": "3d",
-                "src": "assets/models/ship_example.glb",
-                "scale": 0.01
-            }
-        },
-        {
-            "barcode_number": 4,
-            "narration": "",
-            "surround": "",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/4.1.jpg",
-                    "scale": 1
-                },
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/4.2.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "right_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "marker": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            }
-        },
-        {
-            "barcode_number": 5,
-            "narration": "",
-            "surround": "",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/5.1.jpg",
-                    "scale": 1
-                },
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/5.2.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "right_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "marker": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            }
-        },
-        {
-            "barcode_number": 6,
-            "narration": "",
-            "surround": "",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/6.1.jpg",
-                    "scale": 1
-                },
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/6.2.jpg",
-                    "scale": 1
-                },
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/6.3.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "right_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "marker": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            }
-        },
-        {
-            "barcode_number": 7,
-            "narration": "",
-            "surround": "",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/7.1.jpg",
-                    "scale": 1
-                },
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/7.2.jpg",
-                    "scale": 1
-                },
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/7.3.jpg",
-                    "scale": 1
-                },
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/7.4.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "right_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "marker": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            }
-        },
-        {
-            "barcode_number": 8,
-            "narration": "",
-            "surround": "",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/8.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "right_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "marker": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            }
-        },
-        {
-            "barcode_number": 9,
-            "narration": "",
-            "surround": "",
-            "central_side": [
-                {
-                    "type": "image",
-                    "controls": "true",
-                    "src": "assets/images/9.jpg",
-                    "scale": 1
-                }
-            ],
-            "left_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "right_side": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            },
-            "marker": {
-                "type": "",
-                "src": "",
-                "scale": 1
-            }
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.1,
+          "audio": ""
         }
-    ]
+      ],
+      "left_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.05,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.1,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+        }
+      ]
+    },
+    {
+      "barcode_number": 1,
+      "narration": "assets/audio/m1.mp3",
+      "surround": "assets/360/360-image-test.jpg",
+      "marker_navigation": "false",
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/1.1.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "false",
+          "src": "assets/images/1.4.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/0.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.5,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.08,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "false",
+          "src": "assets/images/2.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+        }
+      ]
+    },
+    {
+      "barcode_number": 2,
+      "narration": "assets/audio/m2.mp3",
+      "surround": "assets/360/360-video-test.mp4",
+      "marker_navigation": "",
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/2.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.05,
+          "audio": ""
+        },
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.6,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/0.jpg",
+          "scale": 0.9,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.01,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "false",
+          "src": "assets/images/1.4.jpg",
+          "scale": 0.5,
+          "audio": ""
+        }
+      ]
+    },
+    {
+      "barcode_number": 3,
+      "narration": "",
+      "surround": "",
+      "marker_navigation": "",
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/3.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.7,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.04,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/2.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.06,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.01,
+          "audio": ""
+        }
+      ]
+    },
+    {
+      "barcode_number": 4,
+      "narration": "",
+      "surround": "",
+      "marker_navigation": true,
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/4.1.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/4.2.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.05,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/3.jpg",
+          "scale": 0.8,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.6,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "image",
+          "controls": "false",
+          "src": "assets/images/0.jpg",
+          "scale": 0.5,
+          "audio": ""
+        }
+      ]
+    },
+    {
+      "barcode_number": 5,
+      "narration": "",
+      "surround": "",
+      "marker_navigation": true,
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/5.1.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/5.2.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/4.1.jpg",
+          "scale": 0.9,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.03,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.07,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/4.2.jpg",
+          "scale": 0.8,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.4,
+          "audio": ""
+        }
+      ]
+    },
+    {
+      "barcode_number": 6,
+      "narration": "",
+      "surround": "",
+      "marker_navigation": true,
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/6.1.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/6.2.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/6.3.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.7,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.06,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "false",
+          "src": "assets/images/5.1.jpg",
+          "scale": 0.6,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.09,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/5.2.jpg",
+          "scale": 0.8,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.02,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/1.1.jpg",
+          "scale": 0.5,
+          "audio": ""
+        }
+      ]
+    },
+    {
+      "barcode_number": 7,
+      "narration": "",
+      "surround": "",
+      "marker_navigation": true,
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/7.1.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/7.2.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/7.3.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/7.4.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.05,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/6.1.jpg",
+          "scale": 0.7,
+          "audio": ""
+        },
+        {
+          "type": "video",
+          "controls": "false",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.5,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/6.2.jpg",
+          "scale": 0.8,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.1,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "image",
+          "controls": "false",
+          "src": "assets/images/6.3.jpg",
+          "scale": 0.4,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.015,
+          "audio": ""
+        }
+      ]
+    },
+    {
+      "barcode_number": 8,
+      "narration": "",
+      "surround": "",
+      "marker_navigation": "",
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/8.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.8,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.04,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.06,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/7.1.jpg",
+          "scale": 0.9,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/8.jpg",
+          "scale": 0.5,
+          "audio": ""
+        }
+      ]
+    },
+    {
+      "barcode_number": 9,
+      "narration": "",
+      "surround": "",
+      "marker_navigation": "",
+      "central_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/9.jpg",
+          "scale": 1,
+          "audio": ""
+        }
+      ],
+      "left_side": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.07,
+          "audio": ""
+        },
+        {
+          "type": "video",
+          "controls": "true",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.6,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "false",
+          "src": "assets/images/7.4.jpg",
+          "scale": 0.7,
+          "audio": ""
+        }
+      ],
+      "right_side": [
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/9.jpg",
+          "scale": 0.8,
+          "audio": ""
+        },
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.05,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/ship_example.glb",
+          "scale": 0.02,
+          "audio": ""
+        },
+        {
+          "type": "video",
+          "controls": "false",
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.3,
+          "audio": ""
+        }
+      ]
+    }
+  ]
 }
