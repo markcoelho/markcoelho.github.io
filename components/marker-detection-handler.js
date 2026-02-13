@@ -186,6 +186,17 @@ AFRAME.registerComponent('marker-detection-handler', {
                 console.error(`No content found for marker ${value}`);
             }
         }
+
+        // Handle marker content based on current index
+        if (contentManager) {
+            const currentIndex = contentManager.currentContentIndex[value] || 0;
+            const markerItems = contentManager.markerData?.[value] || [];
+            const currentMarkerItem = markerItems[currentIndex];
+            
+            if (currentMarkerItem) {
+                this.showMarkerImage(value, marker, scene);
+            }
+        }
     },
 
     // NEW FUNCTION: Update left piece controls visibility based on content
@@ -524,138 +535,165 @@ AFRAME.registerComponent('marker-detection-handler', {
         }
     },
 
-    showMarkerImage: function(markerValue, markerElement, scene) {
-        const markerImage = document.querySelector(`#marker-${markerValue}-image`);
-        const markerModel = document.querySelector(`#marker-${markerValue}-model`);
-        const markerVideo = document.querySelector(`#marker-${markerValue}-video`);
-        
-        // Hide all initially
-        if (markerImage) markerImage.setAttribute('visible', 'false');
-        if (markerModel) markerModel.setAttribute('visible', 'false');
-        if (markerVideo) markerVideo.setAttribute('visible', 'false');
-        
-        const contentManager = scene.components['marker-content-manager'];
-        const markerData = this.getMarkerDataFromJSON(markerValue, scene);
-        
-        if (!markerData) {
-            console.log(`No marker data for marker ${markerValue}`);
+    // In marker-detection-handler.js - update showMarkerImage function
+
+showMarkerImage: function(markerValue, markerElement, scene) {
+    const markerImage = document.querySelector(`#marker-${markerValue}-image`);
+    const markerModel = document.querySelector(`#marker-${markerValue}-model`);
+    const markerVideo = document.querySelector(`#marker-${markerValue}-video`);
+    
+    // Get control elements
+    const markerControls = document.querySelector(`#marker-${markerValue}-controls`);
+    const markerVideoControls = document.querySelector(`#marker-${markerValue}-video-controls`);
+    const marker3dControls = document.querySelector(`#marker-${markerValue}-3d-controls`);
+    
+    // Hide all controls initially
+    if (markerControls) markerControls.setAttribute('visible', 'false');
+    if (markerVideoControls) markerVideoControls.setAttribute('visible', 'false');
+    if (marker3dControls) marker3dControls.setAttribute('visible', 'false');
+    
+    // Hide all content initially
+    if (markerImage) markerImage.setAttribute('visible', 'false');
+    if (markerModel) markerModel.setAttribute('visible', 'false');
+    if (markerVideo) markerVideo.setAttribute('visible', 'false');
+    
+    const contentManager = scene.components['marker-content-manager'];
+    const currentIndex = contentManager?.currentContentIndex[markerValue] || 0;
+    const markerItems = contentManager?.markerData?.[markerValue] || [];
+    const currentItem = markerItems[currentIndex];
+    
+    if (!currentItem) {
+        console.log(`No marker data for marker ${markerValue} at index ${currentIndex}`);
+        return;
+    }
+    
+    console.log(`Showing marker ${markerValue} content:`, currentItem);
+    
+    if (currentItem.type === 'image') {
+        // Handle image marker
+        if (!markerImage) {
+            console.warn(`Marker image element not found for marker ${markerValue}`);
             return;
         }
         
-        if (markerData.type === 'image') {
-            // Handle image marker
-            if (!markerImage) {
-                console.warn(`Marker image element not found for marker ${markerValue}`);
-                return;
+        // Set src first
+        markerImage.setAttribute('src', currentItem.src);
+        markerImage.setAttribute('rotation', '-90 0 0');
+        
+        // Create an image to get natural dimensions
+        const img = new Image();
+        img.onload = () => {
+            // Calculate aspect ratio
+            const aspectRatio = img.naturalWidth / img.naturalHeight;
+            const baseScale = currentItem.scale || 1;
+            
+            // Set scale: width = height * aspectRatio
+            const height = baseScale;
+            const width = baseScale * aspectRatio;
+            
+            markerImage.setAttribute('scale', `${width} ${height} ${1}`);
+            markerImage.setAttribute('visible', 'true');
+            
+            // Show controls if enabled
+            if (currentItem.controls && markerControls) {
+                markerControls.setAttribute('visible', 'true');
+                console.log(`Showing marker image controls for ${markerValue}`);
             }
             
-            // Set src first
-            markerImage.setAttribute('src', markerData.src);
-            markerImage.setAttribute('rotation', '-90 0 0');
-            
-            // Create an image to get natural dimensions
-            const img = new Image();
-            img.onload = () => {
-                // Calculate aspect ratio
-                const aspectRatio = img.naturalWidth / img.naturalHeight;
-                const baseScale = markerData.scale || 1;
-                
-                // Set scale: width = height * aspectRatio
-                const height = baseScale;
-                const width = baseScale * aspectRatio;
-                
-                markerImage.setAttribute('scale', 
-                    `${width} ${height} ${1}`
-                );
-                
-                markerImage.setAttribute('visible', 'true');
-                
-                console.log(`Marker image loaded: ${img.naturalWidth}x${img.naturalHeight}, aspect: ${aspectRatio.toFixed(2)}, scale: ${width.toFixed(2)}x${height}`);
-            };
-            
-            img.onerror = () => {
-                console.error(`Failed to load marker image: ${markerData.src}`);
-                markerImage.setAttribute('visible', 'false');
-            };
-            
-            img.src = markerData.src;
-            
-        } else if (markerData.type === '3d') {
-            // Handle 3D model marker
-            if (!markerModel) {
-                console.warn(`Marker model element not found for marker ${markerValue}`);
-                return;
-            }
-            
-            // Set the gltf-model and scale
-            markerModel.setAttribute('gltf-model', markerData.src);
-            
-            // Set scale (3D models typically use uniform scale)
-            const scale = markerData.scale || 1;
-            markerModel.setAttribute('scale', `${scale} ${scale} ${scale}`);
-            
-            // Make it visible
-            markerModel.setAttribute('visible', 'true');
-            
-            console.log(`Marker 3D model loaded: ${markerData.src}, scale: ${scale}`);
-            
-        } else if (markerData.type === 'video') {
-            // Handle video marker
-            if (!markerVideo) {
-                console.warn(`Marker video element not found for marker ${markerValue}`);
-                return;
-            }
-            
-            // Set src and scale
-            markerVideo.setAttribute('src', markerData.src);
-            markerVideo.setAttribute('rotation', '-90 0 0');
-            
-            // For video, we need to wait for metadata to get dimensions
-            const videoElement = document.createElement('video');
-            videoElement.preload = 'metadata';
-            
-            videoElement.onloadedmetadata = () => {
-                // Calculate aspect ratio from video dimensions
-                const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
-                const baseScale = markerData.scale || 1;
-                
-                // Set scale: width = height * aspectRatio
-                const height = baseScale;
-                const width = baseScale * aspectRatio;
-                
-                markerVideo.setAttribute('scale', 
-                    `${width} ${height} ${1}`
-                );
-                
-                markerVideo.setAttribute('visible', 'true');
-                
-                // Try to play the video
-                try {
-                    // Get the A-Frame video component and play it
-                    const videoComponent = markerVideo.components.material;
-                    if (videoComponent && videoComponent.material.map.image) {
-                        videoComponent.material.map.image.play().catch(e => {
-                            console.warn("Could not auto-play marker video:", e);
-                        });
-                    }
-                } catch (e) {
-                    console.warn("Could not access video component for auto-play:", e);
-                }
-                
-                console.log(`Marker video loaded: ${videoElement.videoWidth}x${videoElement.videoHeight}, aspect: ${aspectRatio.toFixed(2)}, scale: ${width.toFixed(2)}x${height}`);
-            };
-            
-            videoElement.onerror = () => {
-                console.error(`Failed to load marker video: ${markerData.src}`);
-                markerVideo.setAttribute('visible', 'false');
-            };
-            
-            videoElement.src = markerData.src;
-            
-        } else {
-            console.warn(`Unknown marker type for marker ${markerValue}: ${markerData.type}`);
+            console.log(`Marker image loaded: ${img.naturalWidth}x${img.naturalHeight}, aspect: ${aspectRatio.toFixed(2)}, scale: ${width.toFixed(2)}x${height}`);
+        };
+        
+        img.onerror = () => {
+            console.error(`Failed to load marker image: ${currentItem.src}`);
+            markerImage.setAttribute('visible', 'false');
+        };
+        
+        img.src = currentItem.src;
+        
+    } else if (currentItem.type === '3d') {
+        // Handle 3D model marker
+        if (!markerModel) {
+            console.warn(`Marker model element not found for marker ${markerValue}`);
+            return;
         }
-    },
+        
+        // Set the gltf-model and scale
+        markerModel.setAttribute('gltf-model', currentItem.src);
+        
+        // Set scale (3D models typically use uniform scale)
+        const scale = currentItem.scale || 1;
+        markerModel.setAttribute('scale', `${scale} ${scale} ${scale}`);
+        
+        // Make it visible
+        markerModel.setAttribute('visible', 'true');
+        
+        // Show controls if enabled
+        if (currentItem.controls && marker3dControls) {
+            marker3dControls.setAttribute('visible', 'true');
+            console.log(`Showing marker 3D controls for ${markerValue}`);
+        }
+        
+        console.log(`Marker 3D model loaded: ${currentItem.src}, scale: ${scale}`);
+        
+    } else if (currentItem.type === 'video') {
+        // Handle video marker
+        if (!markerVideo) {
+            console.warn(`Marker video element not found for marker ${markerValue}`);
+            return;
+        }
+        
+        // Set src and scale
+        markerVideo.setAttribute('src', currentItem.src);
+        markerVideo.setAttribute('rotation', '-90 0 0');
+        
+        // For video, we need to wait for metadata to get dimensions
+        const videoElement = document.createElement('video');
+        videoElement.preload = 'metadata';
+        
+        videoElement.onloadedmetadata = () => {
+            // Calculate aspect ratio from video dimensions
+            const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+            const baseScale = currentItem.scale || 1;
+            
+            // Set scale: width = height * aspectRatio
+            const height = baseScale;
+            const width = baseScale * aspectRatio;
+            
+            markerVideo.setAttribute('scale', `${width} ${height} ${1}`);
+            markerVideo.setAttribute('visible', 'true');
+            
+            // Show controls if enabled
+            if (currentItem.controls && markerVideoControls) {
+                markerVideoControls.setAttribute('visible', 'true');
+                console.log(`Showing marker video controls for ${markerValue}`);
+            }
+            
+            // Try to play the video
+            try {
+                const videoComponent = markerVideo.components.material;
+                if (videoComponent && videoComponent.material.map.image) {
+                    videoComponent.material.map.image.play().catch(e => {
+                        console.warn("Could not auto-play marker video:", e);
+                    });
+                }
+            } catch (e) {
+                console.warn("Could not access video component for auto-play:", e);
+            }
+            
+            console.log(`Marker video loaded: ${videoElement.videoWidth}x${videoElement.videoHeight}, aspect: ${aspectRatio.toFixed(2)}, scale: ${width.toFixed(2)}x${height}`);
+        };
+        
+        videoElement.onerror = () => {
+            console.error(`Failed to load marker video: ${currentItem.src}`);
+            markerVideo.setAttribute('visible', 'false');
+        };
+        
+        videoElement.src = currentItem.src;
+        
+    } else {
+        console.warn(`Unknown marker type for marker ${markerValue}: ${currentItem.type}`);
+    }
+},
 
     // Helper function to get marker data from JSON
     getMarkerDataFromJSON: function(markerValue, scene) {
