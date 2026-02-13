@@ -72,11 +72,15 @@ AFRAME.registerComponent('marker-detection-handler', {
 // In marker-detection-handler.js, update the onMarkerFound function:
 
 // Marker detected
+// In marker-detection-handler.js, update the onMarkerFound function:
+
+// Marker detected
 onMarkerFound: function(marker) {
     const value = marker.getAttribute('value');
+    const previousMarker = this.currentMarker;
     this.currentMarker = value;
     
-    console.log(`=== MARKER ${value} FOUND ===`);
+    console.log(`=== MARKER ${value} FOUND === (previous: ${previousMarker})`);
     
     if (this.currentPlayingAudio) {
         this.currentPlayingAudio.pause();
@@ -129,24 +133,13 @@ onMarkerFound: function(marker) {
     const navUI = scene.components['marker-navigation-ui'];
 
     if (navUI) {
-        // FIRST: Hide ALL centerpiece grids (from any previous markers)
-        // Get all centerpiece grids and hide them
-        const centerpiece = getId('centerpiece');
-        if (centerpiece) {
-            const allCenterpieceGrids = centerpiece.querySelectorAll('[id^="centerpiece-grid-"]');
-            allCenterpieceGrids.forEach(grid => {
-                grid.setAttribute('visible', 'false');
-            });
-        }
-        
-        // SECOND: Hide ALL marker grids initially
+        // Hide ALL marker grids initially
         document.querySelectorAll('a-marker').forEach(m => {
             if (m._imageGrid) {
                 m._imageGrid.setAttribute('visible', 'false');
             }
         });
         
-        // THIRD: Show only the appropriate grid for THIS marker
         if (useMarkerNavigation) {
             // Show marker grid if multiple media
             const hasMultipleMedia = navUI.hasMultipleImages(value);
@@ -155,11 +148,22 @@ onMarkerFound: function(marker) {
                 currentMarker._imageGrid.setAttribute('visible', hasMultipleMedia);
                 console.log(`Showing marker grid for ${value}: ${hasMultipleMedia}`);
             }
+            // Hide centerpiece grid
+            navUI.setCenterpieceGridVisibility(false);
+            
         } else {
+            // Only update centerpiece grid if we're switching to a DIFFERENT marker
+            if (previousMarker !== value) {
+                // Update centerpiece grid with this marker's content
+                navUI.updateCenterpieceGrid(value);
+                console.log(`Updated centerpiece grid for new marker ${value}`);
+            } else {
+                console.log(`Same marker ${value}, keeping existing centerpiece grid`);
+            }
+            
             // Show centerpiece grid if multiple media
             const hasMultipleMedia = navUI.hasMultipleImages(value);
-            navUI.setCenterpieceGridVisibility(value, hasMultipleMedia);
-            console.log(`Showing centerpiece grid for ${value}: ${hasMultipleMedia}`);
+            navUI.setCenterpieceGridVisibility(hasMultipleMedia);
         }
     }
     

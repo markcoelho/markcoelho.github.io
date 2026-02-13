@@ -47,7 +47,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         else if (this.el.classList.contains('model-zoom-button')) this.buttonType = 'model-zoom';
         else if (this.el.classList.contains('3dreset')) this.buttonType = 'model-reset';
         else if (this.el.classList.contains('roller')) this.buttonType = 'model-roll';
-        else if (this.el.classList.contains('image-grid-item') && this.el.tagName.toLowerCase() === 'a-image') 
+        else if (this.el.classList.contains('image-grid-item') || this.el.classList.contains('centerpiece-grid-item')) 
             this.buttonType = 'grid-image';
         else this.buttonType = 'other';
     },
@@ -214,15 +214,22 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             this.triggered = true;
         }
         
-        // Grid image selection
-        // In gaze-interaction-handler.js, update the grid image selection section:
+        // Grid image selection (handles both marker grid and centerpiece grid)
         if (this.buttonType === 'grid-image' && !this.triggered) {
-            const imageSrc = this.el.getAttribute('src');
-            const markerValue = this.el.getAttribute('data-marker-value');
-            const contentIndex = parseInt(this.el.getAttribute('data-content-index'));
-            const mediaType = this.el.getAttribute('data-media-type');
+            // Get the data from the element (could be the container or the image itself)
+            let targetEl = this.el;
             
-            if (!markerValue) return;
+            // If this is a container with children, we need to get the data from the container
+            const markerValue = targetEl.getAttribute('data-marker-value');
+            const contentIndex = parseInt(targetEl.getAttribute('data-content-index'));
+            const mediaType = targetEl.getAttribute('data-media-type');
+            
+            if (!markerValue) {
+                console.log('No marker value found on grid item');
+                return;
+            }
+            
+            console.log(`Grid item selected: marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
             
             const scene = this.scene;
             const contentManager = scene.components['marker-content-manager'];
