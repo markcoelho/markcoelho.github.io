@@ -21,77 +21,74 @@ AFRAME.registerComponent('marker-content-manager', {
             .catch(error => console.error('Error loading content.json:', error));
     },
     
-    // Process JSON into internal structures
-    // In marker-content-manager.js, update processJSONData:
-// In marker-content-manager.js, update processJSONData:
-processJSONData: function(jsonData) {
-    this.contentSequences = {};
-    this.narrations = {};
-    this.currentContentIndex = {};
-    this.surroundContent = {}; 
-    this.markerData = {};
-    this.leftSideContent = {};
-    this.rightSideContent = {}; // Add this for right side content
+    // Process JSON into internal structures - TAKES FIRST ELEMENT FROM ARRAYS
+    processJSONData: function(jsonData) {
+        this.contentSequences = {};
+        this.narrations = {};
+        this.currentContentIndex = {};
+        this.surroundContent = {}; 
+        this.markerData = {};
+        this.leftSideContent = {};
+        this.rightSideContent = {};
 
-    jsonData.pages.forEach(page => {
-        const marker = page.barcode_number.toString();
-        const centralSide = page.central_side;
+        jsonData.pages.forEach(page => {
+            const marker = page.barcode_number.toString();
+            const centralSide = page.central_side;
+            
+            if (page.narration) this.narrations[marker] = page.narration;
+            
+            this.surroundContent[marker] = page.surround || "";
+            
+            // Store marker data - take FIRST ELEMENT if it exists
+            if (page.marker && page.marker.length > 0 && page.marker[0].type && page.marker[0].type !== "") {
+                this.markerData[marker] = {
+                    type: page.marker[0].type,
+                    src: page.marker[0].src,
+                    scale: page.marker[0].scale || 1
+                };
+            }
+            
+            // Store left_side content - take FIRST ELEMENT if it exists
+            if (page.left_side && page.left_side.length > 0 && page.left_side[0].type && page.left_side[0].type !== "") {
+                this.leftSideContent[marker] = {
+                    type: page.left_side[0].type,
+                    value: page.left_side[0].src || page.left_side[0].value,
+                    controls: page.left_side[0].controls === "true",
+                    scale: page.left_side[0].scale || 1
+                };
+            }
+            
+            // Store right_side content - take FIRST ELEMENT if it exists
+            if (page.right_side && page.right_side.length > 0 && page.right_side[0].type && page.right_side[0].type !== "") {
+                this.rightSideContent[marker] = {
+                    type: page.right_side[0].type,
+                    value: page.right_side[0].src || page.right_side[0].value,
+                    controls: page.right_side[0].controls === "true",
+                    scale: page.right_side[0].scale || 1
+                };
+            }
+            
+            this.contentSequences[marker] = centralSide.map(item => ({
+                type: item.type,
+                value: item.src || item.value,
+                controls: item.controls === "true",
+                scale: item.scale || 1
+            }));
+            
+            this.currentContentIndex[marker] = 0;
+        });
         
-        if (page.narration) this.narrations[marker] = page.narration;
-        
-        this.surroundContent[marker] = page.surround || "";
-        
-        // Store marker data if it exists
-        if (page.marker) {
-            this.markerData[marker] = {
-                type: page.marker.type,
-                src: page.marker.src,
-                scale: page.marker.scale || 1
-            };
-        }
-        
-        // Store left_side content if it exists
-        if (page.left_side) {
-            this.leftSideContent[marker] = {
-                type: page.left_side.type,
-                value: page.left_side.src || page.left_side.value,
-                controls: page.left_side.controls === "true",
-                scale: page.left_side.scale || 1
-            };
-        }
-        
-        // Store right_side content if it exists
-        if (page.right_side) {
-            this.rightSideContent[marker] = {
-                type: page.right_side.type,
-                value: page.right_side.src || page.right_side.value,
-                controls: page.right_side.controls === "true",
-                scale: page.right_side.scale || 1
-            };
-        }
-        
-        this.contentSequences[marker] = centralSide.map(item => ({
-            type: item.type,
-            value: item.src || item.value,
-            controls: item.controls === "true",
-            scale: item.scale || 1
-        }));
-        
-        this.currentContentIndex[marker] = 0;
-    });
-    
-    console.log("Content sequences loaded:", this.contentSequences);
-    console.log("Marker data loaded:", this.markerData);
-    console.log("Left side content loaded:", this.leftSideContent);
-    console.log("Right side content loaded:", this.rightSideContent); // Log right side content
-    console.log("Surround content loaded:", this.surroundContent);
-},
+        console.log("Content sequences loaded:", this.contentSequences);
+        console.log("Marker data loaded (first element):", this.markerData);
+        console.log("Left side content loaded (first element):", this.leftSideContent);
+        console.log("Right side content loaded (first element):", this.rightSideContent);
+        console.log("Surround content loaded:", this.surroundContent);
+    },
 
-// Add getter for right side content
-getRightSideContent: function(marker) {
-    return this.rightSideContent[marker];
-},
-
+    // Add getter for right side content
+    getRightSideContent: function(marker) {
+        return this.rightSideContent[marker];
+    },
     
     // Create markers based on content.json
     createDynamicMarkers: function() {
@@ -201,12 +198,12 @@ getRightSideContent: function(marker) {
     },
 
     getLeftSideContent: function(marker) {
-    return this.leftSideContent[marker];
-},
+        return this.leftSideContent[marker];
+    },
 
     getMarkerData: function(markerValue) {
-    return this.markerData[markerValue] || null;
-},
+        return this.markerData[markerValue] || null;
+    },
     
     // Helper method to show specific content type for a marker
     showContentForMarker: function(markerValue, contentType, src) {
