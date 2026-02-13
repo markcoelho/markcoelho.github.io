@@ -41,8 +41,8 @@ function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
         const perpX = direction.z;  // Perpendicular in XZ plane for left
         const perpZ = -direction.x; // Perpendicular in XZ plane for left
         
-        // Left offset (2 units to the left)
-        const leftOffset = 2;
+        // Left offset (1 units to the left)
+        const leftOffset = 1;
         const offsetX = perpX * leftOffset;
         const offsetZ = perpZ * leftOffset;
         
@@ -65,7 +65,7 @@ function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
         // Rotate leftpiece to face camera
         leftpiece.setAttribute('rotation', {
             x: 0,
-            y: yRot - 90, // Rotated 90 degrees left
+            y: yRot + 90, // Rotated 90 degrees left
             z: 0
         });
     }
@@ -77,8 +77,8 @@ function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
         const perpX = -direction.z;  // Perpendicular in XZ plane for right
         const perpZ = direction.x;   // Perpendicular in XZ plane for right
         
-        // Right offset (2 units to the right)
-        const rightOffset = 2;
+        // Right offset (1 units to the right)
+        const rightOffset = 1;
         const offsetX = perpX * rightOffset;
         const offsetZ = perpZ * rightOffset;
         
@@ -101,7 +101,7 @@ function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
         // Rotate rightpiece to face camera
         rightpiece.setAttribute('rotation', {
             x: 0,
-            y: yRot + 90, // Rotated 90 degrees right
+            y: yRot - 90, // Rotated 90 degrees right
             z: 0
         });
     }
