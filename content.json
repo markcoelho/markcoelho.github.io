@@ -18,7 +18,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.1,
+          "scale": 0.02,
           "audio": ""
         }
       ],
@@ -27,7 +27,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.05,
+          "scale": 0.02,
           "audio": ""
         }
       ],
@@ -36,7 +36,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.1,
+          "scale": 0.02,
           "audio": ""
         }
       ],
@@ -69,7 +69,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.1,
+          "scale": 0.02,
           "audio": ""
         },
         {
@@ -101,7 +101,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.08,
+          "scale": 0.02,
           "audio": ""
         },
         {
@@ -136,7 +136,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.05,
+          "scale": 0.02,
           "audio": ""
         },
         {
@@ -152,7 +152,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.1,
+          "scale": 0.02,
           "audio": ""
         },
         {
@@ -168,7 +168,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.01,
+          "scale": 0.02,
           "audio": ""
         },
         {
@@ -206,7 +206,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.04,
+          "scale": 0.02,
           "audio": ""
         }
       ],
@@ -222,7 +222,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.06,
+          "scale": 0.02,
           "audio": ""
         }
       ],
@@ -231,7 +231,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.01,
+          "scale": 0.02,
           "audio": ""
         }
       ]
@@ -262,7 +262,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.05,
+          "scale": 0.02,
           "audio": ""
         },
         {
@@ -325,7 +325,7 @@
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
-          "scale": 0.03,
+          "scale": 0.02,
           "audio": ""
         }
       ],
