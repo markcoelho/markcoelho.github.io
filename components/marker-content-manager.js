@@ -22,68 +22,79 @@ AFRAME.registerComponent('marker-content-manager', {
     },
     
     // Process JSON into internal structures - TAKES FIRST ELEMENT FROM ARRAYS
-    processJSONData: function(jsonData) {
-        this.contentSequences = {};
-        this.narrations = {};
-        this.currentContentIndex = {};
-        this.surroundContent = {}; 
-        this.markerData = {};
-        this.leftSideContent = {};
-        this.rightSideContent = {};
+    // In marker-content-manager.js, update processJSONData function
+processJSONData: function(jsonData) {
+    this.contentSequences = {};
+    this.narrations = {};
+    this.currentContentIndex = {};
+    this.surroundContent = {}; 
+    this.markerData = {};
+    this.leftSideContent = {};
+    this.rightSideContent = {};
+    this.markerNavigationFlags = {}; // Add this line
 
-        jsonData.pages.forEach(page => {
-            const marker = page.barcode_number.toString();
-            const centralSide = page.central_side;
-            
-            if (page.narration) this.narrations[marker] = page.narration;
-            
-            this.surroundContent[marker] = page.surround || "";
-            
-            // Store marker data - take FIRST ELEMENT if it exists
-            if (page.marker && page.marker.length > 0 && page.marker[0].type && page.marker[0].type !== "") {
-                this.markerData[marker] = {
-                    type: page.marker[0].type,
-                    src: page.marker[0].src,
-                    scale: page.marker[0].scale || 1
-                };
-            }
-            
-            // Store left_side content - take FIRST ELEMENT if it exists
-            if (page.left_side && page.left_side.length > 0 && page.left_side[0].type && page.left_side[0].type !== "") {
-                this.leftSideContent[marker] = {
-                    type: page.left_side[0].type,
-                    value: page.left_side[0].src || page.left_side[0].value,
-                    controls: page.left_side[0].controls === "true",
-                    scale: page.left_side[0].scale || 1
-                };
-            }
-            
-            // Store right_side content - take FIRST ELEMENT if it exists
-            if (page.right_side && page.right_side.length > 0 && page.right_side[0].type && page.right_side[0].type !== "") {
-                this.rightSideContent[marker] = {
-                    type: page.right_side[0].type,
-                    value: page.right_side[0].src || page.right_side[0].value,
-                    controls: page.right_side[0].controls === "true",
-                    scale: page.right_side[0].scale || 1
-                };
-            }
-            
-            this.contentSequences[marker] = centralSide.map(item => ({
-                type: item.type,
-                value: item.src || item.value,
-                controls: item.controls === "true",
-                scale: item.scale || 1
-            }));
-            
-            this.currentContentIndex[marker] = 0;
-        });
+    jsonData.pages.forEach(page => {
+        const marker = page.barcode_number.toString();
+        const centralSide = page.central_side;
         
-        console.log("Content sequences loaded:", this.contentSequences);
-        console.log("Marker data loaded (first element):", this.markerData);
-        console.log("Left side content loaded (first element):", this.leftSideContent);
-        console.log("Right side content loaded (first element):", this.rightSideContent);
-        console.log("Surround content loaded:", this.surroundContent);
-    },
+        // Store marker_navigation flag
+        this.markerNavigationFlags[marker] = page.marker_navigation === "true";
+        
+        if (page.narration) this.narrations[marker] = page.narration;
+        
+        this.surroundContent[marker] = page.surround || "";
+        
+        // Store marker data - take FIRST ELEMENT if it exists
+        if (page.marker && page.marker.length > 0 && page.marker[0].type && page.marker[0].type !== "") {
+            this.markerData[marker] = {
+                type: page.marker[0].type,
+                src: page.marker[0].src,
+                scale: page.marker[0].scale || 1
+            };
+        }
+        
+        // Store left_side content - take FIRST ELEMENT if it exists
+        if (page.left_side && page.left_side.length > 0 && page.left_side[0].type && page.left_side[0].type !== "") {
+            this.leftSideContent[marker] = {
+                type: page.left_side[0].type,
+                value: page.left_side[0].src || page.left_side[0].value,
+                controls: page.left_side[0].controls === "true",
+                scale: page.left_side[0].scale || 1
+            };
+        }
+        
+        // Store right_side content - take FIRST ELEMENT if it exists
+        if (page.right_side && page.right_side.length > 0 && page.right_side[0].type && page.right_side[0].type !== "") {
+            this.rightSideContent[marker] = {
+                type: page.right_side[0].type,
+                value: page.right_side[0].src || page.right_side[0].value,
+                controls: page.right_side[0].controls === "true",
+                scale: page.right_side[0].scale || 1
+            };
+        }
+        
+        this.contentSequences[marker] = centralSide.map(item => ({
+            type: item.type,
+            value: item.src || item.value,
+            controls: item.controls === "true",
+            scale: item.scale || 1
+        }));
+        
+        this.currentContentIndex[marker] = 0;
+    });
+    
+    console.log("Content sequences loaded:", this.contentSequences);
+    console.log("Marker data loaded (first element):", this.markerData);
+    console.log("Left side content loaded (first element):", this.leftSideContent);
+    console.log("Right side content loaded (first element):", this.rightSideContent);
+    console.log("Surround content loaded:", this.surroundContent);
+    console.log("Marker navigation flags:", this.markerNavigationFlags);
+},
+
+// Add getter for marker navigation flag
+getMarkerNavigationFlag: function(marker) {
+    return this.markerNavigationFlags[marker] === true;
+},
 
     // Add getter for right side content
     getRightSideContent: function(marker) {

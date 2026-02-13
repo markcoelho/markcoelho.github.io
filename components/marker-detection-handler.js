@@ -69,6 +69,9 @@ AFRAME.registerComponent('marker-detection-handler', {
     // Marker detected
     // Marker detected
 // In the onMarkerFound function, after handling left content:
+// In marker-detection-handler.js, update the onMarkerFound function:
+
+// Marker detected
 onMarkerFound: function(marker) {
     const value = marker.getAttribute('value');
     this.currentMarker = value;
@@ -120,6 +123,45 @@ onMarkerFound: function(marker) {
     
     this.updateNavigationVisibility(marker, value, contentManager);
     this.updateGridVisibility(value, contentManager);
+
+    // Handle centerpiece grid visibility based on marker_navigation flag
+    const useMarkerNavigation = contentManager?.getMarkerNavigationFlag?.(value);
+    const navUI = scene.components['marker-navigation-ui'];
+
+    if (navUI) {
+        // FIRST: Hide ALL centerpiece grids (from any previous markers)
+        // Get all centerpiece grids and hide them
+        const centerpiece = getId('centerpiece');
+        if (centerpiece) {
+            const allCenterpieceGrids = centerpiece.querySelectorAll('[id^="centerpiece-grid-"]');
+            allCenterpieceGrids.forEach(grid => {
+                grid.setAttribute('visible', 'false');
+            });
+        }
+        
+        // SECOND: Hide ALL marker grids initially
+        document.querySelectorAll('a-marker').forEach(m => {
+            if (m._imageGrid) {
+                m._imageGrid.setAttribute('visible', 'false');
+            }
+        });
+        
+        // THIRD: Show only the appropriate grid for THIS marker
+        if (useMarkerNavigation) {
+            // Show marker grid if multiple media
+            const hasMultipleMedia = navUI.hasMultipleImages(value);
+            const currentMarker = document.querySelector(`a-marker[value="${value}"]`);
+            if (currentMarker && currentMarker._imageGrid) {
+                currentMarker._imageGrid.setAttribute('visible', hasMultipleMedia);
+                console.log(`Showing marker grid for ${value}: ${hasMultipleMedia}`);
+            }
+        } else {
+            // Show centerpiece grid if multiple media
+            const hasMultipleMedia = navUI.hasMultipleImages(value);
+            navUI.setCenterpieceGridVisibility(value, hasMultipleMedia);
+            console.log(`Showing centerpiece grid for ${value}: ${hasMultipleMedia}`);
+        }
+    }
     
     if (contentManager) {
         const content = contentManager.getMarkerContent(value);
