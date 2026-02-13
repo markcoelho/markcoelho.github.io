@@ -1,10 +1,11 @@
-// marker-navigation-ui.js - Updated with bottom positioning
+// marker-navigation-ui.js - Updated with transparent grid cells
 AFRAME.registerComponent('marker-navigation-ui', {
     schema: { contentLoaded: { default: false } },
     
     init: function() {
         this.contentManager = null;
-        this.centerpieceGrids = {}; // Store grids attached to centerpiece
+        this.centerpieceGrid = null; // Single grid for centerpiece
+        this.currentGridMarker = null; // Track which marker's content is currently in the grid
         
         this.checkContentInterval = setInterval(() => {
             this.contentManager = this.el.sceneEl.components['marker-content-manager'];
@@ -23,105 +24,116 @@ AFRAME.registerComponent('marker-navigation-ui', {
     
     // Create all navigation elements (both marker and centerpiece)
     createAllNavigation: function() {
+        // Create the single centerpiece grid if it doesn't exist
+        if (!this.centerpieceGrid) {
+            this.createCenterpieceGrid();
+        }
+        
         document.querySelectorAll('a-marker').forEach(marker => {
             const markerValue = marker.getAttribute('value');
             const useMarkerNavigation = this.contentManager?.getMarkerNavigationFlag(markerValue);
             const content = this.contentManager?.contentSequences?.[markerValue] || [];
             const hasMedia = content.some(item => item.type === 'image' || item.type === 'video' || item.type === '3d');
             
-            if (hasMedia) {
-                if (useMarkerNavigation) {
-                    // Create grid on marker (existing functionality)
-                    if (!marker._imageGrid) {
-                        this.addImageGridToMarker(marker);
-                    }
-                } else {
-                    // Create grid on centerpiece
-                    this.addGridToCenterpiece(markerValue, content);
+            if (hasMedia && useMarkerNavigation) {
+                // Create grid on marker (existing functionality)
+                if (!marker._imageGrid) {
+                    this.addImageGridToMarker(marker);
                 }
             }
         });
     },
     
-    // Add grid to centerpiece for a specific marker
-    addGridToCenterpiece: function(markerValue, content) {
+    // Create the single centerpiece grid
+    createCenterpieceGrid: function() {
         const centerpiece = getId('centerpiece');
         if (!centerpiece) return;
         
-        // Remove existing grid for this marker if any
-        const existingGrid = document.getElementById(`centerpiece-grid-${markerValue}`);
-        if (existingGrid) {
-            existingGrid.remove();
+        const gridContainer = document.createElement('a-entity');
+        gridContainer.setAttribute('id', 'centerpiece-grid');
+        gridContainer.setAttribute('class', 'centerpiece-grid-container');
+        // Position below the controls (controls are at z=2, so put grid at z=3 and lower y)
+        gridContainer.setAttribute('position', '0 -1.8 3'); // Below the controls
+        gridContainer.setAttribute('rotation', '0 0 0');
+        gridContainer.setAttribute('visible', 'false'); // Initially hidden
+        
+        centerpiece.appendChild(gridContainer);
+        this.centerpieceGrid = gridContainer;
+        
+        console.log('Created single centerpiece grid');
+    },
+    
+    // Update centerpiece grid with content for a specific marker
+    updateCenterpieceGrid: function(markerValue) {
+        if (!this.centerpieceGrid) {
+            this.createCenterpieceGrid();
+            if (!this.centerpieceGrid) return;
         }
         
+        // Clear existing grid items
+        while (this.centerpieceGrid.firstChild) {
+            this.centerpieceGrid.removeChild(this.centerpieceGrid.firstChild);
+        }
+        
+        const content = this.contentManager?.contentSequences?.[markerValue] || [];
         const mediaContent = content.filter(item => 
             item.type === 'image' || item.type === 'video' || item.type === '3d'
         );
         
-        if (mediaContent.length <= 1) return; // Only show grid if multiple items
-        
-        const gridContainer = this.createCenterpieceGridContainer(markerValue);
-        centerpiece.appendChild(gridContainer);
-        
-        this.centerpieceGrids[markerValue] = gridContainer;
+        if (mediaContent.length <= 1) {
+            // Hide grid if only one item
+            this.centerpieceGrid.setAttribute('visible', 'false');
+            this.currentGridMarker = null;
+            return;
+        }
         
         // Create grid items (3x3 layout)
-        this.createCenterpieceGridMedia(gridContainer, mediaContent, markerValue);
+        this.createCenterpieceGridMedia(this.centerpieceGrid, mediaContent, markerValue);
+        this.currentGridMarker = markerValue;
         
-        // Initially hide the grid (will be shown when marker is detected)
-        gridContainer.setAttribute('visible', 'false');
-    },
-    
-    createCenterpieceGridContainer: function(markerValue) {
-        const container = document.createElement('a-entity');
-        container.setAttribute('id', `centerpiece-grid-${markerValue}`);
-        container.setAttribute('class', 'centerpiece-grid-container');
-        // Position below the controls (controls are at z=2, so put grid at z=3 and lower y)
-        container.setAttribute('position', '0 -1.8 3'); // Below the controls
-        container.setAttribute('rotation', '0 0 0');
-        return container;
+        console.log(`Updated centerpiece grid for marker ${markerValue} with ${mediaContent.length} items`);
     },
     
     // Create grid items for centerpiece
     createCenterpieceGridMedia: function(container, mediaContent, markerValue) {
-        const rows = 3, cols = 3;
-        const maxCellWidth = 0.8, maxCellHeight = 0.7; // Larger for centerpiece
-        const spacingX = maxCellWidth * 1.4, spacingY = maxCellHeight * 1.4;
+    const rows = 2, cols = 4; // Changed to 4x2
+    const maxCellWidth = 0.8, maxCellHeight = 0.7; // Larger for centerpiece
+    const spacingX = maxCellWidth * 1.4, spacingY = maxCellHeight * 1.4;
+    
+    for (let i = 0; i < Math.min(mediaContent.length, rows * cols); i++) {
+        const row = Math.floor(i / cols);
+        const col = i % cols;
         
-        for (let i = 0; i < Math.min(mediaContent.length, rows * cols); i++) {
-            const row = Math.floor(i / cols);
-            const col = i % cols;
-            
-            const x = (col - (cols - 1) / 2) * spacingX;
-            const y = -((row - (rows - 1) / 2) * spacingY); // Negative Y to go down
-            
-            const item = mediaContent[i];
-            const src = item.value || item.src;
-            
-            // Create a container for each grid item to handle hover/click
-            const itemContainer = document.createElement('a-entity');
-            itemContainer.setAttribute('class', 'centerpiece-grid-item');
-            itemContainer.setAttribute('position', `${x} ${y} 0`);
-            itemContainer.setAttribute('data-content-index', i);
-            itemContainer.setAttribute('data-marker-value', markerValue);
-            itemContainer.setAttribute('data-media-type', item.type);
-            
-            // Create thumbnail based on media type
-            if (item.type === 'image') {
-                this.createCenterpieceImageThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue);
-            } else if (item.type === 'video') {
-                this.createCenterpieceVideoThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue);
-            } else if (item.type === '3d') {
-                this.createCenterpiece3DThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue);
-            }
-            
-            // Add gaze interaction to the container
-            itemContainer.setAttribute('gaze-interaction-handler', 
-                `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
-            
-            container.appendChild(itemContainer);
+        const x = (col - (cols - 1) / 2) * spacingX;
+        const y = -((row - (rows - 1) / 2) * spacingY); // Negative Y to go down
+        
+        const item = mediaContent[i];
+        const src = item.value || item.src;
+        
+        // Create a container for each grid item to handle hover/click
+        const itemContainer = document.createElement('a-entity');
+        itemContainer.setAttribute('class', 'centerpiece-grid-item');
+        itemContainer.setAttribute('position', `${x} ${y} 0`);
+        itemContainer.setAttribute('data-content-index', i);
+        itemContainer.setAttribute('data-marker-value', markerValue);
+        itemContainer.setAttribute('data-media-type', item.type);
+        
+        // Create thumbnail based on media type
+        if (item.type === 'image') {
+            this.createCenterpieceImageThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue);
+        } else if (item.type === 'video') {
+            this.createCenterpieceVideoThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue);
+        } else if (item.type === '3d') {
+            this.createCenterpiece3DThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue);
         }
-    },
+        
+        // Add gaze interaction to the container
+        itemContainer.setAttribute('gaze-interaction-handler', 
+            `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
+        
+        container.appendChild(itemContainer);
+    }
+},
     
     createCenterpieceImageThumbnail: function(container, imageSrc, maxWidth, maxHeight, index, markerValue) {
         const img = new Image();
@@ -138,17 +150,10 @@ AFRAME.registerComponent('marker-navigation-ui', {
             imageEl.setAttribute('src', imageSrc);
             imageEl.setAttribute('width', width);
             imageEl.setAttribute('height', height);
-            imageEl.setAttribute('position', `${offsetX} ${-offsetY} 0.01`); // Slightly in front
-            imageEl.setAttribute('material', 'depthTest: false;');
+            imageEl.setAttribute('position', `${offsetX} ${-offsetY} 0`);
+            imageEl.setAttribute('material', 'depthTest: false; transparent: true;');
             
-            // Add a border/background
-            const bgEl = document.createElement('a-plane');
-            bgEl.setAttribute('width', maxWidth + 0.05);
-            bgEl.setAttribute('height', maxHeight + 0.05);
-            bgEl.setAttribute('color', '#333');
-            bgEl.setAttribute('position', '0 0 0');
-            
-            container.appendChild(bgEl);
+            // NO background plane - just the image with transparency
             container.appendChild(imageEl);
         };
         
@@ -156,42 +161,24 @@ AFRAME.registerComponent('marker-navigation-ui', {
     },
     
     createCenterpieceVideoThumbnail: function(container, videoSrc, maxWidth, maxHeight, index, markerValue) {
-        // Background
-        const bgEl = document.createElement('a-plane');
-        bgEl.setAttribute('width', maxWidth + 0.05);
-        bgEl.setAttribute('height', maxHeight + 0.05);
-        bgEl.setAttribute('color', '#333');
-        bgEl.setAttribute('position', '0 0 0');
-        container.appendChild(bgEl);
-        
-        // Video icon
+        // Video icon only - no background
         const iconEl = document.createElement('a-image');
         iconEl.setAttribute('src', 'assets/icons/video-thumbnail.png');
         iconEl.setAttribute('width', maxWidth * 0.8);
         iconEl.setAttribute('height', maxHeight * 0.8);
-        iconEl.setAttribute('position', '0 0 0.01');
-        iconEl.setAttribute('material', 'depthTest: false;');
+        iconEl.setAttribute('position', '0 0 0');
+        iconEl.setAttribute('material', 'depthTest: false; transparent: true;');
         container.appendChild(iconEl);
-        
-        // Optional: Add text "VIDEO" or just rely on icon
     },
     
     createCenterpiece3DThumbnail: function(container, modelSrc, maxWidth, maxHeight, index, markerValue) {
-        // Background
-        const bgEl = document.createElement('a-plane');
-        bgEl.setAttribute('width', maxWidth + 0.05);
-        bgEl.setAttribute('height', maxHeight + 0.05);
-        bgEl.setAttribute('color', '#333');
-        bgEl.setAttribute('position', '0 0 0');
-        container.appendChild(bgEl);
-        
-        // 3D model icon
+        // 3D model icon only - no background
         const iconEl = document.createElement('a-image');
         iconEl.setAttribute('src', 'assets/icons/model-thumbnail.png');
         iconEl.setAttribute('width', maxWidth * 0.8);
         iconEl.setAttribute('height', maxHeight * 0.8);
-        iconEl.setAttribute('position', '0 0 0.01');
-        iconEl.setAttribute('material', 'depthTest: false;');
+        iconEl.setAttribute('position', '0 0 0');
+        iconEl.setAttribute('material', 'depthTest: false; transparent: true;');
         container.appendChild(iconEl);
     },
     
@@ -254,7 +241,7 @@ AFRAME.registerComponent('marker-navigation-ui', {
         const thumbnailEl = document.createElement('a-image');
         thumbnailEl.setAttribute('class', 'image-grid-item');
         thumbnailEl.setAttribute('position', `${x} ${y} 0`);
-        thumbnailEl.setAttribute('material', 'depthTest: false;');
+        thumbnailEl.setAttribute('material', 'depthTest: false; transparent: true;');
         thumbnailEl.setAttribute('src', 'assets/icons/model-thumbnail.png');
         thumbnailEl.setAttribute('width', maxCellWidth);
         thumbnailEl.setAttribute('height', maxCellHeight);
@@ -272,7 +259,7 @@ AFRAME.registerComponent('marker-navigation-ui', {
         const thumbnailEl = document.createElement('a-image');
         thumbnailEl.setAttribute('class', 'image-grid-item');
         thumbnailEl.setAttribute('position', `${x} ${y} 0`);
-        thumbnailEl.setAttribute('material', 'depthTest: false;');
+        thumbnailEl.setAttribute('material', 'depthTest: false; transparent: true;');
         thumbnailEl.setAttribute('src', 'assets/icons/video-thumbnail.png');
         thumbnailEl.setAttribute('width', maxCellWidth);
         thumbnailEl.setAttribute('height', maxCellHeight);
@@ -300,7 +287,7 @@ AFRAME.registerComponent('marker-navigation-ui', {
             const imageEl = document.createElement('a-image');
             imageEl.setAttribute('class', 'image-grid-item');
             imageEl.setAttribute('position', `${x + offsetX} ${y - offsetY} 0`);
-            imageEl.setAttribute('material', 'depthTest: false;');
+            imageEl.setAttribute('material', 'depthTest: false; transparent: true;');
             imageEl.setAttribute('src', imageSrc);
             imageEl.setAttribute('width', width);
             imageEl.setAttribute('height', height);
@@ -317,11 +304,10 @@ AFRAME.registerComponent('marker-navigation-ui', {
         img.src = imageSrc;
     },
     
-    // Show/hide centerpiece grid for a marker
-    setCenterpieceGridVisibility: function(markerValue, visible) {
-        const grid = document.getElementById(`centerpiece-grid-${markerValue}`);
-        if (grid) {
-            grid.setAttribute('visible', visible);
+    // Show/hide centerpiece grid
+    setCenterpieceGridVisibility: function(visible) {
+        if (this.centerpieceGrid) {
+            this.centerpieceGrid.setAttribute('visible', visible);
         }
     },
     
@@ -339,13 +325,15 @@ AFRAME.registerComponent('marker-navigation-ui', {
         if (marker && marker._imageGrid) {
             marker._imageGrid.setAttribute('visible', visible);
         }
-        
-        // Also handle centerpiece grid
-        this.setCenterpieceGridVisibility(markerValue, visible);
     },
     
     remove: function() {
         if (this.checkContentInterval) clearInterval(this.checkContentInterval);
         this.el.removeEventListener('content-loaded', () => {});
+        
+        // Remove centerpiece grid
+        if (this.centerpieceGrid) {
+            this.centerpieceGrid.remove();
+        }
     }
 });
