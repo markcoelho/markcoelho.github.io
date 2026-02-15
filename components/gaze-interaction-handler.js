@@ -154,11 +154,11 @@ AFRAME.registerComponent('gaze-interaction-handler', {
 
 // In gaze-interaction-handler.js - update the image zoom section:
 
+// In gaze-interaction-handler.js - update the image zoom section for marker images
+
 if (this.buttonType === 'zoom') {
-    // Determine which target to zoom based on the button's data-target attribute
     const target = this.el.getAttribute('data-target') || 'center';
     
-    // Get the appropriate image element
     let targetImage;
     if (target === 'left') {
         targetImage = getId('leftImage');
@@ -167,23 +167,16 @@ if (this.buttonType === 'zoom') {
     } else if (target === 'center') {
         targetImage = getId('centerImage');
     } else if (target.startsWith('marker-')) {
-        // For marker images
-        targetImage = document.querySelector(`#${target}-image`);
+        // Target the image inside the marker container
+        targetImage = document.querySelector(`#${target}-container #${target}-image`);
     }
     
-    if (!targetImage || !targetImage.getAttribute('visible')) {
-        console.log(`Target image ${target} not visible or not found`);
-        return;
-    }
+    if (!targetImage || !targetImage.getAttribute('visible')) return;
     
-    // Get current scale (for marker images, this is a non-uniform scale like [width, height, 1])
     const currentScale = targetImage.getAttribute('scale');
     const zoomMultiplier = this.data.zoomFactor;
-    
-    // Check both the data-action attribute and the component's action
     const action = this.el.getAttribute('data-action') || this.data.action;
     
-    // Calculate zoom factor
     let zoomFactor;
     if (action === 'increase') {
         zoomFactor = (1 + zoomMultiplier);
@@ -191,28 +184,19 @@ if (this.buttonType === 'zoom') {
         zoomFactor = Math.max(0.1 / currentScale.x, (1 - zoomMultiplier));
     }
     
-    // Apply zoom while PRESERVING ASPECT RATIO
     targetImage.setAttribute('scale', { 
         x: currentScale.x * zoomFactor, 
         y: currentScale.y * zoomFactor, 
         z: 1 
     });
     
-    // SAVE THE SCALE FOR MARKER IMAGES
     if (target.startsWith('marker-')) {
         const markerValue = target.replace('marker-', '');
-        const scene = this.el.sceneEl;
-        const contentManager = scene.components['marker-content-manager'];
-        
+        const contentManager = this.scene.components['marker-content-manager'];
         if (contentManager) {
-            // Store the current scale factor (relative to 1, not relative to original)
-            // Since marker images have non-uniform scale, we store the x scale as the zoom level
             contentManager.markerImageScales[markerValue] = currentScale.x * zoomFactor;
-            console.log(`Saved marker ${markerValue} image zoom level: ${contentManager.markerImageScales[markerValue]}`);
         }
     }
-    
-    console.log(`Image zoom on ${target}: action=${action}, scale ${currentScale.x.toFixed(2)} -> ${(currentScale.x * zoomFactor).toFixed(2)}`);
     return;
 }
         

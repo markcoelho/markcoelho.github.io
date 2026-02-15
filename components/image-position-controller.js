@@ -274,29 +274,28 @@ AFRAME.registerComponent('image-position-controller', {
     },
     
     onMarkerScrollerIntersect: function(evt, markerValue, markerTarget) {
-        const scroller = evt.target;
-        if (scroller.classList.contains('not-interactive')) return;
-        
-        // Get the marker image element
-        const markerImage = document.querySelector(`#${markerTarget}-image`);
-        if (!markerImage || !markerImage.getAttribute('visible')) return;
-        
-        const sessionId = `scroll-marker-${markerValue}`;
-        
-        // Initialize session if needed
-        if (!this.activeScrollSessions[sessionId]) {
-            this.activeScrollSessions[sessionId] = {
-                activeScrollers: new Set(),
-                moveTimer: null,
-                targetImage: markerImage,
-                target: 'marker',
-                markerValue: markerValue
-            };
-        }
-        
-        this.activeScrollSessions[sessionId].activeScrollers.add(scroller.id);
-        this.checkMovement(sessionId);
-    },
+    const scroller = evt.target;
+    if (scroller.classList.contains('not-interactive')) return;
+    
+    // Target the image inside the marker container
+    const markerImage = document.querySelector(`#${markerTarget}-container #${markerTarget}-image`);
+    if (!markerImage || !markerImage.getAttribute('visible')) return;
+    
+    const sessionId = `scroll-marker-${markerValue}`;
+    
+    if (!this.activeScrollSessions[sessionId]) {
+        this.activeScrollSessions[sessionId] = {
+            activeScrollers: new Set(),
+            moveTimer: null,
+            targetImage: markerImage,
+            target: 'marker',
+            markerValue: markerValue
+        };
+    }
+    
+    this.activeScrollSessions[sessionId].activeScrollers.add(scroller.id);
+    this.checkMovement(sessionId);
+},
     
     onMarkerScrollerIntersectCleared: function(evt, markerValue, markerTarget) {
         const scroller = evt.target;
