@@ -181,7 +181,7 @@ createMarkerElement: function(markerValue, parent) {
     modelEl.setAttribute('id', `marker-${markerValue}-model`);
     modelEl.setAttribute('gltf-model', '');
     modelEl.setAttribute('scale', '1 1 1');
-    modelEl.setAttribute('rotation', '90 90 90');
+    modelEl.setAttribute('rotation', '0 0 0');
     modelEl.setAttribute('render-order', '1');
     modelEl.setAttribute('visible', 'false');
     modelEl.setAttribute('class', 'content-entity');

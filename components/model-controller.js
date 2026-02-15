@@ -192,50 +192,60 @@ AFRAME.registerComponent('model-controller', {
     },
     
     continuousRotate: function(sessionId) {
-        const session = this.activeRotationSessions[sessionId];
-        if (!session || !session.targetModel || session.activeRollers.size === 0) {
-            this.stopRotation(sessionId);
-            return;
+    const session = this.activeRotationSessions[sessionId];
+    if (!session || !session.targetModel || session.activeRollers.size === 0) {
+        this.stopRotation(sessionId);
+        return;
+    }
+    
+    const currentRotation = session.targetModel.getAttribute('rotation');
+    const target = session.target;
+    let rotateY = 0, rotateZ = 0;
+    
+    // Define rotation directions based on target
+    const rotations = {};
+    
+    if (target === 'center') {
+        rotations['roller-up'] = () => rotateZ -= this.data.rotationStep;
+        rotations['roller-down'] = () => rotateZ += this.data.rotationStep;
+        rotations['roller-left'] = () => rotateY += this.data.rotationStep;
+        rotations['roller-right'] = () => rotateY -= this.data.rotationStep;
+    } else if (target && target.startsWith('marker-')) {
+        // Marker rollers have IDs like 'marker-roller-up', 'marker-roller-down', etc.
+        rotations['marker-roller-up'] = () => rotateZ -= this.data.rotationStep;
+        rotations['marker-roller-down'] = () => rotateZ += this.data.rotationStep;
+        rotations['marker-roller-left'] = () => rotateY += this.data.rotationStep;
+        rotations['marker-roller-right'] = () => rotateY -= this.data.rotationStep;
+    } else {
+        rotations[`${target}-roller-up`] = () => rotateZ -= this.data.rotationStep;
+        rotations[`${target}-roller-down`] = () => rotateZ += this.data.rotationStep;
+        rotations[`${target}-roller-left`] = () => rotateY += this.data.rotationStep;
+        rotations[`${target}-roller-right`] = () => rotateY -= this.data.rotationStep;
+    }
+    
+    // Apply rotations from all active rollers
+    session.activeRollers.forEach(id => {
+        if (rotations[id]) rotations[id]();
+    });
+    
+    // Apply the rotation
+    session.targetModel.setAttribute('rotation', {
+        x: currentRotation.x,
+        y: currentRotation.y + rotateY,
+        z: currentRotation.z + rotateZ
+    });
+    
+    // Save rotation state if this is for center model with a current marker
+    if (target === 'center' && this.currentMarker) {
+        this.saveRotationForMarker(this.currentMarker, session.targetModel);
+    } else if (target && target.startsWith('marker-')) {
+        // Save rotation for marker models
+        const markerValue = target.replace('marker-', '');
+        if (markerValue) {
+            this.saveRotationForMarker(markerValue, session.targetModel);
         }
-        
-        const currentRotation = session.targetModel.getAttribute('rotation');
-        const target = session.target;
-        let rotateY = 0, rotateZ = 0;
-        
-        // Define rotation directions based on target
-        const rotations = {};
-        
-        if (target === 'center') {
-            // Center rollers have IDs like 'roller-up', 'roller-right', etc.
-            rotations['roller-up'] = () => rotateZ -= this.data.rotationStep;
-            rotations['roller-down'] = () => rotateZ += this.data.rotationStep;
-            rotations['roller-left'] = () => rotateY += this.data.rotationStep;
-            rotations['roller-right'] = () => rotateY -= this.data.rotationStep;
-        } else {
-            // Left/right rollers have IDs like 'left-roller-up', 'right-roller-bottom', etc.
-            rotations[`${target}-roller-up`] = () => rotateZ -= this.data.rotationStep;
-            rotations[`${target}-roller-down`] = () => rotateZ += this.data.rotationStep;
-            rotations[`${target}-roller-left`] = () => rotateY += this.data.rotationStep;
-            rotations[`${target}-roller-right`] = () => rotateY -= this.data.rotationStep;
-        }
-        
-        // Apply rotations from all active rollers
-        session.activeRollers.forEach(id => {
-            if (rotations[id]) rotations[id]();
-        });
-        
-        // Apply the rotation
-        session.targetModel.setAttribute('rotation', {
-            x: currentRotation.x,
-            y: currentRotation.y + rotateY,
-            z: currentRotation.z + rotateZ
-        });
-        
-        // Save rotation state if this is for center model with a current marker
-        if (target === 'center' && this.currentMarker) {
-            this.saveRotationForMarker(this.currentMarker, session.targetModel);
-        }
-    },
+    }
+},
     
     // Observe for dynamically added marker rollers
     observeMarkerRollers: function() {
@@ -282,9 +292,14 @@ AFRAME.registerComponent('model-controller', {
     const roller = evt.target;
     if (roller.classList.contains('not-interactive')) return;
     
+    // Fix: markerTarget already includes "marker-"
     // Target the model inside the marker container
     const markerModel = document.querySelector(`#${markerTarget}-container #${markerTarget}-model`);
-    if (!markerModel || !markerModel.getAttribute('visible')) return;
+    
+    if (!markerModel || !markerModel.getAttribute('visible')) {
+        console.log(`Marker model not found for ${markerTarget}`);
+        return;
+    }
     
     const sessionId = `rotate-marker-${markerValue}`;
     
