@@ -309,6 +309,8 @@ onMarkerFound: function(marker) {
         console.log(`Showing right piece content for marker ${markerValue}:`, content);
         
         const rightImage = getId('rightImage');
+        rightImage.setAttribute('position', { x: 0, y: 0, z: 0 });
+        
         const rightVideo = getId('rightVideo');
         const rightModel = getId('rightModel');
         
@@ -439,6 +441,8 @@ onMarkerFound: function(marker) {
         console.log(`Showing left piece content for marker ${markerValue}:`, content);
         
         const leftImage = getId('leftImage');
+        leftImage.setAttribute('position', { x: 0, y: 0, z: 0 });
+
         const leftVideo = getId('leftVideo');
         const leftModel = getId('leftModel');
         
