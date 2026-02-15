@@ -244,7 +244,20 @@ if (this.buttonType === 'zoom') {
     }
         
         // Reset button (for images)
-        if (this.buttonType === 'reset' && !this.triggered) {
+       // Reset button (for images) - add marker-reset case
+if (this.buttonType === 'reset' && !this.triggered) {
+    // Check if this is a marker reset first
+    if (this.el.classList.contains('marker-reset')) {
+        const markerValue = this.el.getAttribute('data-marker-value') || 
+                           this.el.getAttribute('markerValue');
+        if (markerValue) {
+            this.resetMarkerImage(markerValue, this.scene);
+            this.triggered = true;
+            return;
+        }
+    }
+    
+    // Rest of your existing reset logic for center/left/right...
     const scene = this.scene;
     const contentManager = scene.components['marker-content-manager'];
     const imageController = scene.components['image-position-controller'];
@@ -258,16 +271,6 @@ if (this.buttonType === 'zoom') {
         target = 'left';
     } else if (this.el.classList.contains('right-reset')) {
         target = 'right';
-    } else if (this.el.classList.contains('marker-reset')) {
-        target = 'marker';
-        // Get marker value from data attribute
-        const markerValue = this.el.getAttribute('data-marker-value') || 
-                           this.el.getAttribute('data-target')?.replace('marker-', '');
-        if (markerValue) {
-            this.resetMarkerImage(markerValue, scene);
-            this.triggered = true;
-            return;
-        }
     }
     
     // Use the currently detected marker
@@ -280,12 +283,9 @@ if (this.buttonType === 'zoom') {
     
     // Reset based on target
     if (target === 'center') {
-        // Existing center reset logic
         const content = contentManager.getMarkerContent(currentMarker);
         if (content?.type === 'image') {
             imageController.setupImage(content.value, currentMarker, 'reset');
-        } else {
-            console.log('Current content is not an image, cannot reset');
         }
     } else if (target === 'left') {
         const leftContent = contentManager.getLeftSideContent(currentMarker);
@@ -300,6 +300,16 @@ if (this.buttonType === 'zoom') {
     }
     
     this.triggered = true;
+}
+
+// Also add a specific case for marker-reset if you want to handle it separately
+if (this.data.action === 'marker-reset' && !this.triggered) {
+    const markerValue = this.data.markerValue || this.el.getAttribute('markerValue');
+    if (markerValue) {
+        this.resetMarkerImage(markerValue, this.scene);
+        this.triggered = true;
+    }
+    return;
 }
         
         // 3D Model Reset button
@@ -507,37 +517,56 @@ resetSideImage: function(side, content, markerValue, scene) {
 },
 
 // Reset marker image
+// Update the resetMarkerImage function in gaze-interaction-handler.js
 resetMarkerImage: function(markerValue, scene) {
     const markerImage = document.querySelector(`#marker-${markerValue}-container #marker-${markerValue}-image`);
-    if (!markerImage) return;
+    if (!markerImage) {
+        console.log(`Marker image not found for ${markerValue}`);
+        return;
+    }
     
     const contentManager = scene.components['marker-content-manager'];
     const currentIndex = contentManager?.currentContentIndex[markerValue] || 0;
     const markerItems = contentManager?.markerData?.[markerValue] || [];
     const currentItem = markerItems[currentIndex];
     
-    if (!currentItem || currentItem.type !== 'image') return;
+    if (!currentItem || currentItem.type !== 'image') {
+        console.log(`Current item for marker ${markerValue} is not an image`);
+        return;
+    }
     
     const baseScale = currentItem.scale || 1;
     
-    // Reset marker image scale in content manager
+    // Reset position to 0,0,0
+    markerImage.setAttribute('position', { x: 0, y: 0, z: 0 });
+    
+    // Reset scale in content manager
     if (contentManager) {
         contentManager.markerImageScales[markerValue] = 1;
     }
     
-    // Create a temporary image to get natural dimensions
+    // Create a temporary image to get natural dimensions and set proper scale
     const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
     img.onload = () => {
         const aspectRatio = img.naturalWidth / img.naturalHeight;
         
-        // Set scale: width = height * aspectRatio
-        const height = baseScale;
+        // Set scale based on aspect ratio (maintain proportions)
+        // For marker images, we want them to lie flat (rotation -90) so scale accordingly
+        // width = baseScale * aspectRatio, height = baseScale
         const width = baseScale * aspectRatio;
+        const height = baseScale;
         
-        markerImage.setAttribute('scale', `${width} ${height} ${1}`);
-        markerImage.setAttribute('position', { x: 0, y: 0, z: 0 });
+        markerImage.setAttribute('scale', `${width} ${height} 1`);
         
-        console.log(`Reset marker image for ${markerValue} to scale: ${width.toFixed(2)}x${height}`);
+        console.log(`Reset marker image for ${markerValue} to position (0,0,0) and scale: ${width.toFixed(2)}x${height}`);
+    };
+    
+    img.onerror = () => {
+        console.error(`Failed to load image for reset: ${currentItem.src}`);
+        // Fallback: just set a default square scale
+        markerImage.setAttribute('scale', `${baseScale} ${baseScale} 1`);
     };
     
     img.src = currentItem.src;
