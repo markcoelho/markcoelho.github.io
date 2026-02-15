@@ -206,7 +206,6 @@ createMarkerControls: function(markerValue, type) {
     controlsPlane.setAttribute('height', '0.5'); // Slightly taller
     controlsPlane.setAttribute('color', 'white');
     controlsPlane.setAttribute('visible', 'false');
-    controlsPlane.setAttribute('material', 'depthTest: false; transparent: false;'); // Solid white
     controlsPlane.setAttribute('render-order', '2');
 
     // Reset button - moved more to center
@@ -290,7 +289,6 @@ createMarkerVideoControls: function(markerValue) {
     controlsPlane.setAttribute('height', '0.5'); // Taller
     controlsPlane.setAttribute('color', 'white');
     controlsPlane.setAttribute('visible', 'false');
-    controlsPlane.setAttribute('material', 'depthTest: false; transparent: false;'); // Solid white
     controlsPlane.setAttribute('render-order', '2');
 
     // Restart button - moved to center left
@@ -363,7 +361,6 @@ createMarker3dControls: function(markerValue) {
     controlsPlane.setAttribute('height', '0.5');
     controlsPlane.setAttribute('color', 'white');
     controlsPlane.setAttribute('visible', 'false');
-    controlsPlane.setAttribute('material', 'depthTest: false; transparent: false;');
     controlsPlane.setAttribute('render-order', '2');
 
     // Reset button

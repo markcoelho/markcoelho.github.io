@@ -152,6 +152,8 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         // Image Zoom buttons
          // In gaze-interaction-handler.js, update the image zoom section:
 
+// In gaze-interaction-handler.js - update the image zoom section:
+
 if (this.buttonType === 'zoom') {
     // Determine which target to zoom based on the button's data-target attribute
     const target = this.el.getAttribute('data-target') || 'center';
@@ -174,20 +176,27 @@ if (this.buttonType === 'zoom') {
         return;
     }
     
-    const currentScale = targetImage.getAttribute('scale').x;
+    // Get current scale (for marker images, this is a non-uniform scale like [width, height, 1])
+    const currentScale = targetImage.getAttribute('scale');
     const zoomMultiplier = this.data.zoomFactor;
     
     // Check both the data-action attribute and the component's action
     const action = this.el.getAttribute('data-action') || this.data.action;
     
-    let newScale;
+    // Calculate zoom factor
+    let zoomFactor;
     if (action === 'increase') {
-        newScale = currentScale * (1 + zoomMultiplier);
+        zoomFactor = (1 + zoomMultiplier);
     } else {
-        newScale = Math.max(0.1, currentScale * (1 - zoomMultiplier));
+        zoomFactor = Math.max(0.1 / currentScale.x, (1 - zoomMultiplier));
     }
     
-    targetImage.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
+    // Apply zoom while PRESERVING ASPECT RATIO
+    targetImage.setAttribute('scale', { 
+        x: currentScale.x * zoomFactor, 
+        y: currentScale.y * zoomFactor, 
+        z: 1 
+    });
     
     // SAVE THE SCALE FOR MARKER IMAGES
     if (target.startsWith('marker-')) {
@@ -196,15 +205,14 @@ if (this.buttonType === 'zoom') {
         const contentManager = scene.components['marker-content-manager'];
         
         if (contentManager) {
-            // Calculate user scale factor relative to original
-            const originalScale = contentManager.markerOriginalScales[markerValue] || 1;
-            const userScale = newScale / originalScale;
-            contentManager.markerImageScales[markerValue] = userScale;
-            console.log(`Saved marker ${markerValue} image user scale: ${userScale}`);
+            // Store the current scale factor (relative to 1, not relative to original)
+            // Since marker images have non-uniform scale, we store the x scale as the zoom level
+            contentManager.markerImageScales[markerValue] = currentScale.x * zoomFactor;
+            console.log(`Saved marker ${markerValue} image zoom level: ${contentManager.markerImageScales[markerValue]}`);
         }
     }
     
-    console.log(`Image zoom on ${target}: action=${action}, scale ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
+    console.log(`Image zoom on ${target}: action=${action}, scale ${currentScale.x.toFixed(2)} -> ${(currentScale.x * zoomFactor).toFixed(2)}`);
     return;
 }
         

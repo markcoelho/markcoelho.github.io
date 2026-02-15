@@ -17,7 +17,6 @@ function calcImageSize(aspectRatio, maxWidth, maxHeight) {
 }
 
 // Position panel between camera and marker
-// Position panel between camera and marker
 function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
     const markerPos = getWorldPosition(marker);
     const cameraPos = getWorldPosition(camera);
