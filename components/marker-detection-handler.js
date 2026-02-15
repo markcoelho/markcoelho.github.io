@@ -568,14 +568,14 @@ onMarkerFound: function(marker) {
     // In marker-detection-handler.js - update showMarkerImage function
 
 showMarkerImage: function(markerValue, markerElement, scene) {
-    const markerImage = document.querySelector(`#marker-${markerValue}-image`);
-    const markerModel = document.querySelector(`#marker-${markerValue}-model`);
-    const markerVideo = document.querySelector(`#marker-${markerValue}-video`);
+        const markerImage = document.querySelector(`#marker-${markerValue}-container #marker-${markerValue}-image`);
+    const markerModel = document.querySelector(`#marker-${markerValue}-container #marker-${markerValue}-model`);
+    const markerVideo = document.querySelector(`#marker-${markerValue}-container #marker-${markerValue}-video`);
     
     // Get control elements
-    const markerControls = document.querySelector(`#marker-${markerValue}-controls`);
-    const markerVideoControls = document.querySelector(`#marker-${markerValue}-video-controls`);
-    const marker3dControls = document.querySelector(`#marker-${markerValue}-3d-controls`);
+        const markerControls = document.querySelector(`#marker-${markerValue}-container #marker-${markerValue}-controls`);
+    const markerVideoControls = document.querySelector(`#marker-${markerValue}-container #marker-${markerValue}-video-controls`);
+    const marker3dControls = document.querySelector(`#marker-${markerValue}-container #marker-${markerValue}-3d-controls`);
     
     // Hide all controls initially
     if (markerControls) markerControls.setAttribute('visible', 'false');

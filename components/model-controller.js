@@ -279,29 +279,28 @@ AFRAME.registerComponent('model-controller', {
     },
     
     onMarkerRollerIntersect: function(evt, markerValue, markerTarget) {
-        const roller = evt.target;
-        if (roller.classList.contains('not-interactive')) return;
-        
-        // Get the marker model element
-        const markerModel = document.querySelector(`#${markerTarget}-model`);
-        if (!markerModel || !markerModel.getAttribute('visible')) return;
-        
-        const sessionId = `rotate-marker-${markerValue}`;
-        
-        // Initialize session if needed
-        if (!this.activeRotationSessions[sessionId]) {
-            this.activeRotationSessions[sessionId] = {
-                activeRollers: new Set(),
-                rotateTimer: null,
-                targetModel: markerModel,
-                target: `marker-${markerValue}`,
-                markerValue: markerValue
-            };
-        }
-        
-        this.activeRotationSessions[sessionId].activeRollers.add(roller.id);
-        this.startRotation(sessionId);
-    },
+    const roller = evt.target;
+    if (roller.classList.contains('not-interactive')) return;
+    
+    // Target the model inside the marker container
+    const markerModel = document.querySelector(`#${markerTarget}-container #${markerTarget}-model`);
+    if (!markerModel || !markerModel.getAttribute('visible')) return;
+    
+    const sessionId = `rotate-marker-${markerValue}`;
+    
+    if (!this.activeRotationSessions[sessionId]) {
+        this.activeRotationSessions[sessionId] = {
+            activeRollers: new Set(),
+            rotateTimer: null,
+            targetModel: markerModel,
+            target: `marker-${markerValue}`,
+            markerValue: markerValue
+        };
+    }
+    
+    this.activeRotationSessions[sessionId].activeRollers.add(roller.id);
+    this.startRotation(sessionId);
+},
     
     onMarkerRollerIntersectCleared: function(evt, markerValue, markerTarget) {
         const roller = evt.target;

@@ -141,12 +141,22 @@ getMarkerNavigationFlag: function(marker) {
     // Create single marker element
     // In marker-content-manager.js - update createMarkerElement function
 
+// In marker-content-manager.js - update createMarkerElement function
+
 createMarkerElement: function(markerValue, parent) {
     const markerEl = document.createElement('a-marker');
     markerEl.setAttribute('type', 'barcode');
     markerEl.setAttribute('value', markerValue);
     
-    // Create image element
+    // Create a CONTAINER for all marker content (like centerpiece)
+    // This will NOT be directly affected by AR.js tracking
+    const markerContainer = document.createElement('a-entity');
+    markerContainer.setAttribute('id', `marker-${markerValue}-container`);
+    markerContainer.setAttribute('class', 'marker-content-container');
+    // Position it slightly above the marker to avoid z-fighting
+    markerContainer.setAttribute('position', '0 0 0.1');
+    
+    // Create image element inside container
     const imageEl = document.createElement('a-image');
     imageEl.setAttribute('id', `marker-${markerValue}-image`);
     imageEl.setAttribute('src', '');
@@ -154,9 +164,9 @@ createMarkerElement: function(markerValue, parent) {
     imageEl.setAttribute('render-order', '1');
     imageEl.setAttribute('visible', 'false');
     imageEl.setAttribute('class', 'content-entity');
-    markerEl.appendChild(imageEl);
+    markerContainer.appendChild(imageEl);
     
-    // Create video element
+    // Create video element inside container
     const videoEl = document.createElement('a-video');
     videoEl.setAttribute('id', `marker-${markerValue}-video`);
     videoEl.setAttribute('src', '');
@@ -164,30 +174,33 @@ createMarkerElement: function(markerValue, parent) {
     videoEl.setAttribute('render-order', '1');
     videoEl.setAttribute('visible', 'false');
     videoEl.setAttribute('class', 'content-entity');
-    markerEl.appendChild(videoEl);
+    markerContainer.appendChild(videoEl);
     
-    // Create 3D model element
+    // Create 3D model element inside container
     const modelEl = document.createElement('a-entity');
     modelEl.setAttribute('id', `marker-${markerValue}-model`);
     modelEl.setAttribute('gltf-model', '');
     modelEl.setAttribute('scale', '1 1 1');
+    modelEl.setAttribute('rotation', '90 90 90');
     modelEl.setAttribute('render-order', '1');
     modelEl.setAttribute('visible', 'false');
     modelEl.setAttribute('class', 'content-entity');
-    markerEl.appendChild(modelEl);
+    markerContainer.appendChild(modelEl);
     
-    // ===== ADD MARKER CONTROLS =====
-    // Create controls for marker images
+    // Create controls for marker images inside container
     const markerControls = this.createMarkerControls(markerValue, 'image');
-    markerEl.appendChild(markerControls);
+    markerContainer.appendChild(markerControls);
     
-    // Create controls for marker videos
+    // Create controls for marker videos inside container
     const markerVideoControls = this.createMarkerVideoControls(markerValue);
-    markerEl.appendChild(markerVideoControls);
+    markerContainer.appendChild(markerVideoControls);
     
-    // Create controls for marker 3D models
+    // Create controls for marker 3D models inside container
     const marker3dControls = this.createMarker3dControls(markerValue);
-    markerEl.appendChild(marker3dControls);
+    markerContainer.appendChild(marker3dControls);
+    
+    // Append the container to the marker, NOT the individual elements
+    markerEl.appendChild(markerContainer);
     
     parent.appendChild(markerEl);
     
