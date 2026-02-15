@@ -1,14 +1,19 @@
 AFRAME.registerComponent('marker-content-manager', {
     init: function() {
-        this.centerImage = getId('centerImage');
-        this.centerpiece = getId('centerpiece');
-        this.contentSequences = {};
-        this.currentContentIndex = {};
-        this.narrations = {};
-        this.surroundContent = {};
-        
-        this.loadContentFromJSON();
-    },
+    this.centerImage = getId('centerImage');
+    this.centerpiece = getId('centerpiece');
+    this.contentSequences = {};
+    this.currentContentIndex = {};
+    this.narrations = {};
+    this.surroundContent = {};
+    
+    // ADD THESE LINES - stores for marker zoom levels
+    this.markerImageScales = {};  // Stores user-adjusted scale for marker images
+    this.markerModelScales = {};  // Stores user-adjusted scale for marker 3D models
+    this.markerOriginalScales = {}; // Stores original scale from content.json for marker images
+    
+    this.loadContentFromJSON();
+},
     
     // Load content from JSON file
     loadContentFromJSON: function() {
@@ -241,32 +246,35 @@ createMarkerControls: function(markerValue, type) {
         controlsPlane.appendChild(arrow);
     });
 
-    // Zoom controls - moved more to center
+
+// Zoom controls
     const zoomIn = document.createElement('a-image');
     zoomIn.setAttribute('src', 'assets/icons/zoom-in.png');
     zoomIn.setAttribute('class', 'marker-zoom-button');
-    zoomIn.setAttribute('position', '0.65 0 0.1'); // Adjusted for wider plane
-    zoomIn.setAttribute('scale', '0.22 0.22 0.22'); // Slightly larger
+    zoomIn.setAttribute('position', '0.65 0 0.2');
+    zoomIn.setAttribute('scale', '0.22 0.22 0.22');
     zoomIn.setAttribute('rotation', '0 0 0');
-    zoomIn.setAttribute('data-action', 'increase');
+    zoomIn.setAttribute('data-action', 'increase');  // This must be 'increase'
+    zoomIn.setAttribute('data-target', `marker-${markerValue}`);
     zoomIn.setAttribute('material', 'depthTest: false;');
     zoomIn.setAttribute('render-order', '3');
     zoomIn.setAttribute('gaze-interaction-handler', 
-        `action: marker-zoom-in; markerValue: ${markerValue}; fuseTimeout: 500`);
+        `action: increase; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomIn);
 
     const zoomOut = document.createElement('a-image');
     zoomOut.setAttribute('src', 'assets/icons/zoom-out.png');
     zoomOut.setAttribute('class', 'marker-zoom-button');
-    zoomOut.setAttribute('position', '0.9 0 0.1'); // Adjusted for wider plane
-    zoomOut.setAttribute('scale', '0.22 0.22 0.22'); // Slightly larger
+    zoomOut.setAttribute('position', '0.9 0 0.2');
+    zoomOut.setAttribute('scale', '0.22 0.22 0.22');
     zoomOut.setAttribute('rotation', '0 0 0');
-    zoomOut.setAttribute('data-action', 'decrease');
+    zoomOut.setAttribute('data-action', 'decrease');  // This must be 'decrease'
+    zoomOut.setAttribute('data-target', `marker-${markerValue}`);
     zoomOut.setAttribute('material', 'depthTest: false;');
     zoomOut.setAttribute('render-order', '3');
     zoomOut.setAttribute('gaze-interaction-handler', 
-        `action: marker-zoom-out; markerValue: ${markerValue}; fuseTimeout: 500`);
-    controlsPlane.appendChild(zoomOut);
+        `action: decrease; markerValue: ${markerValue}; fuseTimeout: 500`);
+controlsPlane.appendChild(zoomOut);
 
     return controlsPlane;
 },
@@ -343,20 +351,22 @@ createMarkerVideoControls: function(markerValue) {
 },
 
 // Helper function to create marker 3D controls - BETTER CENTERING
+// In marker-content-manager.js, update createMarker3dControls function:
+
 createMarker3dControls: function(markerValue) {
     const controlsPlane = document.createElement('a-plane');
     controlsPlane.setAttribute('id', `marker-${markerValue}-3d-controls`);
     controlsPlane.setAttribute('class', 'marker-3d-controls');
-    controlsPlane.setAttribute('position', '0 0 0.2'); // Increased Z
+    controlsPlane.setAttribute('position', '0 0 0.2');
     controlsPlane.setAttribute('rotation', '-90 0 0');
-    controlsPlane.setAttribute('width', '2.2'); // Wider
-    controlsPlane.setAttribute('height', '0.5'); // Taller
+    controlsPlane.setAttribute('width', '2.2');
+    controlsPlane.setAttribute('height', '0.5');
     controlsPlane.setAttribute('color', 'white');
     controlsPlane.setAttribute('visible', 'false');
-    controlsPlane.setAttribute('material', 'depthTest: false; transparent: false;'); // Solid white
+    controlsPlane.setAttribute('material', 'depthTest: false; transparent: false;');
     controlsPlane.setAttribute('render-order', '2');
 
-    // Reset button - left side
+    // Reset button
     const resetBtn = document.createElement('a-image');
     resetBtn.setAttribute('src', 'assets/icons/reset.png');
     resetBtn.setAttribute('class', 'marker-3dreset');
@@ -365,11 +375,12 @@ createMarker3dControls: function(markerValue) {
     resetBtn.setAttribute('rotation', '0 0 0');
     resetBtn.setAttribute('material', 'depthTest: false;');
     resetBtn.setAttribute('render-order', '3');
+    resetBtn.setAttribute('data-target', `marker-${markerValue}`);
     resetBtn.setAttribute('gaze-interaction-handler', 
-        `action: marker-3dreset; markerValue: ${markerValue}; fuseTimeout: 1000`);
+        `action: 3dreset; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(resetBtn);
 
-    // Rotating arrows - centered in a cross pattern
+    // Rotating arrows
     const directions = [
         { id: 'up', pos: '0 0.15 0.1' },
         { id: 'right', pos: '0.25 0 0.1' },
@@ -380,7 +391,7 @@ createMarker3dControls: function(markerValue) {
     directions.forEach(dir => {
         const arrow = document.createElement('a-image');
         arrow.setAttribute('src', `assets/icons/${dir.id}.png`);
-        arrow.setAttribute('class', `marker-roller marker-roller-${dir.id}`);
+        arrow.setAttribute('class', `marker-roller`);
         arrow.setAttribute('position', dir.pos);
         arrow.setAttribute('scale', '0.22 0.22 0.22');
         arrow.setAttribute('rotation', '0 0 0');
@@ -389,35 +400,37 @@ createMarker3dControls: function(markerValue) {
         arrow.setAttribute('data-direction', dir.id);
         arrow.setAttribute('data-target', `marker-${markerValue}`);
         arrow.setAttribute('gaze-interaction-handler', 
-            `action: marker-rotate; markerValue: ${markerValue}; fuseTimeout: 500`);
+            `action: model-rotate; markerValue: ${markerValue}; fuseTimeout: 500`);
         controlsPlane.appendChild(arrow);
     });
 
-    // Zoom controls - right side
+    // Zoom controls - FIX THE ACTIONS HERE
     const zoomIn = document.createElement('a-image');
     zoomIn.setAttribute('src', 'assets/icons/zoom-in.png');
     zoomIn.setAttribute('class', 'marker-model-zoom-button');
-    zoomIn.setAttribute('position', '0.65 0 0.1'); // Adjusted
+    zoomIn.setAttribute('position', '0.65 0 0.1');
     zoomIn.setAttribute('scale', '0.22 0.22 0.22');
     zoomIn.setAttribute('rotation', '0 0 0');
-    zoomIn.setAttribute('data-action', '3dincrease');
+    zoomIn.setAttribute('data-action', '3dincrease');  // Make sure this is '3dincrease'
+    zoomIn.setAttribute('data-target', `marker-${markerValue}`);
     zoomIn.setAttribute('material', 'depthTest: false;');
     zoomIn.setAttribute('render-order', '3');
     zoomIn.setAttribute('gaze-interaction-handler', 
-        `action: marker-3dincrease; markerValue: ${markerValue}; fuseTimeout: 500`);
+        `action: 3dincrease; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomIn);
 
     const zoomOut = document.createElement('a-image');
     zoomOut.setAttribute('src', 'assets/icons/zoom-out.png');
     zoomOut.setAttribute('class', 'marker-model-zoom-button');
-    zoomOut.setAttribute('position', '0.9 0 0.1'); // Adjusted
+    zoomOut.setAttribute('position', '0.9 0 0.1');
     zoomOut.setAttribute('scale', '0.22 0.22 0.22');
     zoomOut.setAttribute('rotation', '0 0 0');
-    zoomOut.setAttribute('data-action', '3ddecrease');
+    zoomOut.setAttribute('data-action', '3ddecrease');  // Make sure this is '3ddecrease'
+    zoomOut.setAttribute('data-target', `marker-${markerValue}`);
     zoomOut.setAttribute('material', 'depthTest: false;');
     zoomOut.setAttribute('render-order', '3');
     zoomOut.setAttribute('gaze-interaction-handler', 
-        `action: marker-3ddecrease; markerValue: ${markerValue}; fuseTimeout: 500`);
+        `action: 3ddecrease; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomOut);
 
     return controlsPlane;
