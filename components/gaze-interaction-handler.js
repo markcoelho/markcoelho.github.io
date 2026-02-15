@@ -245,31 +245,62 @@ if (this.buttonType === 'zoom') {
         
         // Reset button (for images)
         if (this.buttonType === 'reset' && !this.triggered) {
-            const scene = this.scene;
-            const contentManager = scene.components['marker-content-manager'];
-            const imageController = scene.components['image-position-controller'];
-            const detectionHandler = scene.components['marker-detection-handler'];
-            
-            if (!imageController || !contentManager || !detectionHandler) return;
-            
-            // Use the currently detected marker
-            const currentMarker = detectionHandler.currentMarker;
-            
-            if (!currentMarker) {
-                console.log('No marker is currently active');
-                return;
-            }
-            
-            // Only reset the current marker's image
-            const content = contentManager.getMarkerContent(currentMarker);
-            if (content?.type === 'image') {
-                imageController.setupImage(content.value, currentMarker, 'reset');
-            } else {
-                console.log('Current content is not an image, cannot reset');
-            }
-            
+    const scene = this.scene;
+    const contentManager = scene.components['marker-content-manager'];
+    const imageController = scene.components['image-position-controller'];
+    const detectionHandler = scene.components['marker-detection-handler'];
+    
+    if (!imageController || !contentManager || !detectionHandler) return;
+    
+    // Determine which target to reset based on button's data-target or class
+    let target = 'center'; // default
+    if (this.el.classList.contains('left-reset')) {
+        target = 'left';
+    } else if (this.el.classList.contains('right-reset')) {
+        target = 'right';
+    } else if (this.el.classList.contains('marker-reset')) {
+        target = 'marker';
+        // Get marker value from data attribute
+        const markerValue = this.el.getAttribute('data-marker-value') || 
+                           this.el.getAttribute('data-target')?.replace('marker-', '');
+        if (markerValue) {
+            this.resetMarkerImage(markerValue, scene);
             this.triggered = true;
+            return;
         }
+    }
+    
+    // Use the currently detected marker
+    const currentMarker = detectionHandler.currentMarker;
+    
+    if (!currentMarker) {
+        console.log('No marker is currently active');
+        return;
+    }
+    
+    // Reset based on target
+    if (target === 'center') {
+        // Existing center reset logic
+        const content = contentManager.getMarkerContent(currentMarker);
+        if (content?.type === 'image') {
+            imageController.setupImage(content.value, currentMarker, 'reset');
+        } else {
+            console.log('Current content is not an image, cannot reset');
+        }
+    } else if (target === 'left') {
+        const leftContent = contentManager.getLeftSideContent(currentMarker);
+        if (leftContent?.type === 'image') {
+            this.resetSideImage('left', leftContent, currentMarker, scene);
+        }
+    } else if (target === 'right') {
+        const rightContent = contentManager.getRightSideContent(currentMarker);
+        if (rightContent?.type === 'image') {
+            this.resetSideImage('right', rightContent, currentMarker, scene);
+        }
+    }
+    
+    this.triggered = true;
+}
         
         // 3D Model Reset button
         if (this.buttonType === 'model-reset' && !this.triggered) {
@@ -429,6 +460,88 @@ if (this.buttonType === 'zoom') {
             this.triggered = true;
         }
     },
+
+    // Reset side image (left or right)
+resetSideImage: function(side, content, markerValue, scene) {
+    const sideImage = getId(`${side}Image`);
+    if (!sideImage) return;
+    
+    const contentScale = content.scale || 1;
+    const baseSize = 3 * contentScale;
+    
+    // Create a temporary image to get natural dimensions
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+        // Calculate aspect ratio
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        
+        // Determine dimensions based on aspect ratio
+        let width, height;
+        if (aspectRatio >= 1) {
+            // Landscape or square
+            width = baseSize;
+            height = baseSize / aspectRatio;
+        } else {
+            // Portrait
+            width = baseSize * aspectRatio;
+            height = baseSize;
+        }
+        
+        // Reset position and scale in a single operation
+        sideImage.setAttribute('position', { x: 0, y: 0, z: 0 });
+        sideImage.setAttribute('src', content.value);
+        sideImage.setAttribute('width', width);
+        sideImage.setAttribute('height', height);
+        sideImage.setAttribute('scale', { x: 1, y: 1, z: 1 });
+        
+        console.log(`Reset ${side} image for marker ${markerValue} to scale: ${width.toFixed(2)}x${height.toFixed(2)}`);
+    };
+    
+    img.onerror = () => {
+        console.error(`Failed to load image for reset: ${content.value}`);
+    };
+    
+    img.src = content.value;
+},
+
+// Reset marker image
+resetMarkerImage: function(markerValue, scene) {
+    const markerImage = document.querySelector(`#marker-${markerValue}-container #marker-${markerValue}-image`);
+    if (!markerImage) return;
+    
+    const contentManager = scene.components['marker-content-manager'];
+    const currentIndex = contentManager?.currentContentIndex[markerValue] || 0;
+    const markerItems = contentManager?.markerData?.[markerValue] || [];
+    const currentItem = markerItems[currentIndex];
+    
+    if (!currentItem || currentItem.type !== 'image') return;
+    
+    const baseScale = currentItem.scale || 1;
+    
+    // Reset marker image scale in content manager
+    if (contentManager) {
+        contentManager.markerImageScales[markerValue] = 1;
+    }
+    
+    // Create a temporary image to get natural dimensions
+    const img = new Image();
+    img.onload = () => {
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        
+        // Set scale: width = height * aspectRatio
+        const height = baseScale;
+        const width = baseScale * aspectRatio;
+        
+        markerImage.setAttribute('scale', `${width} ${height} ${1}`);
+        markerImage.setAttribute('position', { x: 0, y: 0, z: 0 });
+        
+        console.log(`Reset marker image for ${markerValue} to scale: ${width.toFixed(2)}x${height}`);
+    };
+    
+    img.src = currentItem.src;
+},
     
     // Update navigation visibility
     updateNavigationVisibility: function(markerValue, contentManager) {
