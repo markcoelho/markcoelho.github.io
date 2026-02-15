@@ -1,4 +1,4 @@
-// gaze-interaction-handler.js - Updated section for reset buttons
+// gaze-interaction-handler.js - Updated section for mute buttons
 
 AFRAME.registerComponent('gaze-interaction-handler', {
     schema: {
@@ -73,6 +73,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
                  this.el.classList.contains('marker-restart'))
             this.buttonType = 'restart';
         
+        // MUTE BUTTONS - handle all mute button variants
         else if (this.el.classList.contains('mute') || 
                  this.el.classList.contains('left-mute') || 
                  this.el.classList.contains('right-mute') || 
@@ -361,41 +362,64 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             this.triggered = true;
         }
         
-        // Restart video
+        // Restart video - handle center, left, and right
         if (this.buttonType === 'restart' && !this.triggered) {
-            const centerVideo = getId('centerVideo');
-            if (centerVideo) {
+            const target = this.getVideoTarget();
+            const videoElement = this.getVideoElement(target);
+            
+            if (videoElement) {
                 try {
-                    const material = centerVideo.components?.material?.material;
+                    const material = videoElement.components?.material?.material;
                     if (material?.map?.image) {
                         material.map.image.currentTime = 0;
-                        material.map.image.play();
+                        material.map.image.play().catch(e => {
+                            console.warn(`Could not play ${target} video:`, e);
+                        });
                     }
                 } catch (e) {
-                    console.warn('Could not restart video:', e);
+                    console.warn(`Could not restart ${target} video:`, e);
                 }
             }
             this.triggered = true;
         }
         
-        // Mute/unmute video
+        // Mute/unmute video - UPDATED to handle center, left, and right
         if (this.buttonType === 'mute' && !this.triggered) {
-            const centerVideo = getId('centerVideo');
+            const target = this.getVideoTarget();
+            const videoElement = this.getVideoElement(target);
             const muteButton = this.el;
             
-            if (centerVideo) {
+            if (videoElement) {
                 try {
-                    const material = centerVideo.components?.material?.material;
+                    const material = videoElement.components?.material?.material;
                     if (material?.map?.image) {
+                        // Toggle mute state
                         material.map.image.muted = !material.map.image.muted;
                         const isMuted = material.map.image.muted;
-                        muteButton.setAttribute('src', 
-                            isMuted ? 'assets/icons/unmute.png' : 'assets/icons/mute.png'
-                        );
+                        
+                        // Update button icon based on mute state and target
+                        let iconPath;
+                        if (isMuted) {
+                            iconPath = target === 'center' ? 'assets/icons/unmute.png' : 
+                                      target === 'left' ? 'assets/icons/unmute.png' : 
+                                      target === 'right' ? 'assets/icons/unmute.png' : 
+                                      'assets/icons/unmute.png';
+                        } else {
+                            iconPath = target === 'center' ? 'assets/icons/mute.png' : 
+                                      target === 'left' ? 'assets/icons/mute.png' : 
+                                      target === 'right' ? 'assets/icons/mute.png' : 
+                                      'assets/icons/mute.png';
+                        }
+                        
+                        muteButton.setAttribute('src', iconPath);
+                        
+                        // Update action for future toggles
                         this.data.action = isMuted ? 'unmute' : 'mute';
+                        
+                        console.log(`${target} video ${isMuted ? 'muted' : 'unmuted'}`);
                     }
                 } catch (e) {
-                    console.warn('Could not toggle mute:', e);
+                    console.warn(`Could not toggle mute for ${target} video:`, e);
                 }
             }
             this.triggered = true;
@@ -469,39 +493,85 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             this.triggered = true;
         }
         
-        // Video fast backward
+        // Video fast backward - handle center, left, and right
         if (this.buttonType === 'fast-backward' && !this.triggered) {
-            const centerVideo = getId('centerVideo');
-            if (centerVideo) {
+            const target = this.getVideoTarget();
+            const videoElement = this.getVideoElement(target);
+            
+            if (videoElement) {
                 try {
-                    const material = centerVideo.components?.material?.material;
+                    const material = videoElement.components?.material?.material;
                     if (material?.map?.image) {
                         const video = material.map.image;
                         video.currentTime = Math.max(0, video.currentTime - 10);
+                        console.log(`${target} video fast backward to ${video.currentTime.toFixed(1)}s`);
                     }
                 } catch (e) {
-                    console.warn('Could not skip video backward:', e);
+                    console.warn(`Could not skip ${target} video backward:`, e);
                 }
             }
             this.triggered = true;
         }
         
-        // Video fast forward
+        // Video fast forward - handle center, left, and right
         if (this.buttonType === 'fast-forward' && !this.triggered) {
-            const centerVideo = getId('centerVideo');
-            if (centerVideo) {
+            const target = this.getVideoTarget();
+            const videoElement = this.getVideoElement(target);
+            
+            if (videoElement) {
                 try {
-                    const material = centerVideo.components?.material?.material;
+                    const material = videoElement.components?.material?.material;
                     if (material?.map?.image) {
                         const video = material.map.image;
                         video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                        console.log(`${target} video fast forward to ${video.currentTime.toFixed(1)}s`);
                     }
                 } catch (e) {
-                    console.warn('Could not skip video forward:', e);
+                    console.warn(`Could not skip ${target} video forward:`, e);
                 }
             }
             this.triggered = true;
         }
+    },
+
+    // Helper method to determine which video target this button is for
+    getVideoTarget: function() {
+        if (this.el.classList.contains('left-mute') || 
+            this.el.classList.contains('left-restart') || 
+            this.el.classList.contains('left-fast-backward') || 
+            this.el.classList.contains('left-fast-forward')) {
+            return 'left';
+        } else if (this.el.classList.contains('right-mute') || 
+                   this.el.classList.contains('right-restart') || 
+                   this.el.classList.contains('right-fast-backward') || 
+                   this.el.classList.contains('right-fast-forward')) {
+            return 'right';
+        } else if (this.el.classList.contains('marker-mute') || 
+                   this.el.classList.contains('marker-restart') || 
+                   this.el.classList.contains('marker-fast-backward') || 
+                   this.el.classList.contains('marker-fast-forward')) {
+            return 'marker';
+        } else {
+            return 'center'; // default
+        }
+    },
+
+    // Helper method to get the appropriate video element
+    getVideoElement: function(target) {
+        if (target === 'center') {
+            return getId('centerVideo');
+        } else if (target === 'left') {
+            return getId('leftVideo');
+        } else if (target === 'right') {
+            return getId('rightVideo');
+        } else if (target === 'marker') {
+            // For marker videos, we need to get the current marker value
+            const detectionHandler = this.scene.components['marker-detection-handler'];
+            if (detectionHandler && detectionHandler.currentMarker) {
+                return document.querySelector(`#marker-${detectionHandler.currentMarker}-container #marker-${detectionHandler.currentMarker}-video`);
+            }
+        }
+        return null;
     },
 
     // Reset side image (left or right)
