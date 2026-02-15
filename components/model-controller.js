@@ -1,4 +1,4 @@
-// model-controller.js 
+// model-controller.js - Fixed version
 AFRAME.registerComponent('model-controller', {
     schema: {
         minScale: { default: 0.1 },
@@ -10,16 +10,17 @@ AFRAME.registerComponent('model-controller', {
     init: function() {
         this.centerModel = getId('centerModel');
         this.leftModel = getId('leftModel');
+        this.rightModel = getId('rightModel');
+        
         this.currentMarker = null;
         this.modelScales = {}; // Store user-adjusted scale per marker
         this.originalScales = {}; // Store original scale from content.json per marker
         this.modelRotations = {}; // Store user-adjusted rotation per marker
         
-        // Rotation control variables
-        this.activeRollers = new Set();
-        this.rotateInterval = null;
+        // Store active rotation sessions by target
+        this.activeRotationSessions = {}; // { targetId: { activeRollers: Set, rotateTimer: null, targetModel: entity } }
         
-        // Track which marker has 3D content from ANY source (marker detection OR grid selection)
+        // Track which marker has 3D content from ANY source
         this.el.sceneEl.addEventListener('markerFound', (evt) => {
             const marker = evt.target;
             const markerValue = marker.getAttribute('value');
@@ -34,35 +35,298 @@ AFRAME.registerComponent('model-controller', {
             }
         });
         
-        // Listen for model scale changes
-        this.centerModel.addEventListener('componentchanged', (evt) => {
-            if (evt.detail.name === 'scale' && this.currentMarker) {
-                // Store the current scale for this marker
-                const currentScale = this.centerModel.getAttribute('scale').x;
-                this.modelScales[this.currentMarker] = currentScale;
-                
-                // Debug log to track scale changes
-                console.log(`Stored scale for marker ${this.currentMarker}: ${currentScale} (original: ${this.originalScales[this.currentMarker]})`);
-            }
-        });
-        
-        // Listen for model rotation changes
-        this.centerModel.addEventListener('componentchanged', (evt) => {
-            if (evt.detail.name === 'rotation' && this.currentMarker) {
-                // Store the current rotation for this marker
-                const currentRotation = this.centerModel.getAttribute('rotation');
-                this.modelRotations[this.currentMarker] = {
-                    x: currentRotation.x,
-                    y: currentRotation.y,
-                    z: currentRotation.z
-                };
-                
-                console.log(`Stored rotation for marker ${this.currentMarker}:`, currentRotation);
-            }
-        });
-        
-        // Set up roller event listeners
+        // Set up roller listeners for all targets
         this.setupRollerListeners();
+        
+        // Observe for dynamically added marker rollers
+        this.observeMarkerRollers();
+    },
+    
+    setupRollerListeners: function() {
+        // Setup for centerpiece rollers (IDs: roller-up, roller-right, etc.)
+        this.setupCenterRollers();
+        
+        // Setup for leftpiece rollers
+        this.setupRollerListenersForTarget('left');
+        
+        // Setup for rightpiece rollers
+        this.setupRollerListenersForTarget('right');
+    },
+    
+    setupCenterRollers: function() {
+        const rollers = document.querySelectorAll('.roller');
+        
+        rollers.forEach(roller => {
+            // Remove any existing listeners
+            roller.removeEventListener('raycaster-intersected', this.onCenterRollerIntersect);
+            roller.removeEventListener('raycaster-intersected-cleared', this.onCenterRollerIntersectCleared);
+            
+            // Add new listeners
+            roller.addEventListener('raycaster-intersected', (evt) => {
+                this.onCenterRollerIntersect(evt);
+            });
+            
+            roller.addEventListener('raycaster-intersected-cleared', (evt) => {
+                this.onCenterRollerIntersectCleared(evt);
+            });
+        });
+    },
+    
+    onCenterRollerIntersect: function(evt) {
+        const roller = evt.target;
+        if (roller.classList.contains('not-interactive')) return;
+        
+        // Get the target model element
+        const targetModel = this.centerModel;
+        if (!targetModel || !targetModel.getAttribute('visible')) return;
+        
+        const sessionId = 'rotate-center';
+        
+        // Initialize session if needed
+        if (!this.activeRotationSessions[sessionId]) {
+            this.activeRotationSessions[sessionId] = {
+                activeRollers: new Set(),
+                rotateTimer: null,
+                targetModel: targetModel,
+                target: 'center'
+            };
+        }
+        
+        this.activeRotationSessions[sessionId].activeRollers.add(roller.id);
+        this.startRotation(sessionId);
+    },
+    
+    onCenterRollerIntersectCleared: function(evt) {
+        const roller = evt.target;
+        const sessionId = 'rotate-center';
+        
+        if (this.activeRotationSessions[sessionId]) {
+            this.activeRotationSessions[sessionId].activeRollers.delete(roller.id);
+            
+            if (this.activeRotationSessions[sessionId].activeRollers.size === 0) {
+                this.stopRotation(sessionId);
+            }
+        }
+    },
+    
+    setupRollerListenersForTarget: function(target) {
+        const rollers = document.querySelectorAll(`.${target}-roller`);
+        
+        rollers.forEach(roller => {
+            // Remove any existing listeners
+            roller.removeEventListener('raycaster-intersected', this.onRollerIntersect);
+            roller.removeEventListener('raycaster-intersected-cleared', this.onRollerIntersectCleared);
+            
+            // Add new listeners with bound target
+            roller.addEventListener('raycaster-intersected', (evt) => {
+                this.onRollerIntersect(evt, target);
+            });
+            
+            roller.addEventListener('raycaster-intersected-cleared', (evt) => {
+                this.onRollerIntersectCleared(evt, target);
+            });
+        });
+    },
+    
+    onRollerIntersect: function(evt, target) {
+        const roller = evt.target;
+        if (roller.classList.contains('not-interactive')) return;
+        
+        // Get the target model element
+        const targetModel = this.getTargetModel(target);
+        if (!targetModel || !targetModel.getAttribute('visible')) return;
+        
+        const sessionId = `rotate-${target}`;
+        
+        // Initialize session if needed
+        if (!this.activeRotationSessions[sessionId]) {
+            this.activeRotationSessions[sessionId] = {
+                activeRollers: new Set(),
+                rotateTimer: null,
+                targetModel: targetModel,
+                target: target
+            };
+        }
+        
+        this.activeRotationSessions[sessionId].activeRollers.add(roller.id);
+        this.startRotation(sessionId);
+    },
+    
+    onRollerIntersectCleared: function(evt, target) {
+        const roller = evt.target;
+        const sessionId = `rotate-${target}`;
+        
+        if (this.activeRotationSessions[sessionId]) {
+            this.activeRotationSessions[sessionId].activeRollers.delete(roller.id);
+            
+            if (this.activeRotationSessions[sessionId].activeRollers.size === 0) {
+                this.stopRotation(sessionId);
+            }
+        }
+    },
+    
+    getTargetModel: function(target) {
+        switch(target) {
+            case 'center': return this.centerModel;
+            case 'left': return this.leftModel;
+            case 'right': return this.rightModel;
+            default: return null;
+        }
+    },
+    
+    startRotation: function(sessionId) {
+        const session = this.activeRotationSessions[sessionId];
+        if (!session || session.rotateTimer) return;
+        
+        session.rotateTimer = setInterval(() => {
+            this.continuousRotate(sessionId);
+        }, this.data.rotationInterval);
+    },
+    
+    stopRotation: function(sessionId) {
+        const session = this.activeRotationSessions[sessionId];
+        if (session && session.rotateTimer) {
+            clearInterval(session.rotateTimer);
+            session.rotateTimer = null;
+        }
+    },
+    
+    continuousRotate: function(sessionId) {
+        const session = this.activeRotationSessions[sessionId];
+        if (!session || !session.targetModel || session.activeRollers.size === 0) {
+            this.stopRotation(sessionId);
+            return;
+        }
+        
+        const currentRotation = session.targetModel.getAttribute('rotation');
+        const target = session.target;
+        let rotateY = 0, rotateZ = 0;
+        
+        // Define rotation directions based on target
+        const rotations = {};
+        
+        if (target === 'center') {
+            // Center rollers have IDs like 'roller-up', 'roller-right', etc.
+            rotations['roller-up'] = () => rotateZ -= this.data.rotationStep;
+            rotations['roller-down'] = () => rotateZ += this.data.rotationStep;
+            rotations['roller-left'] = () => rotateY += this.data.rotationStep;
+            rotations['roller-right'] = () => rotateY -= this.data.rotationStep;
+        } else {
+            // Left/right rollers have IDs like 'left-roller-up', 'right-roller-bottom', etc.
+            rotations[`${target}-roller-up`] = () => rotateZ -= this.data.rotationStep;
+            rotations[`${target}-roller-down`] = () => rotateZ += this.data.rotationStep;
+            rotations[`${target}-roller-left`] = () => rotateY += this.data.rotationStep;
+            rotations[`${target}-roller-right`] = () => rotateY -= this.data.rotationStep;
+        }
+        
+        // Apply rotations from all active rollers
+        session.activeRollers.forEach(id => {
+            if (rotations[id]) rotations[id]();
+        });
+        
+        // Apply the rotation
+        session.targetModel.setAttribute('rotation', {
+            x: currentRotation.x,
+            y: currentRotation.y + rotateY,
+            z: currentRotation.z + rotateZ
+        });
+        
+        // Save rotation state if this is for center model with a current marker
+        if (target === 'center' && this.currentMarker) {
+            this.saveRotationForMarker(this.currentMarker, session.targetModel);
+        }
+    },
+    
+    // Observe for dynamically added marker rollers
+    observeMarkerRollers: function() {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) { // Element node
+                        // Check if this is a marker roller
+                        if (node.classList && node.classList.contains('marker-roller')) {
+                            this.setupMarkerRoller(node);
+                        }
+                        
+                        // Also check children
+                        if (node.querySelectorAll) {
+                            node.querySelectorAll('.marker-roller').forEach(roller => {
+                                this.setupMarkerRoller(roller);
+                            });
+                        }
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+    },
+    
+    setupMarkerRoller: function(roller) {
+        // Get marker value from the roller's data-target
+        const markerTarget = roller.getAttribute('data-target');
+        if (!markerTarget || !markerTarget.startsWith('marker-')) return;
+        
+        const markerValue = markerTarget.replace('marker-', '');
+        
+        roller.addEventListener('raycaster-intersected', (evt) => {
+            this.onMarkerRollerIntersect(evt, markerValue, markerTarget);
+        });
+        
+        roller.addEventListener('raycaster-intersected-cleared', (evt) => {
+            this.onMarkerRollerIntersectCleared(evt, markerValue, markerTarget);
+        });
+    },
+    
+    onMarkerRollerIntersect: function(evt, markerValue, markerTarget) {
+        const roller = evt.target;
+        if (roller.classList.contains('not-interactive')) return;
+        
+        // Get the marker model element
+        const markerModel = document.querySelector(`#${markerTarget}-model`);
+        if (!markerModel || !markerModel.getAttribute('visible')) return;
+        
+        const sessionId = `rotate-marker-${markerValue}`;
+        
+        // Initialize session if needed
+        if (!this.activeRotationSessions[sessionId]) {
+            this.activeRotationSessions[sessionId] = {
+                activeRollers: new Set(),
+                rotateTimer: null,
+                targetModel: markerModel,
+                target: `marker-${markerValue}`,
+                markerValue: markerValue
+            };
+        }
+        
+        this.activeRotationSessions[sessionId].activeRollers.add(roller.id);
+        this.startRotation(sessionId);
+    },
+    
+    onMarkerRollerIntersectCleared: function(evt, markerValue, markerTarget) {
+        const roller = evt.target;
+        const sessionId = `rotate-marker-${markerValue}`;
+        
+        if (this.activeRotationSessions[sessionId]) {
+            this.activeRotationSessions[sessionId].activeRollers.delete(roller.id);
+            
+            if (this.activeRotationSessions[sessionId].activeRollers.size === 0) {
+                this.stopRotation(sessionId);
+            }
+        }
+    },
+    
+    saveRotationForMarker: function(markerValue, modelElement) {
+        if (!this.modelRotations[markerValue]) {
+            this.modelRotations[markerValue] = { x: 0, y: 0, z: 0 };
+        }
+        
+        const currentRotation = modelElement.getAttribute('rotation');
+        this.modelRotations[markerValue] = {
+            x: currentRotation.x,
+            y: currentRotation.y,
+            z: currentRotation.z
+        };
     },
     
     // Helper method to set current marker (used by both marker detection and grid selection)
@@ -82,7 +346,7 @@ AFRAME.registerComponent('model-controller', {
             this.modelRotations[markerValue] = { x: 0, y: 0, z: 0 };
         }
         
-        // Apply saved scale and rotation
+        // Apply saved scale and rotation if center model is visible
         if (this.centerModel.getAttribute('visible')) {
             this.centerModel.setAttribute('scale', { 
                 x: this.modelScales[markerValue], 
@@ -96,96 +360,43 @@ AFRAME.registerComponent('model-controller', {
         }
     },
     
-    setupRollerListeners: function() {
-        // Get all roller buttons
-        const rollers = document.querySelectorAll('.roller');
+    // Reset model to original scale and rotation
+    resetModel: function(target) {
+        let targetModel, markerValue;
         
-        rollers.forEach(roller => {
-            roller.addEventListener('raycaster-intersected', (evt) => {
-                if (roller.classList.contains('not-interactive')) return;
-                
-                this.activeRollers.add(roller.id);
-                this.startRotation();
+        if (target === 'center') {
+            targetModel = this.centerModel;
+            markerValue = this.currentMarker;
+        } else if (target === 'left') {
+            targetModel = this.leftModel;
+            // For left model, we need to know which marker it belongs to
+            // This would need to be tracked separately
+        } else if (target === 'right') {
+            targetModel = this.rightModel;
+        } else if (target && target.startsWith('marker-')) {
+            targetModel = document.querySelector(`#${target}-model`);
+            markerValue = target.replace('marker-', '');
+        }
+        
+        if (!targetModel || !targetModel.getAttribute('visible')) return;
+        
+        if (markerValue && this.originalScales[markerValue]) {
+            const originalScale = this.originalScales[markerValue];
+            
+            targetModel.setAttribute('scale', { 
+                x: originalScale, 
+                y: originalScale, 
+                z: originalScale 
             });
             
-            roller.addEventListener('raycaster-intersected-cleared', (evt) => {
-                this.activeRollers.delete(roller.id);
-                if (this.activeRollers.size === 0) this.stopRotation();
-            });
-        });
-    },
-    
-    startRotation: function() {
-        if (this.rotateInterval) return; // Already rotating
-        
-        this.rotateInterval = setInterval(() => this.continuousRotate(), this.data.rotationInterval);
-        console.log('Started model rotation');
-    },
-    
-    stopRotation: function() {
-        if (this.rotateInterval) {
-            clearInterval(this.rotateInterval);
-            this.rotateInterval = null;
+            targetModel.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+            
+            this.modelScales[markerValue] = originalScale;
+            this.modelRotations[markerValue] = { x: 0, y: 0, z: 0 };
+            
+            console.log(`3D model reset for ${target} to scale: ${originalScale}`);
         }
-        console.log('Stopped model rotation');
     },
-    
-    // Rotate model based on active rollers
-    continuousRotate: function() {
-        if (!this.centerModel || !this.centerModel.getAttribute('visible') || this.activeRollers.size === 0) {
-            this.stopRotation();
-            return;
-        }
-        
-        const currentRotation = this.centerModel.getAttribute('rotation');
-        let rotateY = 0, rotateZ = 0;
-        
-        // Define rotation directions
-        const rotations = {
-            'roller-up': () => rotateZ -= this.data.rotationStep,    // Rotate up = negative Y
-            'roller-down': () => rotateZ += this.data.rotationStep,  // Rotate down = positive Y
-            'roller-left': () => rotateY += this.data.rotationStep,  // Rotate left = positive Z
-            'roller-right': () => rotateY -= this.data.rotationStep  // Rotate right = negative Z
-        };
-        
-        // Apply rotations from all active rollers
-        this.activeRollers.forEach(id => rotations[id]?.());
-        
-        // Apply the rotation
-        this.centerModel.setAttribute('rotation', {
-            x: currentRotation.x,
-            y: currentRotation.y + rotateY,
-            z: currentRotation.z + rotateZ
-        });
-    },
-    
-    // Reset model to original scale and rotation from content.json
-    // model-controller.js - updated resetModel function
-resetModel: function() {
-    if (!this.centerModel || !this.centerModel.getAttribute('visible') || !this.currentMarker) {
-        console.log('Cannot reset: 3D model not visible or no current marker');
-        return;
-    }
-
-    // Get original scale for current marker
-    const originalScale = this.originalScales[this.currentMarker] || 1;
-    
-    // Reset both scale and rotation to original
-    this.centerModel.setAttribute('scale', { 
-        x: originalScale, 
-        y: originalScale, 
-        z: originalScale 
-    });
-    
-    // Reset rotation to zero
-    this.centerModel.setAttribute('rotation', { x: 0, y: 0, z: 0 });
-    
-    // Update stored scale and rotation to original
-    this.modelScales[this.currentMarker] = originalScale;
-    this.modelRotations[this.currentMarker] = { x: 0, y: 0, z: 0 };
-    
-    console.log(`3D model reset to original scale: ${originalScale} and rotation: 0,0,0`);
-},
     
     // Get user scale for marker (or original if not modified yet)
     getUserScale: function(markerValue) {
@@ -221,6 +432,9 @@ resetModel: function() {
     },
     
     remove: function() {
-        this.stopRotation();
+        // Stop all rotation sessions
+        Object.keys(this.activeRotationSessions).forEach(sessionId => {
+            this.stopRotation(sessionId);
+        });
     }
 });

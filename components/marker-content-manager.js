@@ -195,25 +195,28 @@ createMarkerElement: function(markerValue, parent) {
 },
 
 // Helper function to create marker image controls - BETTER CENTERING
+// In marker-content-manager.js - update the createMarkerControls, createMarkerVideoControls, and createMarker3dControls functions
+
+// Helper function to create marker image controls - FIXED IDs
 createMarkerControls: function(markerValue, type) {
     // Create a plane to hold all controls (similar to centerControls)
     const controlsPlane = document.createElement('a-plane');
     controlsPlane.setAttribute('id', `marker-${markerValue}-controls`);
     controlsPlane.setAttribute('class', 'marker-controls');
-    controlsPlane.setAttribute('position', '0 0 0.2'); // Increased Z to be more visible above marker
+    controlsPlane.setAttribute('position', '0 0 0.2');
     controlsPlane.setAttribute('rotation', '-90 0 0');
-    controlsPlane.setAttribute('width', '2.2'); // Slightly wider
-    controlsPlane.setAttribute('height', '0.5'); // Slightly taller
+    controlsPlane.setAttribute('width', '2.2');
+    controlsPlane.setAttribute('height', '0.5');
     controlsPlane.setAttribute('color', 'white');
     controlsPlane.setAttribute('visible', 'false');
     controlsPlane.setAttribute('render-order', '2');
 
-    // Reset button - moved more to center
+    // Reset button
     const resetBtn = document.createElement('a-image');
     resetBtn.setAttribute('src', 'assets/icons/reset.png');
     resetBtn.setAttribute('class', 'marker-reset');
-    resetBtn.setAttribute('position', '-0.9 0 0.1'); // Adjusted for wider plane
-    resetBtn.setAttribute('scale', '0.22 0.22 0.22'); // Slightly larger
+    resetBtn.setAttribute('position', '-0.9 0 0.1');
+    resetBtn.setAttribute('scale', '0.22 0.22 0.22');
     resetBtn.setAttribute('rotation', '0 0 0');
     resetBtn.setAttribute('material', 'depthTest: false;');
     resetBtn.setAttribute('render-order', '3');
@@ -221,20 +224,23 @@ createMarkerControls: function(markerValue, type) {
         `action: marker-reset; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(resetBtn);
 
-    // Scrolling arrows - better distributed
+    // Scrolling arrows - FIXED IDs to match what image-position-controller expects
+    // The controller looks for IDs like 'marker-scroller-up', 'marker-scroller-down', etc.
     const directions = [
-        { id: 'up', pos: '0 0.15 0.1' },    // Centered horizontally, up
-        { id: 'right', pos: '0.25 0 0.1' }, // Right
-        { id: 'down', pos: '0 -0.15 0.1' }, // Down
-        { id: 'left', pos: '-0.25 0 0.1' }  // Left
+        { id: 'up', pos: '0 0.15 0.1' },
+        { id: 'right', pos: '0.25 0 0.1' },
+        { id: 'down', pos: '0 -0.15 0.1' },
+        { id: 'left', pos: '-0.25 0 0.1' }
     ];
 
     directions.forEach(dir => {
         const arrow = document.createElement('a-image');
         arrow.setAttribute('src', `assets/icons/${dir.id}.png`);
         arrow.setAttribute('class', `marker-scroller marker-scroller-${dir.id}`);
+        // FIXED: Set ID to 'marker-scroller-up', 'marker-scroller-down', etc.
+        arrow.setAttribute('id', `marker-scroller-${dir.id}`);
         arrow.setAttribute('position', dir.pos);
-        arrow.setAttribute('scale', '0.22 0.22 0.22'); // Slightly larger
+        arrow.setAttribute('scale', '0.22 0.22 0.22');
         arrow.setAttribute('rotation', '0 0 0');
         arrow.setAttribute('material', 'depthTest: false;');
         arrow.setAttribute('render-order', '3');
@@ -245,15 +251,14 @@ createMarkerControls: function(markerValue, type) {
         controlsPlane.appendChild(arrow);
     });
 
-
-// Zoom controls
+    // Zoom controls
     const zoomIn = document.createElement('a-image');
     zoomIn.setAttribute('src', 'assets/icons/zoom-in.png');
     zoomIn.setAttribute('class', 'marker-zoom-button');
     zoomIn.setAttribute('position', '0.65 0 0.2');
     zoomIn.setAttribute('scale', '0.22 0.22 0.22');
     zoomIn.setAttribute('rotation', '0 0 0');
-    zoomIn.setAttribute('data-action', 'increase');  // This must be 'increase'
+    zoomIn.setAttribute('data-action', 'increase');
     zoomIn.setAttribute('data-target', `marker-${markerValue}`);
     zoomIn.setAttribute('material', 'depthTest: false;');
     zoomIn.setAttribute('render-order', '3');
@@ -267,31 +272,31 @@ createMarkerControls: function(markerValue, type) {
     zoomOut.setAttribute('position', '0.9 0 0.2');
     zoomOut.setAttribute('scale', '0.22 0.22 0.22');
     zoomOut.setAttribute('rotation', '0 0 0');
-    zoomOut.setAttribute('data-action', 'decrease');  // This must be 'decrease'
+    zoomOut.setAttribute('data-action', 'decrease');
     zoomOut.setAttribute('data-target', `marker-${markerValue}`);
     zoomOut.setAttribute('material', 'depthTest: false;');
     zoomOut.setAttribute('render-order', '3');
     zoomOut.setAttribute('gaze-interaction-handler', 
         `action: decrease; markerValue: ${markerValue}; fuseTimeout: 500`);
-controlsPlane.appendChild(zoomOut);
+    controlsPlane.appendChild(zoomOut);
 
     return controlsPlane;
 },
 
-// Helper function to create marker video controls - BETTER CENTERING
+// Helper function to create marker video controls - FIXED IDs (though video doesn't use scrollers)
 createMarkerVideoControls: function(markerValue) {
     const controlsPlane = document.createElement('a-plane');
     controlsPlane.setAttribute('id', `marker-${markerValue}-video-controls`);
     controlsPlane.setAttribute('class', 'marker-video-controls');
-    controlsPlane.setAttribute('position', '0 0 0.2'); // Increased Z for better visibility
+    controlsPlane.setAttribute('position', '0 0 0.2');
     controlsPlane.setAttribute('rotation', '-90 0 0');
-    controlsPlane.setAttribute('width', '2.2'); // Wider
-    controlsPlane.setAttribute('height', '0.5'); // Taller
+    controlsPlane.setAttribute('width', '2.2');
+    controlsPlane.setAttribute('height', '0.5');
     controlsPlane.setAttribute('color', 'white');
     controlsPlane.setAttribute('visible', 'false');
     controlsPlane.setAttribute('render-order', '2');
 
-    // Restart button - moved to center left
+    // Restart button
     const restartBtn = document.createElement('a-image');
     restartBtn.setAttribute('src', 'assets/icons/reset.png');
     restartBtn.setAttribute('class', 'marker-restart');
@@ -304,11 +309,11 @@ createMarkerVideoControls: function(markerValue) {
         `action: marker-restart; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(restartBtn);
 
-    // Mute button - more centered
+    // Mute button
     const muteBtn = document.createElement('a-image');
     muteBtn.setAttribute('src', 'assets/icons/mute.png');
     muteBtn.setAttribute('class', 'marker-mute');
-    muteBtn.setAttribute('position', '-0.4 0 0.1'); // Moved more to center
+    muteBtn.setAttribute('position', '-0.4 0 0.1');
     muteBtn.setAttribute('scale', '0.22 0.22 0.22');
     muteBtn.setAttribute('rotation', '0 0 0');
     muteBtn.setAttribute('material', 'depthTest: false;');
@@ -317,11 +322,11 @@ createMarkerVideoControls: function(markerValue) {
         `action: marker-mute; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(muteBtn);
 
-    // Fast backward - centered
+    // Fast backward
     const backwardBtn = document.createElement('a-image');
     backwardBtn.setAttribute('src', 'assets/icons/fastbackward.png');
     backwardBtn.setAttribute('class', 'marker-fast-backward');
-    backwardBtn.setAttribute('position', '0.4 0 0.1'); // More centered
+    backwardBtn.setAttribute('position', '0.4 0 0.1');
     backwardBtn.setAttribute('scale', '0.22 0.22 0.22');
     backwardBtn.setAttribute('rotation', '0 0 0');
     backwardBtn.setAttribute('data-action', 'backward');
@@ -331,11 +336,11 @@ createMarkerVideoControls: function(markerValue) {
         `action: marker-backward; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(backwardBtn);
 
-    // Fast forward - center right
+    // Fast forward
     const forwardBtn = document.createElement('a-image');
     forwardBtn.setAttribute('src', 'assets/icons/fastforward.png');
     forwardBtn.setAttribute('class', 'marker-fast-forward');
-    forwardBtn.setAttribute('position', '0.9 0 0.1'); // Adjusted for wider plane
+    forwardBtn.setAttribute('position', '0.9 0 0.1');
     forwardBtn.setAttribute('scale', '0.22 0.22 0.22');
     forwardBtn.setAttribute('rotation', '0 0 0');
     forwardBtn.setAttribute('data-action', 'forward');
@@ -348,9 +353,7 @@ createMarkerVideoControls: function(markerValue) {
     return controlsPlane;
 },
 
-// Helper function to create marker 3D controls - BETTER CENTERING
-// In marker-content-manager.js, update createMarker3dControls function:
-
+// Helper function to create marker 3D controls - FIXED IDs
 createMarker3dControls: function(markerValue) {
     const controlsPlane = document.createElement('a-plane');
     controlsPlane.setAttribute('id', `marker-${markerValue}-3d-controls`);
@@ -377,7 +380,8 @@ createMarker3dControls: function(markerValue) {
         `action: 3dreset; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(resetBtn);
 
-    // Rotating arrows
+    // Rotating arrows - FIXED IDs to match what model-controller expects
+    // The controller looks for IDs like 'marker-roller-up', 'marker-roller-down', etc.
     const directions = [
         { id: 'up', pos: '0 0.15 0.1' },
         { id: 'right', pos: '0.25 0 0.1' },
@@ -389,6 +393,8 @@ createMarker3dControls: function(markerValue) {
         const arrow = document.createElement('a-image');
         arrow.setAttribute('src', `assets/icons/${dir.id}.png`);
         arrow.setAttribute('class', `marker-roller`);
+        // FIXED: Set ID to 'marker-roller-up', 'marker-roller-down', etc.
+        arrow.setAttribute('id', `marker-roller-${dir.id}`);
         arrow.setAttribute('position', dir.pos);
         arrow.setAttribute('scale', '0.22 0.22 0.22');
         arrow.setAttribute('rotation', '0 0 0');
@@ -401,14 +407,14 @@ createMarker3dControls: function(markerValue) {
         controlsPlane.appendChild(arrow);
     });
 
-    // Zoom controls - FIX THE ACTIONS HERE
+    // Zoom controls
     const zoomIn = document.createElement('a-image');
     zoomIn.setAttribute('src', 'assets/icons/zoom-in.png');
     zoomIn.setAttribute('class', 'marker-model-zoom-button');
     zoomIn.setAttribute('position', '0.65 0 0.1');
     zoomIn.setAttribute('scale', '0.22 0.22 0.22');
     zoomIn.setAttribute('rotation', '0 0 0');
-    zoomIn.setAttribute('data-action', '3dincrease');  // Make sure this is '3dincrease'
+    zoomIn.setAttribute('data-action', '3dincrease');
     zoomIn.setAttribute('data-target', `marker-${markerValue}`);
     zoomIn.setAttribute('material', 'depthTest: false;');
     zoomIn.setAttribute('render-order', '3');
@@ -422,7 +428,7 @@ createMarker3dControls: function(markerValue) {
     zoomOut.setAttribute('position', '0.9 0 0.1');
     zoomOut.setAttribute('scale', '0.22 0.22 0.22');
     zoomOut.setAttribute('rotation', '0 0 0');
-    zoomOut.setAttribute('data-action', '3ddecrease');  // Make sure this is '3ddecrease'
+    zoomOut.setAttribute('data-action', '3ddecrease');
     zoomOut.setAttribute('data-target', `marker-${markerValue}`);
     zoomOut.setAttribute('material', 'depthTest: false;');
     zoomOut.setAttribute('render-order', '3');
