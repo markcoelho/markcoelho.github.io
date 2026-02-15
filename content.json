@@ -285,7 +285,7 @@
       "marker": [
         {
           "type": "image",
-          "controls": "false",
+          "controls": "true",
           "src": "assets/images/0.jpg",
           "scale": 0.5,
           "audio": ""

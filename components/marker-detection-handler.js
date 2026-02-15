@@ -575,6 +575,11 @@ showMarkerImage: function(markerValue, markerElement, scene) {
             console.warn(`Marker image element not found for marker ${markerValue}`);
             return;
         }
+
+        // Store original scale if not already stored
+        if (contentManager && !contentManager.markerOriginalScales[markerValue]) {
+            contentManager.markerOriginalScales[markerValue] = currentItem.scale || 1;
+        }
         
         // Set src first
         markerImage.setAttribute('src', currentItem.src);
@@ -586,6 +591,18 @@ showMarkerImage: function(markerValue, markerElement, scene) {
             // Calculate aspect ratio
             const aspectRatio = img.naturalWidth / img.naturalHeight;
             const baseScale = currentItem.scale || 1;
+
+             // Get saved user scale or use base scale
+            let userScale = 1;
+            if (contentManager && contentManager.markerImageScales[markerValue]) {
+                userScale = contentManager.markerImageScales[markerValue];
+                console.log(`Using saved scale for marker ${markerValue} image: ${userScale}`);
+            } else {
+                // Initialize with base scale
+                if (contentManager) {
+                    contentManager.markerImageScales[markerValue] = 1;
+                }
+            }
             
             // Set scale: width = height * aspectRatio
             const height = baseScale;
@@ -619,6 +636,18 @@ showMarkerImage: function(markerValue, markerElement, scene) {
         
         // Set the gltf-model and scale
         markerModel.setAttribute('gltf-model', currentItem.src);
+
+                // Get saved user scale or use base scale
+        let userScale = 1;
+        if (contentManager && contentManager.markerModelScales[markerValue]) {
+            userScale = contentManager.markerModelScales[markerValue];
+            console.log(`Using saved scale for marker ${markerValue} model: ${userScale}`);
+        } else {
+            // Initialize with base scale
+            if (contentManager) {
+                contentManager.markerModelScales[markerValue] = 1;
+            }
+        }
         
         // Set scale (3D models typically use uniform scale)
         const scale = currentItem.scale || 1;

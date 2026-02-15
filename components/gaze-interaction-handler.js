@@ -38,27 +38,82 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     
     // Identify button type
     determineButtonType: function() {
-        if (this.el.classList.contains('zoom-button')) this.buttonType = 'zoom';
-        else if (this.el.classList.contains('reset')) this.buttonType = 'reset';
-        else if (this.el.classList.contains('restart')) this.buttonType = 'restart';
-        else if (this.el.classList.contains('mute')) this.buttonType = 'mute';
-        else if (this.el.classList.contains('fast-backward')) this.buttonType = 'fast-backward';
-        else if (this.el.classList.contains('fast-forward')) this.buttonType = 'fast-forward';
-        else if (this.el.classList.contains('model-zoom-button')) this.buttonType = 'model-zoom';
-        else if (this.el.classList.contains('3dreset')) this.buttonType = 'model-reset';
-        else if (this.el.classList.contains('roller')) this.buttonType = 'model-roll';
-        else if (this.el.classList.contains('image-grid-item') || this.el.classList.contains('centerpiece-grid-item')) 
-            this.buttonType = 'grid-image';
-        else this.buttonType = 'other';
-    },
+    // Check for image zoom buttons first (including marker image zoom)
+    if (this.el.classList.contains('zoom-button') || 
+        this.el.classList.contains('left-zoom-button') || 
+        this.el.classList.contains('right-zoom-button') ||
+        this.el.classList.contains('marker-zoom-button'))  // Add this line
+        this.buttonType = 'zoom';
+    
+    // Check for model zoom buttons (including marker model zoom)
+    else if (this.el.classList.contains('model-zoom-button') || 
+             this.el.classList.contains('left-model-zoom-button') || 
+             this.el.classList.contains('right-model-zoom-button') || 
+             this.el.classList.contains('marker-model-zoom-button'))
+        this.buttonType = 'model-zoom';
+    
+    else if (this.el.classList.contains('reset') || 
+             this.el.classList.contains('left-reset') || 
+             this.el.classList.contains('right-reset'))
+        this.buttonType = 'reset';
+    
+    else if (this.el.classList.contains('restart') || 
+             this.el.classList.contains('left-restart') || 
+             this.el.classList.contains('right-restart') || 
+             this.el.classList.contains('marker-restart'))
+        this.buttonType = 'restart';
+    
+    else if (this.el.classList.contains('mute') || 
+             this.el.classList.contains('left-mute') || 
+             this.el.classList.contains('right-mute') || 
+             this.el.classList.contains('marker-mute'))
+        this.buttonType = 'mute';
+    
+    else if (this.el.classList.contains('fast-backward') || 
+             this.el.classList.contains('left-fast-backward') || 
+             this.el.classList.contains('right-fast-backward') || 
+             this.el.classList.contains('marker-fast-backward'))
+        this.buttonType = 'fast-backward';
+    
+    else if (this.el.classList.contains('fast-forward') || 
+             this.el.classList.contains('left-fast-forward') || 
+             this.el.classList.contains('right-fast-forward') || 
+             this.el.classList.contains('marker-fast-forward'))
+        this.buttonType = 'fast-forward';
+    
+    else if (this.el.classList.contains('3dreset') || 
+             this.el.classList.contains('left-3dreset') || 
+             this.el.classList.contains('right-3dreset') || 
+             this.el.classList.contains('marker-3dreset'))
+        this.buttonType = 'model-reset';
+    
+    else if (this.el.classList.contains('roller') || 
+             this.el.classList.contains('left-roller') || 
+             this.el.classList.contains('right-roller') || 
+             this.el.classList.contains('marker-roller'))
+        this.buttonType = 'model-roll';
+    
+    else if (this.el.classList.contains('scroller') || 
+             this.el.classList.contains('left-scroller') || 
+             this.el.classList.contains('right-scroller') || 
+             this.el.classList.contains('marker-scroller'))
+        this.buttonType = 'scroller';
+    
+    else if (this.el.classList.contains('image-grid-item') || 
+             this.el.classList.contains('centerpiece-grid-item'))
+        this.buttonType = 'grid-image';
+    
+    else
+        this.buttonType = 'other';
+},
     
     // Show loading for certain buttons
     showLoading: function() {
-        if (!this.loading) return;
-        const show = ['zoom', 'model-zoom', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset'].includes(this.buttonType) ||
-                    ((this.buttonType === 'grid-image' || this.buttonType === 'reset') && !this.triggered);
-        if (show) this.loading.setVisible();
-    },
+    if (!this.loading) return;
+    const show = ['zoom', 'model-zoom', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset', 'scroller', 'model-roll'].includes(this.buttonType) ||
+                ((this.buttonType === 'grid-image' || this.buttonType === 'reset') && !this.triggered);
+    if (show) this.loading.setVisible();
+},
     
     // Start gaze timer
     startFuse: function() {
@@ -95,44 +150,106 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     // Execute button action
     triggerAction: function() {
         // Image Zoom buttons
-        if (this.buttonType === 'zoom') {
-            const centerImage = getId('centerImage');
-            if (!centerImage) return;
-            
-            const currentScale = centerImage.getAttribute('scale').x;
-            const zoomMultiplier = this.data.zoomFactor;
-            let newScale = this.data.action === 'increase' 
-                ? currentScale * (1 + zoomMultiplier)
-                : Math.max(0.1, currentScale * (1 - zoomMultiplier));
-            
-            centerImage.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
-            return;
-        } 
+         // In gaze-interaction-handler.js, update the image zoom section:
+
+if (this.buttonType === 'zoom') {
+    // Determine which target to zoom based on the button's data-target attribute
+    const target = this.el.getAttribute('data-target') || 'center';
+    
+    // Get the appropriate image element
+    let targetImage;
+    if (target === 'left') {
+        targetImage = getId('leftImage');
+    } else if (target === 'right') {
+        targetImage = getId('rightImage');
+    } else if (target === 'center') {
+        targetImage = getId('centerImage');
+    } else if (target.startsWith('marker-')) {
+        // For marker images
+        targetImage = document.querySelector(`#${target}-image`);
+    }
+    
+    if (!targetImage || !targetImage.getAttribute('visible')) {
+        console.log(`Target image ${target} not visible or not found`);
+        return;
+    }
+    
+    const currentScale = targetImage.getAttribute('scale').x;
+    const zoomMultiplier = this.data.zoomFactor;
+    
+    // Check both the data-action attribute and the component's action
+    const action = this.el.getAttribute('data-action') || this.data.action;
+    
+    let newScale;
+    if (action === 'increase') {
+        newScale = currentScale * (1 + zoomMultiplier);
+    } else {
+        newScale = Math.max(0.1, currentScale * (1 - zoomMultiplier));
+    }
+    
+    targetImage.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
+    
+    // SAVE THE SCALE FOR MARKER IMAGES
+    if (target.startsWith('marker-')) {
+        const markerValue = target.replace('marker-', '');
+        const scene = this.el.sceneEl;
+        const contentManager = scene.components['marker-content-manager'];
+        
+        if (contentManager) {
+            // Calculate user scale factor relative to original
+            const originalScale = contentManager.markerOriginalScales[markerValue] || 1;
+            const userScale = newScale / originalScale;
+            contentManager.markerImageScales[markerValue] = userScale;
+            console.log(`Saved marker ${markerValue} image user scale: ${userScale}`);
+        }
+    }
+    
+    console.log(`Image zoom on ${target}: action=${action}, scale ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
+    return;
+}
         
         // 3D Model Zoom buttons - WORK EXACTLY LIKE IMAGE ZOOM
         if (this.buttonType === 'model-zoom') {
-            const centerModel = getId('centerModel');
-            if (!centerModel || !centerModel.getAttribute('visible')) return;
-            
-            const currentScale = centerModel.getAttribute('scale').x;
-            const zoomMultiplier = this.data.zoomFactor;
-            
-            let newScale;
-            if (this.data.action === '3dincrease') {
-                newScale = currentScale * (1 + zoomMultiplier);
-            } else {
-                newScale = currentScale * (1 - zoomMultiplier);
-            }
-            
-            centerModel.setAttribute('scale', { 
-                x: newScale, 
-                y: newScale, 
-                z: newScale 
-            });
-            
-            console.log(`3D model zoom ${this.data.action}: ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
+        // Determine which target to zoom based on the button's data-target attribute
+        const target = this.el.getAttribute('data-target') || 'center';
+        
+        // Get the appropriate model element
+        let targetModel;
+        if (target === 'left') {
+            targetModel = getId('leftModel');
+        } else if (target === 'right') {
+            targetModel = getId('rightModel');
+        } else if (target === 'center') {
+            targetModel = getId('centerModel');
+        } else if (target.startsWith('marker-')) {
+            // For marker models
+            targetModel = document.querySelector(`#${target}-model`);
+        }
+        
+        if (!targetModel || !targetModel.getAttribute('visible')) {
+            console.log(`Target model ${target} not visible or not found`);
             return;
         }
+        
+        const currentScale = targetModel.getAttribute('scale').x;
+        const zoomMultiplier = this.data.zoomFactor;
+        
+        let newScale;
+        if (this.data.action === '3dincrease') {
+            newScale = currentScale * (1 + zoomMultiplier);
+        } else {
+            newScale = currentScale * (1 - zoomMultiplier);
+        }
+        
+        targetModel.setAttribute('scale', { 
+            x: newScale, 
+            y: newScale, 
+            z: newScale 
+        });
+        
+        console.log(`3D model zoom ${this.data.action} on ${target}: ${currentScale.toFixed(2)} -> ${newScale.toFixed(2)}`);
+        return;
+    }
         
         // Reset button (for images)
         if (this.buttonType === 'reset' && !this.triggered) {

@@ -35,8 +35,8 @@
         </a-cursor>
         
         <!-- Raycaster for interactions -->
-        <a-entity id="raycaster" raycaster="objects: .zoom-button, .nav-button, #centerImage, .scroller, .centerpiece-grid-item, .image-grid-item; showLine: false;"
-    position="0 0 0" visible-in-vr-only></a-entity>
+        <a-entity id="raycaster" raycaster="objects: .zoom-button, .nav-button, #centerImage, .scroller, .centerpiece-grid-item, .image-grid-item, .left-zoom-button, .right-zoom-button, .left-model-zoom-button, .right-model-zoom-button, .marker-zoom-button, .marker-model-zoom-button, .marker-reset, .marker-3dreset, .marker-restart, .marker-mute, .marker-fast-backward, .marker-fast-forward, .marker-scroller, .marker-roller; showLine: false;"
+position="0 0 0" visible-in-vr-only></a-entity>
                   
         <!-- AR video feed -->
         <a-video id="arjs_feed" position="0 0 -50" width="83" height="83" render-order="0"></a-video>
@@ -146,11 +146,11 @@
         
         <!-- Zoom controls -->
         <a-image class="left-zoom-button" src="assets/icons/zoom-in.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
-                data-action="increase" data-target="left" material="depthTest: false;" render-order="3"
-                gaze-interaction-handler="action: increase; target: left; fuseTimeout: 500"></a-image>
-        <a-image class="left-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
-                data-action="decrease" data-target="left" material="depthTest: false;" render-order="3"
-                gaze-interaction-handler="action: decrease; target: left; fuseTimeout: 500"></a-image>
+        data-action="increase" data-target="left" material="depthTest: false;" render-order="3"
+        gaze-interaction-handler="action: increase; target: left; fuseTimeout: 500"></a-image>
+<a-image class="left-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
+        data-action="decrease" data-target="left" material="depthTest: false;" render-order="3"
+        gaze-interaction-handler="action: decrease; target: left; fuseTimeout: 500"></a-image>
     </a-plane>
 
     <!-- Left Video controls - UPDATED with render-order and material settings -->
@@ -184,11 +184,11 @@
         
         <!-- Zoom controls -->
         <a-image class="left-model-zoom-button" src="assets/icons/zoom-in.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
-                data-action="3dincrease" data-target="left" material="depthTest: false;" render-order="3"
-                gaze-interaction-handler="action: 3dincrease; target: left; fuseTimeout: 500"></a-image>
-        <a-image class="left-model-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
-                data-action="3ddecrease" data-target="left" material="depthTest: false;" render-order="3"
-                gaze-interaction-handler="action: 3ddecrease; target: left; fuseTimeout: 500"></a-image>
+        data-action="3dincrease" data-target="left" material="depthTest: false;" render-order="3"
+        gaze-interaction-handler="action: 3dincrease; target: left; fuseTimeout: 500"></a-image>
+<a-image class="left-model-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
+        data-action="3ddecrease" data-target="left" material="depthTest: false;" render-order="3"
+        gaze-interaction-handler="action: 3ddecrease; target: left; fuseTimeout: 500"></a-image>
     </a-plane>
 </a-entity>
 
@@ -217,11 +217,11 @@
         
         <!-- Zoom controls -->
         <a-image class="right-zoom-button" src="assets/icons/zoom-in.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
-                data-action="increase" data-target="right" material="depthTest: false;" render-order="3"
-                gaze-interaction-handler="action: increase; target: right; fuseTimeout: 500"></a-image>
-        <a-image class="right-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
-                data-action="decrease" data-target="right" material="depthTest: false;" render-order="3"
-                gaze-interaction-handler="action: decrease; target: right; fuseTimeout: 500"></a-image>
+        data-action="increase" data-target="right" material="depthTest: false;" render-order="3"
+        gaze-interaction-handler="action: increase; target: right; fuseTimeout: 500"></a-image>
+<a-image class="right-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
+        data-action="decrease" data-target="right" material="depthTest: false;" render-order="3"
+        gaze-interaction-handler="action: decrease; target: right; fuseTimeout: 500"></a-image>
     </a-plane>
 
     <!-- Right Video controls - UPDATED with render-order and material settings -->
@@ -257,11 +257,11 @@
         
         <!-- Zoom controls -->
         <a-image class="right-model-zoom-button" src="assets/icons/zoom-in.png" position="0.5 0 0.1" scale="0.18 0.18 0.18" 
-                data-action="3dincrease" data-target="right" material="depthTest: false;" render-order="3"
-                gaze-interaction-handler="action: 3dincrease; target: right; fuseTimeout: 500"></a-image>
-        <a-image class="right-model-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
-                data-action="3ddecrease" data-target="right" material="depthTest: false;" render-order="3"
-                gaze-interaction-handler="action: 3ddecrease; target: right; fuseTimeout: 500"></a-image>
+        data-action="3dincrease" data-target="right" material="depthTest: false;" render-order="3"
+        gaze-interaction-handler="action: 3dincrease; target: right; fuseTimeout: 500"></a-image>
+<a-image class="right-model-zoom-button" src="assets/icons/zoom-out.png" position="0.7 0 0.1" scale="0.18 0.18 0.18" 
+        data-action="3ddecrease" data-target="right" material="depthTest: false;" render-order="3"
+        gaze-interaction-handler="action: 3ddecrease; target: right; fuseTimeout: 500"></a-image>
     </a-plane>
 </a-entity>
 
