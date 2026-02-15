@@ -375,42 +375,99 @@ AFRAME.registerComponent('model-controller', {
     },
     
     // Reset model to original scale and rotation
-    resetModel: function(target) {
-        let targetModel, markerValue;
+    // In model-controller.js - update the resetModel function
+
+// Reset model to original scale and rotation
+resetModel: function(target) {
+    let targetModel, markerValue;
+    
+    if (target === 'center') {
+        targetModel = this.centerModel;
+        markerValue = this.currentMarker;
+    } else if (target === 'left') {
+        targetModel = this.leftModel;
+        // For left model, we need to know which marker it belongs to
+        // Use the current marker from detection handler
+        const detectionHandler = this.el.sceneEl.components['marker-detection-handler'];
+        if (detectionHandler) {
+            markerValue = detectionHandler.currentMarker;
+        }
+    } else if (target === 'right') {
+        targetModel = this.rightModel;
+        const detectionHandler = this.el.sceneEl.components['marker-detection-handler'];
+        if (detectionHandler) {
+            markerValue = detectionHandler.currentMarker;
+        }
+    } else if (target && target.startsWith('marker-')) {
+        targetModel = document.querySelector(`#${target}-container #${target}-model`);
+        markerValue = target.replace('marker-', '');
+    }
+    
+    if (!targetModel || !targetModel.getAttribute('visible')) {
+        console.log(`Target model ${target} not visible or not found`);
+        return;
+    }
+    
+    if (markerValue) {
+        // Get original scale from content manager if available
+        let originalScale = 1;
+        const contentManager = this.el.sceneEl.components['marker-content-manager'];
         
-        if (target === 'center') {
-            targetModel = this.centerModel;
-            markerValue = this.currentMarker;
-        } else if (target === 'left') {
-            targetModel = this.leftModel;
-            // For left model, we need to know which marker it belongs to
-            // This would need to be tracked separately
-        } else if (target === 'right') {
-            targetModel = this.rightModel;
-        } else if (target && target.startsWith('marker-')) {
-            targetModel = document.querySelector(`#${target}-model`);
-            markerValue = target.replace('marker-', '');
+        if (target === 'center' && contentManager) {
+            const content = contentManager.getMarkerContent(markerValue);
+            if (content && content.type === '3d') {
+                originalScale = content.scale || 1;
+            }
+        } else if (target === 'left' && contentManager) {
+            const leftContent = contentManager.getLeftSideContent(markerValue);
+            if (leftContent && leftContent.type === '3d') {
+                originalScale = leftContent.scale || 1;
+            }
+        } else if (target === 'right' && contentManager) {
+            const rightContent = contentManager.getRightSideContent(markerValue);
+            if (rightContent && rightContent.type === '3d') {
+                originalScale = rightContent.scale || 1;
+            }
+        } else if (target.startsWith('marker-') && contentManager) {
+            const currentIndex = contentManager.currentContentIndex[markerValue] || 0;
+            const markerItems = contentManager.markerData?.[markerValue] || [];
+            const currentItem = markerItems[currentIndex];
+            if (currentItem && currentItem.type === '3d') {
+                originalScale = currentItem.scale || 1;
+                // Reset marker model scale in content manager
+                contentManager.markerModelScales[markerValue] = originalScale;
+            }
         }
         
-        if (!targetModel || !targetModel.getAttribute('visible')) return;
+        console.log(`Resetting model for ${target} to original scale: ${originalScale}`);
         
-        if (markerValue && this.originalScales[markerValue]) {
-            const originalScale = this.originalScales[markerValue];
-            
-            targetModel.setAttribute('scale', { 
-                x: originalScale, 
-                y: originalScale, 
-                z: originalScale 
-            });
-            
-            targetModel.setAttribute('rotation', { x: 0, y: 0, z: 0 });
-            
+        targetModel.setAttribute('scale', { 
+            x: originalScale, 
+            y: originalScale, 
+            z: originalScale 
+        });
+        
+        targetModel.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+        
+        // Update stored scales
+        if (target === 'center' && this.modelScales) {
             this.modelScales[markerValue] = originalScale;
-            this.modelRotations[markerValue] = { x: 0, y: 0, z: 0 };
-            
-            console.log(`3D model reset for ${target} to scale: ${originalScale}`);
+        } else if (target === 'left') {
+            // If we need to track left model scales
+        } else if (target === 'right') {
+            // If we need to track right model scales
         }
-    },
+        
+        // Update rotation tracking
+        if (this.modelRotations) {
+            this.modelRotations[markerValue] = { x: 0, y: 0, z: 0 };
+        }
+        
+        console.log(`3D model reset for ${target} to scale: ${originalScale}`);
+    } else {
+        console.log(`No marker value found for target ${target}`);
+    }
+},
     
     // Get user scale for marker (or original if not modified yet)
     getUserScale: function(markerValue) {
