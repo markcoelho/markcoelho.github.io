@@ -187,50 +187,68 @@ AFRAME.registerComponent('image-position-controller', {
     },
     
     moveImage: function(sessionId) {
-        const session = this.activeScrollSessions[sessionId];
-        if (!session || !session.targetImage || session.activeScrollers.size === 0) {
-            this.stopMovement(sessionId);
-            return;
+    const session = this.activeScrollSessions[sessionId];
+    if (!session || !session.targetImage || session.activeScrollers.size === 0) {
+        this.stopMovement(sessionId);
+        return;
+    }
+    
+    const pos = session.targetImage.getAttribute('position');
+    const target = session.target;
+    
+    // Define movement directions based on scroller IDs
+    const moves = {};
+    
+    if (target === 'center') {
+        // Center image moves in X and Y (vertical plane)
+        // INVERTED: top moves image UP (positive Y), bottom moves DOWN (negative Y)
+        moves['scroller-top'] = [0, this.data.moveSpeed, 0];      // Inverted: +Y
+        moves['scroller-right'] = [this.data.moveSpeed, 0, 0];    // Inverted: +X (right)
+        moves['scroller-bottom'] = [0, -this.data.moveSpeed, 0];  // Inverted: -Y
+        moves['scroller-left'] = [-this.data.moveSpeed, 0, 0];    // Inverted: -X (left)
+    } else if (target === 'marker') {
+        // Marker images lie flat (rotation -90), so move in X and Z (horizontal plane)
+        // Keep marker scrollers as-is (not inverted)
+        moves['marker-scroller-up'] = [0, 0, -this.data.moveSpeed];    // Up = move away from camera (-Z)
+        moves['marker-scroller-down'] = [0, 0, this.data.moveSpeed];   // Down = move toward camera (+Z)
+        moves['marker-scroller-left'] = [-this.data.moveSpeed, 0, 0];  // Left = move left (-X)
+        moves['marker-scroller-right'] = [this.data.moveSpeed, 0, 0];  // Right = move right (+X)
+    } else if (target === 'left' || target === 'right') {
+        // Left and right images also move in X and Y (vertical plane)
+        // INVERTED for consistency with center
+        moves[`${target}-scroller-top`] = [0, this.data.moveSpeed, 0];     // Inverted: +Y
+        moves[`${target}-scroller-right`] = [this.data.moveSpeed, 0, 0];   // Inverted: +X
+        moves[`${target}-scroller-bottom`] = [0, -this.data.moveSpeed, 0]; // Inverted: -Y
+        moves[`${target}-scroller-left`] = [-this.data.moveSpeed, 0, 0];   // Inverted: -X
+    }
+    
+    let moveX = 0, moveY = 0, moveZ = 0;
+    
+    session.activeScrollers.forEach(scrollerId => {
+        if (moves[scrollerId]) {
+            moveX += moves[scrollerId][0];
+            moveY += moves[scrollerId][1];
+            moveZ += moves[scrollerId][2];
         }
-        
-        const pos = session.targetImage.getAttribute('position');
-        const target = session.target;
-        
-        // Define movement directions based on scroller IDs
-        const moves = {};
-        
-        if (target === 'center') {
-            // Center scrollers have IDs like 'scroller-top', 'scroller-right', etc.
-            moves['scroller-top'] = [0, -this.data.moveSpeed];
-            moves['scroller-right'] = [-this.data.moveSpeed, 0];
-            moves['scroller-bottom'] = [0, this.data.moveSpeed];
-            moves['scroller-left'] = [this.data.moveSpeed, 0];
-        } else if (target === 'marker') {
-            // Marker scrollers are handled separately
-            // This will be overridden in the marker-specific method
-        } else {
-            // Left/right scrollers have IDs like 'left-scroller-top', 'right-scroller-bottom', etc.
-            moves[`${target}-scroller-top`] = [0, -this.data.moveSpeed];
-            moves[`${target}-scroller-right`] = [-this.data.moveSpeed, 0];
-            moves[`${target}-scroller-bottom`] = [0, this.data.moveSpeed];
-            moves[`${target}-scroller-left`] = [this.data.moveSpeed, 0];
-        }
-        
-        let moveX = 0, moveY = 0;
-        
-        session.activeScrollers.forEach(scrollerId => {
-            if (moves[scrollerId]) {
-                moveX += moves[scrollerId][0];
-                moveY += moves[scrollerId][1];
-            }
+    });
+    
+    // Apply movement based on target type
+    if (target === 'marker') {
+        // For marker images, move in X and Z
+        session.targetImage.setAttribute('position', {
+            x: pos.x + moveX,
+            y: pos.y,  // Keep Y constant
+            z: pos.z + moveZ
         });
-        
+    } else {
+        // For center, left, right images, move in X and Y
         session.targetImage.setAttribute('position', {
             x: pos.x + moveX,
             y: pos.y + moveY,
             z: pos.z
         });
-    },
+    }
+},
     
     // Observe for dynamically added marker scrollers
     observeMarkerScrollers: function() {
@@ -277,9 +295,14 @@ AFRAME.registerComponent('image-position-controller', {
     const scroller = evt.target;
     if (scroller.classList.contains('not-interactive')) return;
     
-    // Target the image inside the marker container
+    // Fix: markerTarget already includes "marker-", so we need to use it directly
+    // The container ID is like "marker-123-container" and image ID is "marker-123-image"
     const markerImage = document.querySelector(`#${markerTarget}-container #${markerTarget}-image`);
-    if (!markerImage || !markerImage.getAttribute('visible')) return;
+    
+    if (!markerImage || !markerImage.getAttribute('visible')) {
+        console.log(`Marker image not found for ${markerTarget}`);
+        return;
+    }
     
     const sessionId = `scroll-marker-${markerValue}`;
     
