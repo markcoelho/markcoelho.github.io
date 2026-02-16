@@ -4,9 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const scene = document.querySelector('a-scene');
     
     scene.setAttribute('image-position-controller', '');
-    scene.setAttribute('marker-navigation-ui', '');
+    scene.setAttribute('navigation-ui', '');
     scene.setAttribute('marker-content-manager', '');
-    scene.setAttribute('marker-detection-handler', '');
+    scene.setAttribute('marker-detection', '');
     scene.setAttribute('model-controller', '');
     
     // Setup AR video feed

@@ -243,7 +243,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
                     contentManager.markerModelScales[markerValue] = newScale;
                 }
             } else if (target === 'center') {
-                const detectionHandler = this.scene.components['marker-detection-handler'];
+                const detectionHandler = this.scene.components['marker-detection'];
                 if (detectionHandler && detectionHandler.currentMarker) {
                     const modelController = this.scene.components['model-controller'];
                     if (modelController && modelController.modelScales) {
@@ -273,7 +273,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             const scene = this.scene;
             const contentManager = scene.components['marker-content-manager'];
             const imageController = scene.components['image-position-controller'];
-            const detectionHandler = scene.components['marker-detection-handler'];
+            const detectionHandler = scene.components['marker-detection'];
             
             if (!imageController || !contentManager || !detectionHandler) return;
             
@@ -318,7 +318,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         if (this.buttonType === 'model-reset' && !this.triggered) {
             const scene = this.scene;
             const modelController = scene.components['model-controller'];
-            const detectionHandler = scene.components['marker-detection-handler'];
+            const detectionHandler = scene.components['marker-detection'];
             
             if (!modelController) {
                 console.log('Model controller not found');
@@ -448,7 +448,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         
         const scene = this.scene;
         const contentManager = scene.components['marker-content-manager'];
-        const detectionHandler = scene.components['marker-detection-handler'];
+        const detectionHandler = scene.components['marker-detection'];
         
         if (!contentManager || !detectionHandler) {
             console.log('Content manager or detection handler not found');
@@ -516,7 +516,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     const scene = this.scene;
     const contentManager = scene.components['marker-content-manager'];
     const imageController = scene.components['image-position-controller'];
-    const detectionHandler = scene.components['marker-detection-handler'];
+    const detectionHandler = scene.components['marker-detection'];
     
     if (!contentManager || !detectionHandler) return;
     
@@ -594,7 +594,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     
     const scene = this.scene;
     const contentManager = scene.components['marker-content-manager'];
-    const detectionHandler = scene.components['marker-detection-handler'];
+    const detectionHandler = scene.components['marker-detection'];
     
     if (!contentManager || !detectionHandler) return;
     
@@ -693,7 +693,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             return getId('rightVideo');
         } else if (target === 'marker') {
             // For marker videos, we need to get the current marker value
-            const detectionHandler = this.scene.components['marker-detection-handler'];
+            const detectionHandler = this.scene.components['marker-detection'];
             if (detectionHandler && detectionHandler.currentMarker) {
                 return document.querySelector(`#marker-${detectionHandler.currentMarker}-container #marker-${detectionHandler.currentMarker}-video`);
             }
@@ -792,7 +792,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         const marker = document.querySelector(`a-marker[value="${markerValue}"]`);
         if (!marker) return;
         
-        const detectionHandler = this.scene.components['marker-detection-handler'];
+        const detectionHandler = this.scene.components['marker-detection'];
         if (detectionHandler?.updateNavigationVisibility) {
             detectionHandler.updateNavigationVisibility(marker, markerValue, contentManager);
         }
