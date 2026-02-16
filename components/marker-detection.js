@@ -1,17 +1,14 @@
-// marker-detection.js - Shortened version (video controls removed)
-
+// marker-detection.js - Shortened version
 AFRAME.registerComponent('marker-detection', {
     init: function() {
-        this.centerImage = document.getElementById('centerImage');
-        this.centerpiece = document.getElementById('centerpiece');
+        this.audioElements = {};
+        this.currentPlayingAudio = null;
+        this.centerImage = getId('centerImage');
+        this.centerpiece = getId('centerpiece');
         this.camera = document.querySelector('a-camera');
         this.currentMarker = null;
         
-        // Get references to video controller
-        this.el.sceneEl.addEventListener('loaded', () => {
-            this.videoController = this.el.sceneEl.components['video-controller'];
-        });
-        
+        this.setupVideoControls();
         this.el.sceneEl.addEventListener('markers-created', () => {
             document.querySelectorAll('a-marker').forEach(marker => {
                 marker.addEventListener('markerFound', () => this.onMarkerFound(marker));
@@ -20,32 +17,67 @@ AFRAME.registerComponent('marker-detection', {
         });
     },
 
+    setupVideoControls: function() {
+        const setupButton = (btnId, callback) => {
+            const btn = getId(btnId);
+            if (btn) btn.addEventListener('click', callback);
+        };
+        
+        setupButton('restart', () => this.controlVideo('restart'));
+        setupButton('mute', () => this.controlVideo('mute'));
+    },
+
+    controlVideo: function(action, video = getId('centerVideo')) {
+        if (!video) return;
+        try {
+            const img = video.components?.material?.material?.map?.image;
+            if (!img) return;
+            
+            if (action === 'restart') {
+                img.currentTime = 0;
+                img.play();
+            } else if (action === 'mute') {
+                img.muted = !img.muted;
+                const muteBtn = getId('mute');
+                if (muteBtn) muteBtn.setAttribute('src', `assets/icons/${img.muted ? 'unmute' : 'mute'}.png`);
+            }
+        } catch (e) { console.warn(`Could not ${action} video:`, e); }
+    },
+
+    playContentAudio: function(audioSrc) {
+        if (this.currentPlayingAudio) {
+            this.currentPlayingAudio.pause();
+            this.currentPlayingAudio.currentTime = 0;
+        }
+        if (!audioSrc) return;
+        
+        if (!this.audioElements[audioSrc]) {
+            this.audioElements[audioSrc] = new Audio(audioSrc);
+            this.audioElements[audioSrc].preload = 'auto';
+        }
+        this.currentPlayingAudio = this.audioElements[audioSrc];
+        this.currentPlayingAudio.currentTime = 0;
+        this.currentPlayingAudio.play().catch(e => console.warn("Could not play audio:", e));
+    },
+
     onMarkerFound: function(marker) {
         const value = marker.getAttribute('value');
         const isNewMarker = this.currentMarker !== value;
         this.currentMarker = value;
         
-        // Stop any currently playing audio
-        if (this.videoController) {
-            this.videoController.stopCurrentAudio();
-        }
+        if (this.currentPlayingAudio) this.currentPlayingAudio.pause();
         
         const scene = this.el.sceneEl;
         const contentManager = scene.components['content-manager'];
         
-        // Play narration audio if available
         if (contentManager?.narrations?.[value]) {
-            if (this.videoController) {
-                this.videoController.playContentAudio(contentManager.narrations[value]);
-            }
+            this.playAudio(value, contentManager.narrations[value]);
         }
         
-        // Position the centerpiece between camera and marker
         if (this.centerpiece && this.camera) {
             positionBetweenCameraAndMarker(this.camera, marker, this.centerpiece);
         }
         
-        // Load marker content if it's a new marker
         if (isNewMarker) {
             this.loadMarkerContent(value, scene, contentManager);
         } else {
@@ -58,10 +90,8 @@ AFRAME.registerComponent('marker-detection', {
         
         if (!contentManager) return;
         
-        // Update surround content (360 video/image)
         this.updateSurroundContent(value, contentManager.getSurroundContent(value));
         
-        // Handle left and right side content
         ['left', 'right'].forEach(side => {
             const content = contentManager[`get${side.charAt(0).toUpperCase() + side.slice(1)}SideContent`](value);
             if (content) {
@@ -77,27 +107,18 @@ AFRAME.registerComponent('marker-detection', {
             }
         });
 
-        // Handle center content
         const content = contentManager.getMarkerContent(value);
         if (content) {
             const actions = { image: 'showImage', video: 'showVideo', '3d': 'show3DModel' };
             if (actions[content.type]) this[actions[content.type]](content.value, value, scene);
-            
-            // Play content audio if available
-            if (content.audio && content.audio !== "" && this.videoController) {
-                this.videoController.playContentAudio(content.audio);
-            }
         }
 
-        // Update navigation visibility
         this.updateNavigationVisibility(document.querySelector(`a-marker[value="${value}"]`), value, contentManager);
         this.updateGridVisibility(value, contentManager);
         
         const navUI = scene.components['navigation-ui'];
         if (navUI) {
-            document.querySelectorAll('a-marker').forEach(m => { 
-                if (m._imageGrid) m._imageGrid.setAttribute('visible', 'false'); 
-            });
+            document.querySelectorAll('a-marker').forEach(m => { if (m._imageGrid) m._imageGrid.setAttribute('visible', 'false'); });
             
             const useMarkerNav = contentManager?.getMarkerNavigationFlag?.(value);
             if (useMarkerNav) {
@@ -115,56 +136,36 @@ AFRAME.registerComponent('marker-detection', {
         const controlsEnabled = content.controls === "true" || content.controls === true;
         const types = ['Controls', 'VideoControls', '3dControls'];
         types.forEach(type => {
-            const el = document.getElementById(`${side}${type}`);
+            const el = getId(`${side}${type}`);
             if (el) el.setInvisible();
         });
         
         if (controlsEnabled) {
             const typeMap = { image: 'Controls', video: 'VideoControls', '3d': '3dControls' };
             const controlId = `${side}${typeMap[content.type]}`;
-            const controlEl = document.getElementById(controlId);
+            const controlEl = getId(controlId);
             if (controlEl) controlEl.setVisible();
         }
     },
 
-    updateLeftPieceControls: function(content, markerValue) { 
-        this.updateSideControls('left', content, markerValue); 
-    },
-    
-    updateRightPieceControls: function(content, markerValue) { 
-        this.updateSideControls('right', content, markerValue); 
-    },
-    
-    hideLeftPieceControls: function() { 
-        ['Controls', 'VideoControls', '3dControls'].forEach(t => {
-            const el = document.getElementById(`left${t}`);
-            if (el) el.setInvisible();
-        });
-    },
-    
-    hideRightPieceControls: function() { 
-        ['Controls', 'VideoControls', '3dControls'].forEach(t => {
-            const el = document.getElementById(`right${t}`);
-            if (el) el.setInvisible();
-        });
-    },
+    updateLeftPieceControls: function(content, markerValue) { this.updateSideControls('left', content, markerValue); },
+    updateRightPieceControls: function(content, markerValue) { this.updateSideControls('right', content, markerValue); },
+    hideLeftPieceControls: function() { ['Controls', 'VideoControls', '3dControls'].forEach(t => getId(`left${t}`)?.setInvisible()); },
+    hideRightPieceControls: function() { ['Controls', 'VideoControls', '3dControls'].forEach(t => getId(`right${t}`)?.setInvisible()); },
 
     showSideContent: function(side, content, markerValue, scene) {
         console.log(`Showing ${side} piece content for marker ${markerValue}:`, content);
         
-        const image = document.getElementById(`${side}Image`);
-        const video = document.getElementById(`${side}Video`);
-        const model = document.getElementById(`${side}Model`);
+        const image = getId(`${side}Image`);
+        const video = getId(`${side}Video`);
+        const model = getId(`${side}Model`);
         
         [image, video, model].forEach(el => { if (el) el.setAttribute('visible', 'false'); });
         
         const contentScale = content.scale || 1;
         const baseSize = 3 * contentScale;
         
-        // Play audio if available
-        if (content.audio && this.videoController) {
-            this.videoController.playContentAudio(content.audio);
-        }
+        if (content.audio) this.playContentAudio(content.audio);
         
         const mediaMap = {
             image: { el: image, handler: this.loadImage },
@@ -211,10 +212,7 @@ AFRAME.registerComponent('marker-detection', {
             videoEl.setAttribute('visible', 'true');
             videoEl.setAttribute('position', { x: 0, y: 0, z: 0 });
             
-            // Auto-play video
-            try { 
-                videoEl.components?.material?.material?.map?.image?.play(); 
-            } catch (e) {}
+            try { videoEl.components?.material?.material?.map?.image?.play(); } catch (e) {}
         };
         video.src = content.value;
     },
@@ -226,13 +224,8 @@ AFRAME.registerComponent('marker-detection', {
         modelEl.setAttribute('position', { x: 0, y: 0, z: 0 });
     },
 
-    showLeftPieceContent: function(content, markerValue, scene) { 
-        this.showSideContent('left', content, markerValue, scene); 
-    },
-    
-    showRightPieceContent: function(content, markerValue, scene) { 
-        this.showSideContent('right', content, markerValue, scene); 
-    },
+    showLeftPieceContent: function(content, markerValue, scene) { this.showSideContent('left', content, markerValue, scene); },
+    showRightPieceContent: function(content, markerValue, scene) { this.showSideContent('right', content, markerValue, scene); },
 
     showMarkerImage: function(markerValue, markerElement, scene) {
         const container = document.querySelector(`#marker-${markerValue}-container`);
@@ -265,12 +258,6 @@ AFRAME.registerComponent('marker-detection', {
         const media = mediaMap[currentItem.type];
         if (media) {
             media.handler.call(this, currentItem, media.el, markerValue);
-            
-            // Play audio if available
-            if (currentItem.audio && this.videoController) {
-                this.videoController.playContentAudio(currentItem.audio);
-            }
-            
             if (currentItem.controls) {
                 const controlEl = container.querySelector(`#marker-${markerValue}-${currentItem.type === 'video' ? 'video-controls' : currentItem.type === '3d' ? '3d-controls' : 'controls'}`);
                 if (controlEl) controlEl.setAttribute('visible', 'true');
@@ -303,11 +290,7 @@ AFRAME.registerComponent('marker-detection', {
             const scale = item.scale || 1;
             videoEl.setAttribute('scale', `${scale * aspect} ${scale} 1`);
             videoEl.setAttribute('visible', 'true');
-            
-            // Auto-play video
-            try { 
-                videoEl.components?.material?.material?.map?.image?.play(); 
-            } catch (e) {}
+            try { videoEl.components?.material?.material?.map?.image?.play(); } catch (e) {}
         };
         video.src = item.src;
     },
@@ -342,50 +325,34 @@ AFRAME.registerComponent('marker-detection', {
     },
 
     showImage: function(src, markerValue, scene) {
-        const centerImage = document.getElementById('centerImage');
-        const centerVideo = document.getElementById('centerVideo');
-        const centerModel = document.getElementById('centerModel');
+        const centerImage = getId('centerImage');
+        const centerVideo = getId('centerVideo');
+        const centerModel = getId('centerModel');
         
         [centerVideo, centerModel].forEach(el => { if (el) el.setInvisible(); });
+        if (centerVideo) pauseVideo(centerVideo);
         
-        // Pause video if it was playing
-        if (centerVideo && this.videoController) {
-            this.videoController.pauseVideo(centerVideo);
-        }
-        
-        ['centerVideoControls', 'center3dControls', 'centerControls'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.setInvisible();
-        });
+        ['centerVideoControls', 'center3dControls', 'centerControls'].forEach(id => getId(id)?.setInvisible());
         
         centerImage.setVisible();
         
         const contentManager = scene.components['content-manager'];
         const content = contentManager?.getMarkerContent(markerValue);
+        if (content?.audio) this.playContentAudio(content.audio);
         
-        // Play audio if available
-        if (content?.audio && content.audio !== "" && this.videoController) {
-            this.videoController.playContentAudio(content.audio);
-        }
-        
-        const imageController = scene.components['image-position-controller'];
+        const imageController = scene.components['image-controller'];
         if (imageController) imageController.setupImage(src, markerValue, 'marker');
     },
 
     showVideo: function(src, markerValue, scene) {
-        const centerImage = document.getElementById('centerImage');
-        const centerVideo = document.getElementById('centerVideo');
-        const centerModel = document.getElementById('centerModel');
-        const centerVideoControls = document.getElementById('centerVideoControls');
+        const centerImage = getId('centerImage');
+        const centerVideo = getId('centerVideo');
+        const centerModel = getId('centerModel');
+        const centerVideoControls = getId('centerVideoControls');
         
         [centerImage, centerModel].forEach(el => el?.setInvisible());
         centerVideo.setVisible();
-        
-        // Play video
-        if (this.videoController) {
-            this.videoController.playVideo(centerVideo);
-        }
-        
+        playVideo(centerVideo);
         centerVideo.setAttribute('src', src);
         
         const contentManager = scene.components['content-manager'];
@@ -393,36 +360,25 @@ AFRAME.registerComponent('marker-detection', {
         const contentScale = content?.scale || 1;
         const hasControls = content?.controls === true || content?.controls === "true";
         
-        // Play audio if available
-        if (content?.audio && content.audio !== "" && this.videoController) {
-            this.videoController.playContentAudio(content.audio);
-        }
+        if (content?.audio) this.playContentAudio(content.audio);
         
         const baseSize = 3 * contentScale;
         centerVideo.setAttribute('width', baseSize * 16/9);
         centerVideo.setAttribute('height', baseSize);
         
-        if (centerVideoControls) centerVideoControls.setAttribute('visible', hasControls);
-        
-        const center3dControls = document.getElementById('center3dControls');
-        const centerControls = document.getElementById('centerControls');
-        
-        if (center3dControls) center3dControls.setInvisible();
-        if (centerControls) centerControls.setInvisible();
+        centerVideoControls?.setAttribute('visible', hasControls);
+        getId('center3dControls')?.setInvisible();
+        getId('centerControls')?.setInvisible();
     },
 
     show3DModel: function(src, markerValue, scene) {
-        const centerImage = document.getElementById('centerImage');
-        const centerVideo = document.getElementById('centerVideo');
-        const centerModel = document.getElementById('centerModel');
-        const center3dControls = document.getElementById('center3dControls');
+        const centerImage = getId('centerImage');
+        const centerVideo = getId('centerVideo');
+        const centerModel = getId('centerModel');
+        const center3dControls = getId('center3dControls');
         
         [centerImage, centerVideo].forEach(el => el?.setInvisible());
-        
-        // Pause video if it was playing
-        if (centerVideo && this.videoController) {
-            this.videoController.pauseVideo(centerVideo);
-        }
+        if (centerVideo) pauseVideo(centerVideo);
         
         centerModel.setVisible();
         centerModel.setAttribute('gltf-model', src);
@@ -432,10 +388,7 @@ AFRAME.registerComponent('marker-detection', {
         const controlsEnabled = content?.controls === "true" || content?.controls === true;
         const originalScale = content?.scale || 1;
         
-        // Play audio if available
-        if (content?.audio && content.audio !== "" && this.videoController) {
-            this.videoController.playContentAudio(content.audio);
-        }
+        if (content?.audio) this.playContentAudio(content.audio);
         
         const modelController = scene.components['model-controller'];
         const targetScale = modelController?.getUserScale?.(markerValue) || originalScale;
@@ -447,7 +400,7 @@ AFRAME.registerComponent('marker-detection', {
         }, 100);
         
         setTimeout(() => {
-            if (center3dControls) center3dControls.setAttribute('visible', controlsEnabled);
+            center3dControls?.setAttribute('visible', controlsEnabled);
             if (controlsEnabled) {
                 document.querySelectorAll('.model-zoom-button, .roller, .3dreset').forEach(btn => btn.setVisible());
             }
@@ -455,11 +408,8 @@ AFRAME.registerComponent('marker-detection', {
         
         if (modelController?.setCurrentMarker) modelController.setCurrentMarker(markerValue, originalScale);
         
-        const centerVideoControls = document.getElementById('centerVideoControls');
-        const centerControls = document.getElementById('centerControls');
-        
-        if (centerVideoControls) centerVideoControls.setInvisible();
-        if (centerControls) centerControls.setInvisible();
+        getId('centerVideoControls')?.setInvisible();
+        getId('centerControls')?.setInvisible();
     },
 
     updateGridVisibility: function(markerValue, contentManager) {
@@ -470,16 +420,7 @@ AFRAME.registerComponent('marker-detection', {
     onMarkerLost: function(marker) {
         const value = marker.getAttribute('value');
         const markerVideo = document.querySelector(`#marker-${value}-video`);
-        
-        // Pause marker video if it exists
-        if (markerVideo && this.videoController) {
-            this.videoController.pauseVideo(markerVideo);
-        }
-        
-        // Stop any playing audio
-        if (this.videoController) {
-            this.videoController.stopCurrentAudio();
-        }
+        if (markerVideo) pauseVideo(markerVideo);
     },
 
     updateNavigationVisibility: function(marker, markerValue, contentManager) {
@@ -489,15 +430,19 @@ AFRAME.registerComponent('marker-detection', {
         const typeMap = { image: 'centerControls', video: 'centerVideoControls', '3d': 'center3dControls' };
         const controlId = typeMap[content.type];
         
-        ['centerControls', 'centerVideoControls', 'center3dControls'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.setInvisible();
-        });
+        ['centerControls', 'centerVideoControls', 'center3dControls'].forEach(id => getId(id)?.setInvisible());
         
         const controlsEnabled = content.controls === "true" || content.controls === true;
-        if (controlsEnabled && controlId) {
-            const el = document.getElementById(controlId);
-            if (el) el.setVisible();
+        if (controlsEnabled && controlId) getId(controlId)?.setVisible();
+    },
+
+    playAudio: function(markerValue, url) {
+        if (!this.audioElements[markerValue]) {
+            this.audioElements[markerValue] = new Audio(url);
+            this.audioElements[markerValue].preload = 'auto';
         }
+        this.currentPlayingAudio = this.audioElements[markerValue];
+        this.currentPlayingAudio.currentTime = 0;
+        this.currentPlayingAudio.play();
     }
 });

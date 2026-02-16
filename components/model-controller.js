@@ -1,4 +1,5 @@
-// model-controller.js - Shortened version
+
+// model-controller.js
 AFRAME.registerComponent('model-controller', {
     schema: {
         minScale: { default: 0.1 },
@@ -220,3 +221,4 @@ AFRAME.registerComponent('model-controller', {
         Object.keys(this.activeRotationSessions).forEach(id => this.stopRotation(id));
     }
 });
+

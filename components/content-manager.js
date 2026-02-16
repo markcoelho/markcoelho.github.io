@@ -344,11 +344,11 @@ createMarkerControls: function(markerValue, type) {
     resetBtn.setAttribute('rotation', '0 0 0');
     resetBtn.setAttribute('material', 'depthTest: false;');
     resetBtn.setAttribute('render-order', '3');
-    resetBtn.setAttribute('gaze-interaction-handler', 
+    resetBtn.setAttribute('interaction-handler', 
         `action: marker-reset; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(resetBtn);
 
-    // Scrolling arrows - FIXED IDs to match what image-position-controller expects
+    // Scrolling arrows - FIXED IDs to match what image-controller expects
     // The controller looks for IDs like 'marker-scroller-up', 'marker-scroller-down', etc.
     const directions = [
         { id: 'up', pos: '0 0.15 0.1' },
@@ -370,7 +370,7 @@ createMarkerControls: function(markerValue, type) {
         arrow.setAttribute('render-order', '3');
         arrow.setAttribute('data-direction', dir.id);
         arrow.setAttribute('data-target', `marker-${markerValue}`);
-        arrow.setAttribute('gaze-interaction-handler', 
+        arrow.setAttribute('interaction-handler', 
             `action: marker-move; markerValue: ${markerValue}; fuseTimeout: 500`);
         controlsPlane.appendChild(arrow);
     });
@@ -386,7 +386,7 @@ createMarkerControls: function(markerValue, type) {
     zoomIn.setAttribute('data-target', `marker-${markerValue}`);
     zoomIn.setAttribute('material', 'depthTest: false;');
     zoomIn.setAttribute('render-order', '3');
-    zoomIn.setAttribute('gaze-interaction-handler', 
+    zoomIn.setAttribute('interaction-handler', 
         `action: increase; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomIn);
 
@@ -400,7 +400,7 @@ createMarkerControls: function(markerValue, type) {
     zoomOut.setAttribute('data-target', `marker-${markerValue}`);
     zoomOut.setAttribute('material', 'depthTest: false;');
     zoomOut.setAttribute('render-order', '3');
-    zoomOut.setAttribute('gaze-interaction-handler', 
+    zoomOut.setAttribute('interaction-handler', 
         `action: decrease; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomOut);
 
@@ -429,7 +429,7 @@ createMarkerVideoControls: function(markerValue) {
     restartBtn.setAttribute('rotation', '0 0 0');
     restartBtn.setAttribute('material', 'depthTest: false;');
     restartBtn.setAttribute('render-order', '3');
-    restartBtn.setAttribute('gaze-interaction-handler', 
+    restartBtn.setAttribute('interaction-handler', 
         `action: marker-restart; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(restartBtn);
 
@@ -442,7 +442,7 @@ createMarkerVideoControls: function(markerValue) {
     muteBtn.setAttribute('rotation', '0 0 0');
     muteBtn.setAttribute('material', 'depthTest: false;');
     muteBtn.setAttribute('render-order', '3');
-    muteBtn.setAttribute('gaze-interaction-handler', 
+    muteBtn.setAttribute('interaction-handler', 
         `action: marker-mute; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(muteBtn);
 
@@ -456,7 +456,7 @@ createMarkerVideoControls: function(markerValue) {
     backwardBtn.setAttribute('data-action', 'backward');
     backwardBtn.setAttribute('material', 'depthTest: false;');
     backwardBtn.setAttribute('render-order', '3');
-    backwardBtn.setAttribute('gaze-interaction-handler', 
+    backwardBtn.setAttribute('interaction-handler', 
         `action: marker-backward; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(backwardBtn);
 
@@ -470,7 +470,7 @@ createMarkerVideoControls: function(markerValue) {
     forwardBtn.setAttribute('data-action', 'forward');
     forwardBtn.setAttribute('material', 'depthTest: false;');
     forwardBtn.setAttribute('render-order', '3');
-    forwardBtn.setAttribute('gaze-interaction-handler', 
+    forwardBtn.setAttribute('interaction-handler', 
         `action: marker-forward; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(forwardBtn);
 
@@ -500,7 +500,7 @@ createMarker3dControls: function(markerValue) {
     resetBtn.setAttribute('material', 'depthTest: false;');
     resetBtn.setAttribute('render-order', '3');
     resetBtn.setAttribute('data-target', `marker-${markerValue}`);
-    resetBtn.setAttribute('gaze-interaction-handler', 
+    resetBtn.setAttribute('interaction-handler', 
         `action: 3dreset; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(resetBtn);
 
@@ -526,7 +526,7 @@ createMarker3dControls: function(markerValue) {
         arrow.setAttribute('render-order', '3');
         arrow.setAttribute('data-direction', dir.id);
         arrow.setAttribute('data-target', `marker-${markerValue}`);
-        arrow.setAttribute('gaze-interaction-handler', 
+        arrow.setAttribute('interaction-handler', 
             `action: model-rotate; markerValue: ${markerValue}; fuseTimeout: 500`);
         controlsPlane.appendChild(arrow);
     });
@@ -542,7 +542,7 @@ createMarker3dControls: function(markerValue) {
     zoomIn.setAttribute('data-target', `marker-${markerValue}`);
     zoomIn.setAttribute('material', 'depthTest: false;');
     zoomIn.setAttribute('render-order', '3');
-    zoomIn.setAttribute('gaze-interaction-handler', 
+    zoomIn.setAttribute('interaction-handler', 
         `action: 3dincrease; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomIn);
 
@@ -556,7 +556,7 @@ createMarker3dControls: function(markerValue) {
     zoomOut.setAttribute('data-target', `marker-${markerValue}`);
     zoomOut.setAttribute('material', 'depthTest: false;');
     zoomOut.setAttribute('render-order', '3');
-    zoomOut.setAttribute('gaze-interaction-handler', 
+    zoomOut.setAttribute('interaction-handler', 
         `action: 3ddecrease; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomOut);
 
