@@ -1,4 +1,4 @@
-AFRAME.registerComponent('marker-content-manager', {
+AFRAME.registerComponent('content-manager', {
     init: function() {
     this.centerImage = getId('centerImage');
     this.centerpiece = getId('centerpiece');
@@ -27,8 +27,8 @@ AFRAME.registerComponent('marker-content-manager', {
     },
     
     // Process JSON into internal structures - TAKES FIRST ELEMENT FROM ARRAYS
-    // In marker-content-manager.js, update processJSONData function
-// In marker-content-manager.js - update processJSONData function
+    // In content-manager.js, update processJSONData function
+// In content-manager.js - update processJSONData function
 
 processJSONData: function(jsonData) {
     this.contentSequences = {};
@@ -250,9 +250,9 @@ getMarkerNavigationFlag: function(marker) {
     },
     
     // Create single marker element
-    // In marker-content-manager.js - update createMarkerElement function
+    // In content-manager.js - update createMarkerElement function
 
-// In marker-content-manager.js - update createMarkerElement function
+// In content-manager.js - update createMarkerElement function
 
 createMarkerElement: function(markerValue, parent) {
     const markerEl = document.createElement('a-marker');
@@ -319,7 +319,7 @@ createMarkerElement: function(markerValue, parent) {
 },
 
 // Helper function to create marker image controls - BETTER CENTERING
-// In marker-content-manager.js - update the createMarkerControls, createMarkerVideoControls, and createMarker3dControls functions
+// In content-manager.js - update the createMarkerControls, createMarkerVideoControls, and createMarker3dControls functions
 
 // Helper function to create marker image controls - FIXED IDs
 createMarkerControls: function(markerValue, type) {

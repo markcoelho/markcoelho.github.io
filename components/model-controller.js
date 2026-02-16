@@ -28,7 +28,7 @@ AFRAME.registerComponent('model-controller', {
         this.el.sceneEl.addEventListener('markerFound', (evt) => {
             const marker = evt.target;
             const markerValue = marker.getAttribute('value');
-            const contentManager = this.el.sceneEl.components['marker-content-manager'];
+            const contentManager = this.el.sceneEl.components['content-manager'];
             
             if (contentManager) {
                 const content = contentManager.getMarkerContent(markerValue);
@@ -186,7 +186,7 @@ AFRAME.registerComponent('model-controller', {
         
         // Get original scale from content manager
         let originalScale = 1;
-        const contentManager = this.el.sceneEl.components['marker-content-manager'];
+        const contentManager = this.el.sceneEl.components['content-manager'];
         if (contentManager && markerValue) {
             const content = target === 'center' ? contentManager.getMarkerContent(markerValue) :
                            target === 'left' ? contentManager.getLeftSideContent(markerValue) :

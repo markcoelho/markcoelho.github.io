@@ -191,7 +191,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             
             if (target.startsWith('marker-')) {
                 const markerValue = target.replace('marker-', '');
-                const contentManager = this.scene.components['marker-content-manager'];
+                const contentManager = this.scene.components['content-manager'];
                 if (contentManager) {
                     contentManager.markerImageScales[markerValue] = currentScale.x * zoomFactor;
                 }
@@ -238,7 +238,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             // Save the zoom level for this model
             if (target.startsWith('marker-')) {
                 const markerValue = target.replace('marker-', '');
-                const contentManager = this.scene.components['marker-content-manager'];
+                const contentManager = this.scene.components['content-manager'];
                 if (contentManager) {
                     contentManager.markerModelScales[markerValue] = newScale;
                 }
@@ -271,7 +271,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             
             // Rest of your existing reset logic for center/left/right...
             const scene = this.scene;
-            const contentManager = scene.components['marker-content-manager'];
+            const contentManager = scene.components['content-manager'];
             const imageController = scene.components['image-position-controller'];
             const detectionHandler = scene.components['marker-detection'];
             
@@ -447,7 +447,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         console.log(`Side grid item selected: ${side}, marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
         
         const scene = this.scene;
-        const contentManager = scene.components['marker-content-manager'];
+        const contentManager = scene.components['content-manager'];
         const detectionHandler = scene.components['marker-detection'];
         
         if (!contentManager || !detectionHandler) {
@@ -514,7 +514,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     console.log(`Grid item selected: marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
     
     const scene = this.scene;
-    const contentManager = scene.components['marker-content-manager'];
+    const contentManager = scene.components['content-manager'];
     const imageController = scene.components['image-position-controller'];
     const detectionHandler = scene.components['marker-detection'];
     
@@ -593,7 +593,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     console.log(`Side grid item selected: ${side}, marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
     
     const scene = this.scene;
-    const contentManager = scene.components['marker-content-manager'];
+    const contentManager = scene.components['content-manager'];
     const detectionHandler = scene.components['marker-detection'];
     
     if (!contentManager || !detectionHandler) return;
@@ -748,7 +748,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             return;
         }
         
-        const contentManager = scene.components['marker-content-manager'];
+        const contentManager = scene.components['content-manager'];
         const currentIndex = contentManager?.currentContentIndex[markerValue] || 0;
         const markerItems = contentManager?.markerData?.[markerValue] || [];
         const currentItem = markerItems[currentIndex];
