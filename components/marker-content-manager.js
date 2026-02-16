@@ -294,7 +294,7 @@ createMarkerControls: function(markerValue, type) {
     controlsPlane.setAttribute('rotation', '-90 0 0');
     controlsPlane.setAttribute('width', '2.2');
     controlsPlane.setAttribute('height', '0.5');
-    controlsPlane.setAttribute('color', 'white');
+    controlsPlane.setAttribute('opacity', '0');
     controlsPlane.setAttribute('visible', 'false');
     controlsPlane.setAttribute('render-order', '2');
 
@@ -379,7 +379,7 @@ createMarkerVideoControls: function(markerValue) {
     controlsPlane.setAttribute('rotation', '-90 0 0');
     controlsPlane.setAttribute('width', '2.2');
     controlsPlane.setAttribute('height', '0.5');
-    controlsPlane.setAttribute('color', 'white');
+    controlsPlane.setAttribute('opacity', '0');
     controlsPlane.setAttribute('visible', 'false');
     controlsPlane.setAttribute('render-order', '2');
 
@@ -449,7 +449,7 @@ createMarker3dControls: function(markerValue) {
     controlsPlane.setAttribute('rotation', '-90 0 0');
     controlsPlane.setAttribute('width', '2.2');
     controlsPlane.setAttribute('height', '0.5');
-    controlsPlane.setAttribute('color', 'white');
+    controlsPlane.setAttribute('opacity', '0');
     controlsPlane.setAttribute('visible', 'false');
     controlsPlane.setAttribute('render-order', '2');
 
