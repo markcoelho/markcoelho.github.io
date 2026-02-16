@@ -12,14 +12,14 @@
           "controls": "true",
           "src": "assets/images/0.jpg",
           "scale": 1,
-          "audio": ""
+          "audio": "assets/audio/elementoaudio.mp3"
         },
         {
           "type": "3d",
           "controls": "true",
           "src": "assets/models/ship_example.glb",
           "scale": 0.02,
-          "audio": ""
+          "audio": "assets/audio/elementoaudio.mp3"
         }
       ],
       "left_side": [

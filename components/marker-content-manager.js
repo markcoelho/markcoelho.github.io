@@ -39,6 +39,7 @@ processJSONData: function(jsonData) {
     this.leftSideContent = {};
     this.rightSideContent = {};
     this.markerNavigationFlags = {};
+    this.audioPaths = {}; // Add this line
 
     jsonData.pages.forEach(page => {
         const marker = page.barcode_number.toString();
@@ -55,15 +56,23 @@ processJSONData: function(jsonData) {
         // Create an array to store all marker content
         this.markerData[marker] = [];
         
+        // Initialize audioPaths for this marker
+        this.audioPaths[marker] = {};
+        
         if (page.marker && Array.isArray(page.marker)) {
             page.marker.forEach(item => {
                 if (item.type && item.type !== "") {
-                    this.markerData[marker].push({
+                    const contentItem = {
                         type: item.type,
                         src: item.src,
                         scale: item.scale || 1,
-                        controls: item.controls === "true" // Store controls flag
-                    });
+                        controls: item.controls === "true",
+                        audio: item.audio || "" // Store audio path
+                    };
+                    this.markerData[marker].push(contentItem);
+                    
+                    // Store audio path for this index
+                    this.audioPaths[marker][`marker-${this.markerData[marker].length-1}`] = item.audio || "";
                 }
             });
         }
@@ -74,7 +83,8 @@ processJSONData: function(jsonData) {
                 type: page.left_side[0].type,
                 value: page.left_side[0].src || page.left_side[0].value,
                 controls: page.left_side[0].controls === "true",
-                scale: page.left_side[0].scale || 1
+                scale: page.left_side[0].scale || 1,
+                audio: page.left_side[0].audio || "" // Store audio
             };
         }
         
@@ -84,95 +94,122 @@ processJSONData: function(jsonData) {
                 type: page.right_side[0].type,
                 value: page.right_side[0].src || page.right_side[0].value,
                 controls: page.right_side[0].controls === "true",
-                scale: page.right_side[0].scale || 1
+                scale: page.right_side[0].scale || 1,
+                audio: page.right_side[0].audio || "" // Store audio
             };
         }
 
         if (page.left_side && Array.isArray(page.left_side)) {
-    page.left_side.forEach((item, index) => {
-        if (item.type && item.type !== "") {
-            // Ensure leftSideContent still stores the first item for immediate display
-            if (index === 0) {
-                this.leftSideContent[marker] = {
-                    type: item.type,
-                    value: item.src || item.value,
-                    controls: item.controls === "true",
-                    scale: item.scale || 1
-                };
-            }
-            
-            // Add ALL items to markerData with side property
-            if (!this.markerData[marker]) this.markerData[marker] = [];
-            this.markerData[marker].push({
-                type: item.type,
-                src: item.src || item.value,
-                value: item.src || item.value,
-                scale: item.scale || 1,
-                controls: item.controls === "true",
-                side: 'left',
-                index: index
+            page.left_side.forEach((item, index) => {
+                if (item.type && item.type !== "") {
+                    // Ensure leftSideContent still stores the first item for immediate display
+                    if (index === 0) {
+                        this.leftSideContent[marker] = {
+                            type: item.type,
+                            value: item.src || item.value,
+                            controls: item.controls === "true",
+                            scale: item.scale || 1,
+                            audio: item.audio || ""
+                        };
+                    }
+                    
+                    // Add ALL items to markerData with side property
+                    if (!this.markerData[marker]) this.markerData[marker] = [];
+                    const contentItem = {
+                        type: item.type,
+                        src: item.src || item.value,
+                        value: item.src || item.value,
+                        scale: item.scale || 1,
+                        controls: item.controls === "true",
+                        side: 'left',
+                        index: index,
+                        audio: item.audio || ""
+                    };
+                    this.markerData[marker].push(contentItem);
+                    
+                    // Store audio path for this index
+                    this.audioPaths[marker][`left-${index}`] = item.audio || "";
+                }
             });
         }
-    });
-}
 
-// Store right_side content with side property for tracking
-if (page.right_side && Array.isArray(page.right_side)) {
-    page.right_side.forEach((item, index) => {
-        if (item.type && item.type !== "") {
-            // Ensure rightSideContent still stores the first item for immediate display
-            if (index === 0) {
-                this.rightSideContent[marker] = {
-                    type: item.type,
-                    value: item.src || item.value,
-                    controls: item.controls === "true",
-                    scale: item.scale || 1
-                };
-            }
-            
-            // Add ALL items to markerData with side property
-            if (!this.markerData[marker]) this.markerData[marker] = [];
-            this.markerData[marker].push({
-                type: item.type,
-                src: item.src || item.value,
-                value: item.src || item.value,
-                scale: item.scale || 1,
-                controls: item.controls === "true",
-                side: 'right',
-                index: index
+        // Store right_side content with side property for tracking
+        if (page.right_side && Array.isArray(page.right_side)) {
+            page.right_side.forEach((item, index) => {
+                if (item.type && item.type !== "") {
+                    // Ensure rightSideContent still stores the first item for immediate display
+                    if (index === 0) {
+                        this.rightSideContent[marker] = {
+                            type: item.type,
+                            value: item.src || item.value,
+                            controls: item.controls === "true",
+                            scale: item.scale || 1,
+                            audio: item.audio || ""
+                        };
+                    }
+                    
+                    // Add ALL items to markerData with side property
+                    if (!this.markerData[marker]) this.markerData[marker] = [];
+                    const contentItem = {
+                        type: item.type,
+                        src: item.src || item.value,
+                        value: item.src || item.value,
+                        scale: item.scale || 1,
+                        controls: item.controls === "true",
+                        side: 'right',
+                        index: index,
+                        audio: item.audio || ""
+                    };
+                    this.markerData[marker].push(contentItem);
+                    
+                    // Store audio path for this index
+                    this.audioPaths[marker][`right-${index}`] = item.audio || "";
+                }
             });
         }
-    });
-}
 
-// Also update the marker array processing to include side property (default 'center')
-if (page.marker && Array.isArray(page.marker)) {
-    page.marker.forEach((item, index) => {
-        if (item.type && item.type !== "") {
-            this.markerData[marker].push({
-                type: item.type,
-                src: item.src || item.value,
-                value: item.src || item.value,
-                scale: item.scale || 1,
-                controls: item.controls === "true",
-                side: 'center',
-                index: index
+        // Also update the marker array processing to include side property (default 'center')
+        if (page.marker && Array.isArray(page.marker)) {
+            page.marker.forEach((item, index) => {
+                if (item.type && item.type !== "") {
+                    const contentItem = {
+                        type: item.type,
+                        src: item.src || item.value,
+                        value: item.src || item.value,
+                        scale: item.scale || 1,
+                        controls: item.controls === "true",
+                        side: 'center',
+                        index: index,
+                        audio: item.audio || ""
+                    };
+                    this.markerData[marker].push(contentItem);
+                    
+                    // Store audio path for this index
+                    this.audioPaths[marker][`center-${index}`] = item.audio || "";
+                }
             });
         }
-    });
-}
         
         this.contentSequences[marker] = centralSide.map(item => ({
             type: item.type,
             value: item.src || item.value,
             controls: item.controls === "true",
-            scale: item.scale || 1
+            scale: item.scale || 1,
+            audio: item.audio || "" // Store audio
         }));
         
         this.currentContentIndex[marker] = 0;
     });
     
     console.log("Marker data loaded (all items):", this.markerData);
+    console.log("Audio paths loaded:", this.audioPaths);
+},
+
+getAudioForContent: function(markerValue, side, index) {
+    if (!this.audioPaths[markerValue]) return "";
+    
+    const key = `${side}-${index}`;
+    return this.audioPaths[markerValue][key] || "";
 },
 
 // Add getter for specific marker item by index
