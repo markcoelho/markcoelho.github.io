@@ -56,7 +56,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
         <a-entity id="centerModel" gltf-model="" scale="1 1 1" render-order="1" visible="false"></a-entity>
 
         <!-- Image controls -->
-        <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="centerControls">
+        <a-plane visible="false" opacity="0" position="0 0 0.1" width="1.8" height="0.4" id="centerControls">
 
             <a-image src="assets/icons/reset.png" class="reset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                     gaze-interaction-handler="action: reset; fuseTimeout: 1000" material="depthTest: false;"></a-image>
@@ -81,7 +81,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
         </a-plane>
 
         <!-- Video controls -->
-        <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="centerVideoControls">
+        <a-plane visible="false"  opacity="0"  position="0 0 0.1" width="1.8" height="0.4" id="centerVideoControls">
             <a-image src="assets/icons/reset.png" class="restart" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                     gaze-interaction-handler="action: restart; fuseTimeout: 1000" material="depthTest: false;"></a-image>
             <a-image src="assets/icons/mute.png" class="mute" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
@@ -95,7 +95,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
         </a-plane>
 
         <!-- 3D controls -->
-        <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="center3dControls">
+        <a-plane visible="false"  opacity="0"  position="0 0 0.1" width="1.8" height="0.4" id="center3dControls">
             <a-image src="assets/icons/reset.png" class="3dreset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                     gaze-interaction-handler="action: 3dreset; fuseTimeout: 1000" material="depthTest: false;"></a-image>
             
@@ -129,7 +129,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
     <a-entity id="leftModel" gltf-model="" scale="1 1 1" render-order="1" visible="false"></a-entity>
 
     <!-- Left Image controls - UPDATED with render-order and material settings -->
-    <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="leftControls"  render-order="1">
+    <a-plane visible="false"  opacity="0"  position="0 0 0.1" width="1.8" height="0.4" id="leftControls"  render-order="1">
 
         <a-image src="assets/icons/reset.png" class="left-reset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                  material="depthTest: false;" gaze-interaction-handler="action: reset; target: left; fuseTimeout: 1000" render-order="3"></a-image>
@@ -154,7 +154,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
     </a-plane>
 
     <!-- Left Video controls - UPDATED with render-order and material settings -->
-    <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="leftVideoControls"  render-order="2">
+    <a-plane visible="false"  opacity="0"  position="0 0 0.1" width="1.8" height="0.4" id="leftVideoControls"  render-order="2">
         <a-image src="assets/icons/reset.png" class="left-restart" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                 gaze-interaction-handler="action: restart; target: left; fuseTimeout: 1000" material="depthTest: false;" render-order="3"></a-image>
         <a-image src="assets/icons/mute.png" class="left-mute" position="-0.2 0 0.1" scale="0.18 0.18 0.18" 
@@ -168,7 +168,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
     </a-plane>
 
     <!-- Left 3D controls - UPDATED with render-order and material settings -->
-    <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="left3dControls" render-order="2">
+    <a-plane visible="false"  opacity="0"  position="0 0 0.1" width="1.8" height="0.4" id="left3dControls" render-order="2">
         <a-image src="assets/icons/reset.png" class="left-3dreset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                 gaze-interaction-handler="action: 3dreset; target: left; fuseTimeout: 1000"  material="depthTest: false;"  render-order="3"></a-image>
         
@@ -200,7 +200,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
     <a-entity id="rightModel" gltf-model="" scale="1 1 1" render-order="1" visible="false"></a-entity>
 
     <!-- Right Image controls - UPDATED with render-order and material settings -->
-    <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="rightControls" >
+    <a-plane visible="false"  opacity="0"  position="0 0 0.1" width="1.8" height="0.4" id="rightControls" >
         
         <a-image src="assets/icons/reset.png" class="right-reset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                 gaze-interaction-handler="action: reset; target: right; fuseTimeout: 1000"></a-image>
@@ -223,9 +223,9 @@ position="0 0 0" visible-in-vr-only></a-entity>
         data-action="decrease" data-target="right" material="depthTest: false;" render-order="3"
         gaze-interaction-handler="action: decrease; target: right; fuseTimeout: 500"></a-image>
     </a-plane>
-
+f 
     <!-- Right Video controls - UPDATED with render-order and material settings -->
-    <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="rightVideoControls" 
+    <a-plane visible="false"  opacity="0"  position="0 0 0.1" width="1.8" height="0.4" id="rightVideoControls" 
               render-order="2">
         <a-image src="assets/icons/reset.png" class="right-restart" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                 gaze-interaction-handler="action: restart; target: right; fuseTimeout: 1000" material="depthTest: false;" render-order="3"></a-image>
@@ -240,7 +240,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
     </a-plane>
 
     <!-- Right 3D controls - UPDATED with render-order and material settings -->
-    <a-plane visible="false" color="white" position="0 0 0.1" width="1.8" height="0.4" id="right3dControls" 
+    <a-plane visible="false"  opacity="0"  position="0 0 0.1" width="1.8" height="0.4" id="right3dControls" 
               render-order="2">
         <a-image src="assets/icons/reset.png" class="right-3dreset" position="-0.7 0 0.1" scale="0.18 0.18 0.18" 
                 gaze-interaction-handler="action: 3dreset; target: right; fuseTimeout: 1000" material="depthTest: false;" render-order="3"></a-image>
