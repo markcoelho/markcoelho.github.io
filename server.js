@@ -29,16 +29,25 @@ app.use(express.static(__dirname));
 // Serve minds folder
 app.use('/minds', express.static(path.join(__dirname, 'minds')));
 
-// Get local IP
+const { execSync } = require('child_process');
+
 function getLocalIP() {
-    const interfaces = os.networkInterfaces();
-    for (const interfaceName of Object.keys(interfaces)) {
-        for (const iface of interfaces[interfaceName]) {
-            if (iface.family === 'IPv4' && !iface.internal) {
-                return iface.address;
+    try {
+        // Get default gateway interface on Windows
+        const route = execSync('route print 0.0.0.0').toString();
+        const lines = route.split('\n');
+
+        for (const line of lines) {
+            if (line.includes('0.0.0.0')) {
+                const parts = line.trim().split(/\s+/);
+                const interfaceIP = parts[3]; // Interface column
+                return interfaceIP;
             }
         }
+    } catch (err) {
+        console.log('Could not determine default interface:', err);
     }
+
     return 'localhost';
 }
 
