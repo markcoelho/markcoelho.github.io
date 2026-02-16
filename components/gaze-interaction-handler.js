@@ -492,7 +492,51 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             
             this.triggered = true;
         }
+
+
         
+        if (this.buttonType === 'grid-image' && this.el.getAttribute('data-side')) {
+    const targetEl = this.el;
+    const markerValue = targetEl.getAttribute('data-marker-value');
+    const contentIndex = parseInt(targetEl.getAttribute('data-content-index'));
+    const mediaType = targetEl.getAttribute('data-media-type');
+    const side = targetEl.getAttribute('data-side');
+    
+    if (!markerValue || !side) {
+        console.log('Missing marker value or side on grid item');
+        return;
+    }
+    
+    console.log(`Side grid item selected: ${side}, marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
+    
+    const scene = this.scene;
+    const contentManager = scene.components['marker-content-manager'];
+    const detectionHandler = scene.components['marker-detection-handler'];
+    
+    if (!contentManager || !detectionHandler) return;
+    
+    // Get the specific item from markerData for this side
+    const sideItems = (contentManager.markerData?.[markerValue] || []).filter(item => item.side === side);
+    const selectedItem = sideItems[contentIndex];
+    
+    if (!selectedItem) {
+        console.log(`No ${side} item found at index ${contentIndex}`);
+        return;
+    }
+    
+    // Show the selected content in the appropriate side piece
+    if (side === 'left') {
+        detectionHandler.showLeftPieceContent(selectedItem, markerValue, scene);
+        detectionHandler.updateLeftPieceControls(selectedItem, markerValue);
+    } else if (side === 'right') {
+        detectionHandler.showRightPieceContent(selectedItem, markerValue, scene);
+        detectionHandler.updateRightPieceControls(selectedItem, markerValue);
+    }
+    
+    this.triggered = true;
+}
+
+
         // Video fast backward - handle center, left, and right
         if (this.buttonType === 'fast-backward' && !this.triggered) {
             const target = this.getVideoTarget();
