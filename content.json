@@ -19,6 +19,8 @@
           "controls": "true",
           "src": "assets/models/ship_example.glb",
           "scale": 0.02,
+          "auto_rotate": "false",
+          "rotation": "180",
           "audio": "assets/audio/elementoaudio.mp3"
         }
       ],
@@ -28,7 +30,7 @@
           "controls": "true",
           "src": "assets/models/ship_example.glb",
           "scale": 0.02,
-          "audio": ""
+          "audio": "assets/audio/elementoaudio.mp3"
         }
       ],
       "right_side": [
@@ -37,7 +39,7 @@
           "controls": "true",
           "src": "assets/models/ship_example.glb",
           "scale": 0.02,
-          "audio": ""
+          "audio": "assets/audio/elementoaudio.mp3"
         }
       ],
       "marker": [
@@ -86,14 +88,14 @@
           "controls": "true",
           "src": "assets/images/0.jpg",
           "scale": 1,
-          "audio": ""
+          "audio": "assets/audio/elementoaudio.mp3"
         },
         {
           "type": "video",
           "controls": "true",
           "src": "assets/video/video-test.mp4",
           "scale": 0.5,
-          "audio": ""
+          "audio": "assets/audio/elementoaudio.mp3"
         }
       ],
       "right_side": [
@@ -196,19 +198,9 @@
       ],
       "left_side": [
         {
-          "type": "video",
-          "controls": "true",
-          "src": "assets/video/video-test.mp4",
-          "scale": 0.7,
-          "audio": ""
-        },
-        {
-          "type": "3d",
-          "controls": "true",
-          "src": "assets/models/ship_example.glb",
-          "scale": 0.02,
-          "audio": ""
+          
         }
+        
       ],
       "right_side": [
         {
@@ -228,11 +220,7 @@
       ],
       "marker": [
         {
-          "type": "3d",
-          "controls": "true",
-          "src": "assets/models/ship_example.glb",
-          "scale": 0.02,
-          "audio": ""
+        
         }
       ]
     },

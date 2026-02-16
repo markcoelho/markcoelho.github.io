@@ -30,7 +30,8 @@ function positionBetweenCameraAndMarker(camera, marker, contentPanel) {
     const lookDir = new THREE.Vector3().subVectors(cameraXZ, centerPos).normalize();
     const yRot = THREE.Math.radToDeg(Math.atan2(lookDir.x, lookDir.z));
     
-    contentPanel.setAttribute('position', { x: centerPos.x, y: 0, z: centerPos.z });
+    //window.alert(markerPos.y);
+    contentPanel.setAttribute('position', { x: centerPos.x, y: markerPos.y, z: centerPos.z });
     contentPanel.setAttribute('rotation', { x: 0, y: yRot, z: 0 });
     
     // Position leftpiece if it exists

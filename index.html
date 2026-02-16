@@ -25,7 +25,7 @@
 <body>
 <a-scene renderer="sortObjects: true" vr-mode-ui="enabled: true" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
     
-    <a-camera position="0 0 0" look-controls="enabled: false"  >
+    <a-camera look-controls="enabled: false"  >
         <!-- Loading spinner -->
         <a-image id="loading_animation" src="assets/icons/loading.png" position="0 0 -1" scale="0.05 0.05 0.05" 
                  animation="property: rotation; to:0 0 -360; dur: 1500; easing: linear; loop: true" visible="false"></a-image>
@@ -49,7 +49,7 @@ position="0 0 0" visible-in-vr-only></a-entity>
         <a-sphere position="0 0 0" radius="40" src="assets/360/360-image-test.jpg" material="shader: flat; side: back"></a-sphere>
 
     <!-- Main content container -->
-    <a-entity id="centerpiece" position="0 0 -5">
+    <a-entity id="centerpiece" position="">
         <!-- Main image/video/model display -->
         <a-image id="centerImage" src="" scale="3 3 3" render-order="1" visible="true"></a-image>
         <a-video id="centerVideo" src="" scale="3 3 3" render-order="1" visible="false"></a-video>
