@@ -130,6 +130,52 @@ onMarkerFound: function(marker) {
                 this.hideRightPieceControls();
             }
         }
+
+
+        if (contentManager) {
+    const leftContent = contentManager.getLeftSideContent(value);
+    if (leftContent) {
+        this.showLeftPieceContent(leftContent, value, scene);
+        this.updateLeftPieceControls(leftContent, value);
+        
+        // ADD THIS - Update left grid
+        const navUI = scene.components['marker-navigation-ui'];
+        if (navUI) {
+            navUI.updateLeftGrid(value);
+        }
+    } else {
+        this.hideLeftPieceControls();
+        // Hide left grid if no left content
+        const navUI = scene.components['marker-navigation-ui'];
+        if (navUI && navUI.leftGrid) {
+            navUI.leftGrid.setAttribute('visible', 'false');
+        }
+    }
+}
+
+// After showing right piece content
+if (contentManager) {
+    const rightContent = contentManager.getRightSideContent(value);
+    if (rightContent) {
+        this.showRightPieceContent(rightContent, value, scene);
+        this.updateRightPieceControls(rightContent, value);
+        
+        // ADD THIS - Update right grid
+        const navUI = scene.components['marker-navigation-ui'];
+        if (navUI) {
+            navUI.updateRightGrid(value);
+        }
+    } else {
+        this.hideRightPieceControls();
+        // Hide right grid if no right content
+        const navUI = scene.components['marker-navigation-ui'];
+        if (navUI && navUI.rightGrid) {
+            navUI.rightGrid.setAttribute('visible', 'false');
+        }
+    }
+}
+
+
         
         if (contentManager) {
             const content = contentManager.getMarkerContent(value);
@@ -310,7 +356,7 @@ onMarkerFound: function(marker) {
         
         const rightImage = getId('rightImage');
         rightImage.setAttribute('position', { x: 0, y: 0, z: 0 });
-        
+
         const rightVideo = getId('rightVideo');
         const rightModel = getId('rightModel');
         

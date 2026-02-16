@@ -19,8 +19,11 @@ AFRAME.registerComponent('marker-navigation-ui', {
         this.el.addEventListener('content-loaded', () => {
             this.data.contentLoaded = true;
             this.createAllNavigation();
+            this.createLeftGrid();
+            this.createRightGrid();
         });
     },
+
     
     // Create all navigation elements (both marker and centerpiece)
     createAllNavigation: function() {
@@ -93,6 +96,192 @@ AFRAME.registerComponent('marker-navigation-ui', {
         
         console.log(`Updated centerpiece grid for marker ${markerValue} with ${mediaContent.length} items`);
     },
+
+
+    createLeftGrid: function() {
+    const leftpiece = getId('leftpiece');
+    if (!leftpiece) return;
+    
+    const gridContainer = document.createElement('a-entity');
+    gridContainer.setAttribute('id', 'leftpiece-grid');
+    gridContainer.setAttribute('class', 'leftpiece-grid-container');
+    // Position below the left controls (controls are at z=2, so put grid at z=3 and lower y)
+    gridContainer.setAttribute('position', '0 -1.8 3'); // Below the controls
+    gridContainer.setAttribute('rotation', '0 0 0');
+    gridContainer.setAttribute('visible', 'false'); // Initially hidden
+    
+    leftpiece.appendChild(gridContainer);
+    this.leftGrid = gridContainer;
+    
+    console.log('Created left grid');
+},
+
+createRightGrid: function() {
+    const rightpiece = getId('rightpiece');
+    if (!rightpiece) return;
+    
+    const gridContainer = document.createElement('a-entity');
+    gridContainer.setAttribute('id', 'rightpiece-grid');
+    gridContainer.setAttribute('class', 'rightpiece-grid-container');
+    // Position below the right controls (controls are at z=2, so put grid at z=3 and lower y)
+    gridContainer.setAttribute('position', '0 -1.8 3'); // Below the controls
+    gridContainer.setAttribute('rotation', '0 0 0');
+    gridContainer.setAttribute('visible', 'false'); // Initially hidden
+    
+    rightpiece.appendChild(gridContainer);
+    this.rightGrid = gridContainer;
+    
+    console.log('Created right grid');
+},
+
+// Add after updateCenterpieceGrid method
+updateLeftGrid: function(markerValue) {
+    if (!this.leftGrid) {
+        this.createLeftGrid();
+        if (!this.leftGrid) return;
+    }
+    
+    // Clear existing grid items
+    while (this.leftGrid.firstChild) {
+        this.leftGrid.removeChild(this.leftGrid.firstChild);
+    }
+    
+    const leftContent = this.contentManager?.leftSideContent?.[markerValue];
+    
+    // Check if there are multiple items in left_side array
+    const leftSideArray = this.contentManager?.markerData?.[markerValue]?.filter(item => 
+        item.side === 'left'
+    ) || [];
+    
+    // If there's only one item (or none), hide the grid
+    if (leftSideArray.length <= 1) {
+        this.leftGrid.setAttribute('visible', 'false');
+        return;
+    }
+    
+    // Create grid items
+    this.createSideGridMedia(this.leftGrid, leftSideArray, markerValue, 'left');
+    this.leftGrid.setAttribute('visible', 'true');
+    
+    console.log(`Updated left grid for marker ${markerValue} with ${leftSideArray.length} items`);
+},
+
+updateRightGrid: function(markerValue) {
+    if (!this.rightGrid) {
+        this.createRightGrid();
+        if (!this.rightGrid) return;
+    }
+    
+    // Clear existing grid items
+    while (this.rightGrid.firstChild) {
+        this.rightGrid.removeChild(this.rightGrid.firstChild);
+    }
+    
+    const rightSideArray = this.contentManager?.markerData?.[markerValue]?.filter(item => 
+        item.side === 'right'
+    ) || [];
+    
+    // If there's only one item (or none), hide the grid
+    if (rightSideArray.length <= 1) {
+        this.rightGrid.setAttribute('visible', 'false');
+        return;
+    }
+    
+    // Create grid items
+    this.createSideGridMedia(this.rightGrid, rightSideArray, markerValue, 'right');
+    this.rightGrid.setAttribute('visible', 'true');
+    
+    console.log(`Updated right grid for marker ${markerValue} with ${rightSideArray.length} items`);
+},
+
+// New method to create grid for side content (reusing centerpiece grid logic)
+createSideGridMedia: function(container, mediaContent, markerValue, side) {
+    const rows = 2, cols = 4; // Same 4x2 layout as centerpiece
+    const maxCellWidth = 0.8, maxCellHeight = 0.7;
+    const spacingX = maxCellWidth * 1.4, spacingY = maxCellHeight * 1.4;
+    
+    for (let i = 0; i < Math.min(mediaContent.length, rows * cols); i++) {
+        const row = Math.floor(i / cols);
+        const col = i % cols;
+        
+        const x = (col - (cols - 1) / 2) * spacingX;
+        const y = -((row - (rows - 1) / 2) * spacingY); // Negative Y to go down
+        
+        const item = mediaContent[i];
+        const src = item.value || item.src;
+        
+        // Create a container for each grid item
+        const itemContainer = document.createElement('a-entity');
+        itemContainer.setAttribute('class', `${side}-grid-item`);
+        itemContainer.setAttribute('position', `${x} ${y} 0`);
+        itemContainer.setAttribute('data-content-index', i);
+        itemContainer.setAttribute('data-marker-value', markerValue);
+        itemContainer.setAttribute('data-media-type', item.type);
+        itemContainer.setAttribute('data-side', side);
+        
+        // Create thumbnail based on media type
+        if (item.type === 'image') {
+            this.createSideImageThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue, side);
+        } else if (item.type === 'video') {
+            this.createSideVideoThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue, side);
+        } else if (item.type === '3d') {
+            this.createSide3DThumbnail(itemContainer, src, maxCellWidth, maxCellHeight, i, markerValue, side);
+        }
+        
+        // Add gaze interaction to the container
+        itemContainer.setAttribute('gaze-interaction-handler', 
+            `action: select-side-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}; side: ${side}`);
+        
+        container.appendChild(itemContainer);
+    }
+},
+
+// Thumbnail creators for side grids
+createSideImageThumbnail: function(container, imageSrc, maxWidth, maxHeight, index, markerValue, side) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        const { width, height } = calcImageSize(aspectRatio, maxWidth, maxHeight);
+        
+        const offsetX = (maxWidth - width) / 2;
+        const offsetY = (maxHeight - height) / 2;
+        
+        const imageEl = document.createElement('a-image');
+        imageEl.setAttribute('src', imageSrc);
+        imageEl.setAttribute('width', width);
+        imageEl.setAttribute('height', height);
+        imageEl.setAttribute('position', `${offsetX} ${-offsetY} 0`);
+        imageEl.setAttribute('material', 'depthTest: false; transparent: true;');
+        
+        container.appendChild(imageEl);
+    };
+    
+    img.src = imageSrc;
+},
+
+createSideVideoThumbnail: function(container, videoSrc, maxWidth, maxHeight, index, markerValue, side) {
+    const iconEl = document.createElement('a-image');
+    iconEl.setAttribute('src', 'assets/icons/video-thumbnail.png');
+    iconEl.setAttribute('width', maxWidth * 0.8);
+    iconEl.setAttribute('height', maxHeight * 0.8);
+    iconEl.setAttribute('position', '0 0 0');
+    iconEl.setAttribute('material', 'depthTest: false; transparent: true;');
+    container.appendChild(iconEl);
+},
+
+createSide3DThumbnail: function(container, modelSrc, maxWidth, maxHeight, index, markerValue, side) {
+    const iconEl = document.createElement('a-image');
+    iconEl.setAttribute('src', 'assets/icons/model-thumbnail.png');
+    iconEl.setAttribute('width', maxWidth * 0.8);
+    iconEl.setAttribute('height', maxHeight * 0.8);
+    iconEl.setAttribute('position', '0 0 0');
+    iconEl.setAttribute('material', 'depthTest: false; transparent: true;');
+    container.appendChild(iconEl);
+},
+
+    
     
     // Create grid items for centerpiece
     createCenterpieceGridMedia: function(container, mediaContent, markerValue) {
@@ -331,6 +520,9 @@ AFRAME.registerComponent('marker-navigation-ui', {
         if (this.checkContentInterval) clearInterval(this.checkContentInterval);
         this.el.removeEventListener('content-loaded', () => {});
         
+        if (this.leftGrid) this.leftGrid.remove();
+        if (this.rightGrid) this.rightGrid.remove();
+
         // Remove centerpiece grid
         if (this.centerpieceGrid) {
             this.centerpieceGrid.remove();

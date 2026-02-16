@@ -87,6 +87,80 @@ processJSONData: function(jsonData) {
                 scale: page.right_side[0].scale || 1
             };
         }
+
+        if (page.left_side && Array.isArray(page.left_side)) {
+    page.left_side.forEach((item, index) => {
+        if (item.type && item.type !== "") {
+            // Ensure leftSideContent still stores the first item for immediate display
+            if (index === 0) {
+                this.leftSideContent[marker] = {
+                    type: item.type,
+                    value: item.src || item.value,
+                    controls: item.controls === "true",
+                    scale: item.scale || 1
+                };
+            }
+            
+            // Add ALL items to markerData with side property
+            if (!this.markerData[marker]) this.markerData[marker] = [];
+            this.markerData[marker].push({
+                type: item.type,
+                src: item.src || item.value,
+                value: item.src || item.value,
+                scale: item.scale || 1,
+                controls: item.controls === "true",
+                side: 'left',
+                index: index
+            });
+        }
+    });
+}
+
+// Store right_side content with side property for tracking
+if (page.right_side && Array.isArray(page.right_side)) {
+    page.right_side.forEach((item, index) => {
+        if (item.type && item.type !== "") {
+            // Ensure rightSideContent still stores the first item for immediate display
+            if (index === 0) {
+                this.rightSideContent[marker] = {
+                    type: item.type,
+                    value: item.src || item.value,
+                    controls: item.controls === "true",
+                    scale: item.scale || 1
+                };
+            }
+            
+            // Add ALL items to markerData with side property
+            if (!this.markerData[marker]) this.markerData[marker] = [];
+            this.markerData[marker].push({
+                type: item.type,
+                src: item.src || item.value,
+                value: item.src || item.value,
+                scale: item.scale || 1,
+                controls: item.controls === "true",
+                side: 'right',
+                index: index
+            });
+        }
+    });
+}
+
+// Also update the marker array processing to include side property (default 'center')
+if (page.marker && Array.isArray(page.marker)) {
+    page.marker.forEach((item, index) => {
+        if (item.type && item.type !== "") {
+            this.markerData[marker].push({
+                type: item.type,
+                src: item.src || item.value,
+                value: item.src || item.value,
+                scale: item.scale || 1,
+                controls: item.controls === "true",
+                side: 'center',
+                index: index
+            });
+        }
+    });
+}
         
         this.contentSequences[marker] = centralSide.map(item => ({
             type: item.type,
