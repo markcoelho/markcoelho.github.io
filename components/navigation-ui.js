@@ -18,7 +18,7 @@ AFRAME.registerComponent('navigation-ui', {
         };
         
         this.checkContentInterval = setInterval(() => {
-            this.contentManager = this.el.sceneEl.components['marker-content-manager'];
+            this.contentManager = this.el.sceneEl.components['content-manager'];
             if (this.contentManager?.contentSequences && !this.data.contentLoaded) {
                 this.data.contentLoaded = true;
                 this.onContentReady();

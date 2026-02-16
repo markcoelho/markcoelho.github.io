@@ -357,7 +357,7 @@ AFRAME.registerComponent('image-position-controller', {
     },
     
     getContent: function(markerValue) {
-        const manager = this.el.sceneEl.components['marker-content-manager'];
+        const manager = this.el.sceneEl.components['content-manager'];
         return manager?.getMarkerContent(markerValue);
     },
     

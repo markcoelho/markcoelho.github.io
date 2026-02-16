@@ -5,9 +5,10 @@ document.addEventListener("DOMContentLoaded", () => {
     
     scene.setAttribute('image-position-controller', '');
     scene.setAttribute('navigation-ui', '');
-    scene.setAttribute('marker-content-manager', '');
+    scene.setAttribute('content-manager', '');
     scene.setAttribute('marker-detection', '');
     scene.setAttribute('model-controller', '');
+    scene.setAttribute('video-controller', '');
     
     // Setup AR video feed
     setTimeout(() => {
