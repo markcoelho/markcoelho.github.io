@@ -105,8 +105,10 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             this.buttonType = 'scroller';
         
         else if (this.el.classList.contains('image-grid-item') || 
-                 this.el.classList.contains('centerpiece-grid-item'))
-            this.buttonType = 'grid-image';
+            this.el.classList.contains('centerpiece-grid-item') ||
+            this.el.classList.contains('left-grid-item') ||      // Add this
+            this.el.classList.contains('right-grid-item'))       // Add this
+        this.buttonType = 'grid-image';
         
         else
             this.buttonType = 'other';
@@ -114,36 +116,35 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     
     // Show loading for certain buttons
     showLoading: function() {
-        if (!this.loading) return;
-        const show = ['zoom', 'model-zoom', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset', 'scroller', 'model-roll'].includes(this.buttonType) ||
-                    ((this.buttonType === 'grid-image' || this.buttonType === 'reset') && !this.triggered);
-        if (show) this.loading.setVisible();
-    },
-    
+    if (!this.loading) return;
+    const show = ['zoom', 'model-zoom', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset', 'scroller', 'model-roll'].includes(this.buttonType) ||
+                ((this.buttonType === 'grid-image' || this.buttonType === 'reset') && !this.triggered);
+    if (show) this.loading.setVisible();
+},
     // Start gaze timer
     startFuse: function() {
-        if (this.isFusing || !this.intersected || 
-            (['grid-image', 'reset', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset'].includes(this.buttonType) && this.triggered)) 
-            return;
+    if (this.isFusing || !this.intersected || 
+        (['grid-image', 'reset', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset'].includes(this.buttonType) && this.triggered)) 
+        return;
+    
+    this.isFusing = true;
+    this.timer = setTimeout(() => {
+        this.triggerAction();
+        this.isFusing = false;
         
-        this.isFusing = true;
-        this.timer = setTimeout(() => {
-            this.triggerAction();
-            this.isFusing = false;
-            
-            if (this.intersected) {
-                // Auto-repeat for zoom buttons (both image and 3D model)
-                if (this.buttonType === 'zoom' || this.buttonType === 'model-zoom') {
-                    this.startFuse(); // Auto-repeat for zoom
-                } else if (['grid-image', 'reset', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset'].includes(this.buttonType)) {
-                    this.triggered = true;
-                    this.loading?.setInvisible();
-                }
-            } else {
+        if (this.intersected) {
+            // Auto-repeat for zoom buttons (both image and 3D model)
+            if (this.buttonType === 'zoom' || this.buttonType === 'model-zoom') {
+                this.startFuse(); // Auto-repeat for zoom
+            } else if (['grid-image', 'reset', 'restart', 'mute', 'fast-backward', 'fast-forward', 'model-reset'].includes(this.buttonType)) {
+                this.triggered = true;
                 this.loading?.setInvisible();
             }
-        }, this.data.fuseTimeout);
-    },
+        } else {
+            this.loading?.setInvisible();
+        }
+    }, this.data.fuseTimeout);
+},
     
     reset: function() {
         clearTimeout(this.timer);
@@ -426,72 +427,144 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         }
         
         // Grid image selection
-        if (this.buttonType === 'grid-image' && !this.triggered) {
-            let targetEl = this.el;
-            
-            const markerValue = targetEl.getAttribute('data-marker-value');
-            const contentIndex = parseInt(targetEl.getAttribute('data-content-index'));
-            const mediaType = targetEl.getAttribute('data-media-type');
-            
-            if (!markerValue) {
-                console.log('No marker value found on grid item');
-                return;
-            }
-            
-            console.log(`Grid item selected: marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
-            
-            const scene = this.scene;
-            const contentManager = scene.components['marker-content-manager'];
-            const imageController = scene.components['image-position-controller'];
-            const detectionHandler = scene.components['marker-detection-handler'];
-            
-            if (!contentManager || !detectionHandler) return;
-            
-            contentManager.currentContentIndex[markerValue] = contentIndex;
-            const content = contentManager.getMarkerContent(markerValue);
-            
-            if (!content) return;
-            
-            // Handle different media types
-            if (content.type === 'image') {
-                const centerImage = getId('centerImage');
-                const centerVideo = getId('centerVideo');
-                const centerModel = getId('centerModel');
-                const centerVideoControls = getId('centerVideoControls');
-                const center3dControls = getId('center3dControls');
-                
-                centerImage.setVisible();
-                centerVideo.setInvisible();
-                centerModel.setInvisible();
-                pauseVideo(centerVideo);
-                
-                if (centerVideoControls) centerVideoControls.setInvisible();
-                if (center3dControls) center3dControls.setInvisible();
-                
-                if (imageController) {
-                    imageController.setupImage(content.value, markerValue, 'centerControls');
-                } 
-            } else if (content.type === 'video') {
-                detectionHandler.showVideo(content.value, markerValue, scene);
-            } else if (content.type === '3d') {
-                const modelController = scene.components['model-controller'];
-                const originalScale = content.scale || 1;
-                
-                if (modelController && modelController.handleGridSelection) {
-                    modelController.handleGridSelection(markerValue, originalScale);
-                }
-                
-                detectionHandler.show3DModel(content.value, markerValue, scene);
-            }
-            
-            this.updateNavigationVisibility(markerValue, contentManager);
-            
-            if (detectionHandler.updateGridVisibility) {
-                detectionHandler.updateGridVisibility(markerValue, contentManager);
-            }
-            
-            this.triggered = true;
+        if (this.buttonType === 'grid-image') {
+    // First check if it's a side grid item
+    const side = this.el.getAttribute('data-side') || 
+                 (this.el.classList.contains('left-grid-item') ? 'left' : 
+                  this.el.classList.contains('right-grid-item') ? 'right' : null);
+    
+    if (side && !this.triggered) {
+        const targetEl = this.el;
+        const markerValue = targetEl.getAttribute('data-marker-value');
+        const contentIndex = parseInt(targetEl.getAttribute('data-content-index'));
+        const mediaType = targetEl.getAttribute('data-media-type');
+        
+        if (!markerValue || !side) {
+            console.log('Missing marker value or side on grid item');
+            return;
         }
+        
+        console.log(`Side grid item selected: ${side}, marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
+        
+        const scene = this.scene;
+        const contentManager = scene.components['marker-content-manager'];
+        const detectionHandler = scene.components['marker-detection-handler'];
+        
+        if (!contentManager || !detectionHandler) {
+            console.log('Content manager or detection handler not found');
+            return;
+        }
+        
+        // Get the specific item from markerData for this side
+        const sideItems = (contentManager.markerData?.[markerValue] || []).filter(item => item.side === side);
+        const selectedItem = sideItems[contentIndex];
+        
+        if (!selectedItem) {
+            console.log(`No ${side} item found at index ${contentIndex}`);
+            return;
+        }
+        
+        console.log(`Selected ${side} item:`, selectedItem);
+        
+        // Show the selected content in the appropriate side piece
+        if (side === 'left') {
+            // Hide all left content first
+            const leftImage = getId('leftImage');
+            const leftVideo = getId('leftVideo');
+            const leftModel = getId('leftModel');
+            
+            if (leftImage) leftImage.setAttribute('visible', 'false');
+            if (leftVideo) leftVideo.setAttribute('visible', 'false');
+            if (leftModel) leftModel.setAttribute('visible', 'false');
+            
+            // Show the selected content
+            detectionHandler.showLeftPieceContent(selectedItem, markerValue, scene);
+            detectionHandler.updateLeftPieceControls(selectedItem, markerValue);
+        } else if (side === 'right') {
+            // Hide all right content first
+            const rightImage = getId('rightImage');
+            const rightVideo = getId('rightVideo');
+            const rightModel = getId('rightModel');
+            
+            if (rightImage) rightImage.setAttribute('visible', 'false');
+            if (rightVideo) rightVideo.setAttribute('visible', 'false');
+            if (rightModel) rightModel.setAttribute('visible', 'false');
+            
+            // Show the selected content
+            detectionHandler.showRightPieceContent(selectedItem, markerValue, scene);
+            detectionHandler.updateRightPieceControls(selectedItem, markerValue);
+        }
+        
+        this.triggered = true;
+        return;
+    }
+    
+    // If not a side grid item, handle centerpiece grid selection (existing code)
+    let targetEl = this.el;
+    
+    const markerValue = targetEl.getAttribute('data-marker-value');
+    const contentIndex = parseInt(targetEl.getAttribute('data-content-index'));
+    const mediaType = targetEl.getAttribute('data-media-type');
+    
+    if (!markerValue) {
+        console.log('No marker value found on grid item');
+        return;
+    }
+    
+    console.log(`Grid item selected: marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
+    
+    const scene = this.scene;
+    const contentManager = scene.components['marker-content-manager'];
+    const imageController = scene.components['image-position-controller'];
+    const detectionHandler = scene.components['marker-detection-handler'];
+    
+    if (!contentManager || !detectionHandler) return;
+    
+    contentManager.currentContentIndex[markerValue] = contentIndex;
+    const content = contentManager.getMarkerContent(markerValue);
+    
+    if (!content) return;
+    
+    // Handle different media types
+    if (content.type === 'image') {
+        const centerImage = getId('centerImage');
+        const centerVideo = getId('centerVideo');
+        const centerModel = getId('centerModel');
+        const centerVideoControls = getId('centerVideoControls');
+        const center3dControls = getId('center3dControls');
+        
+        centerImage.setVisible();
+        centerVideo.setInvisible();
+        centerModel.setInvisible();
+        pauseVideo(centerVideo);
+        
+        if (centerVideoControls) centerVideoControls.setInvisible();
+        if (center3dControls) center3dControls.setInvisible();
+        
+        if (imageController) {
+            imageController.setupImage(content.value, markerValue, 'centerControls');
+        } 
+    } else if (content.type === 'video') {
+        detectionHandler.showVideo(content.value, markerValue, scene);
+    } else if (content.type === '3d') {
+        const modelController = scene.components['model-controller'];
+        const originalScale = content.scale || 1;
+        
+        if (modelController && modelController.handleGridSelection) {
+            modelController.handleGridSelection(markerValue, originalScale);
+        }
+        
+        detectionHandler.show3DModel(content.value, markerValue, scene);
+    }
+    
+    this.updateNavigationVisibility(markerValue, contentManager);
+    
+    if (detectionHandler.updateGridVisibility) {
+        detectionHandler.updateGridVisibility(markerValue, contentManager);
+    }
+    
+    this.triggered = true;
+}
 
 
         
