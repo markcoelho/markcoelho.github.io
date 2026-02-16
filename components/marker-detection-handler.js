@@ -1,20 +1,20 @@
 // marker-detection-handler.js (updated sections)
 AFRAME.registerComponent('marker-detection-handler', {
     init: function() {
-        this.audioElements = {};
-        this.currentPlayingAudio = null;
-        this.centerImage = getId('centerImage');
-        this.centerpiece = getId('centerpiece');
-        this.camera = document.querySelector('a-camera');
-        this.navigationPlane = getId('centerControls');
-        this.currentMarker = null;
-        
-        this.setupVideoControls();
-        
-        this.el.sceneEl.addEventListener('markers-created', () => {
-            this.setupMarkerEventListeners();
-        });
-    },
+    this.audioElements = {};
+    this.currentPlayingAudio = null;
+    this.centerImage = getId('centerImage');
+    this.centerpiece = getId('centerpiece');
+    this.camera = document.querySelector('a-camera');
+    this.navigationPlane = getId('centerControls');
+    this.currentMarker = null;
+    
+    this.setupVideoControls();
+    
+    this.el.sceneEl.addEventListener('markers-created', () => {
+        this.setupMarkerEventListeners();
+    });
+},
 
     setupVideoControls: function() {
         const restartBtn = getId('restart');
@@ -65,6 +65,33 @@ AFRAME.registerComponent('marker-detection-handler', {
             marker.addEventListener('markerLost', () => this.onMarkerLost(marker));
         });
     },
+
+    playContentAudio: function(audioSrc) {
+    // Stop currently playing audio if any
+    if (this.currentPlayingAudio) {
+        this.currentPlayingAudio.pause();
+        this.currentPlayingAudio.currentTime = 0;
+    }
+    
+    if (!audioSrc || audioSrc === "") {
+        console.log("No audio to play");
+        return;
+    }
+    
+    console.log(`Playing audio: ${audioSrc}`);
+    
+    // Create new audio element or reuse existing
+    if (!this.audioElements[audioSrc]) {
+        this.audioElements[audioSrc] = new Audio(audioSrc);
+        this.audioElements[audioSrc].preload = 'auto';
+    }
+    
+    this.currentPlayingAudio = this.audioElements[audioSrc];
+    this.currentPlayingAudio.currentTime = 0;
+    this.currentPlayingAudio.play().catch(e => {
+        console.warn("Could not play audio:", e);
+    });
+},
     
     // Marker detected
     // marker-detection-handler.js - Updated onMarkerFound function
@@ -352,268 +379,278 @@ if (contentManager) {
     },
 
     showRightPieceContent: function(content, markerValue, scene) {
-        console.log(`Showing right piece content for marker ${markerValue}:`, content);
-        
-        const rightImage = getId('rightImage');
-        rightImage.setAttribute('position', { x: 0, y: 0, z: 0 });
+    console.log(`Showing right piece content for marker ${markerValue}:`, content);
+    
+    const rightImage = getId('rightImage');
+    rightImage.setAttribute('position', { x: 0, y: 0, z: 0 });
 
-        const rightVideo = getId('rightVideo');
-        const rightModel = getId('rightModel');
-        
-        // Hide all right piece content initially
-        if (rightImage) rightImage.setAttribute('visible', 'false');
-        if (rightVideo) rightVideo.setAttribute('visible', 'false');
-        if (rightModel) rightModel.setAttribute('visible', 'false');
-        
-        const contentScale = content.scale || 1;
-        const baseSize = 3 * contentScale;
-        
-        switch(content.type) {
-            case 'image':
-                if (rightImage) {
-                    // Create a temporary image to get natural dimensions
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    
-                    img.onload = () => {
-                        // Calculate aspect ratio
-                        const aspectRatio = img.naturalWidth / img.naturalHeight;
-                        
-                        // Determine dimensions based on aspect ratio
-                        let width, height;
-                        if (aspectRatio >= 1) {
-                            // Landscape or square
-                            width = baseSize;
-                            height = baseSize / aspectRatio;
-                        } else {
-                            // Portrait
-                            width = baseSize * aspectRatio;
-                            height = baseSize;
-                        }
-                        
-                        // Set attributes
-                        rightImage.setAttribute('src', content.value);
-                        rightImage.setAttribute('width', width);
-                        rightImage.setAttribute('height', height);
-                        rightImage.setAttribute('scale', { x: 1, y: 1, z: 1 });
-                        rightImage.setAttribute('visible', 'true');
-                        
-                        console.log(`Right image loaded: ${img.naturalWidth}x${img.naturalHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
-                    };
-                    
-                    img.onerror = () => {
-                        console.error(`Failed to load right image: ${content.value}`);
-                    };
-                    
-                    img.src = content.value;
-                }
-                break;
+    const rightVideo = getId('rightVideo');
+    const rightModel = getId('rightModel');
+    
+    // Hide all right piece content initially
+    if (rightImage) rightImage.setAttribute('visible', 'false');
+    if (rightVideo) rightVideo.setAttribute('visible', 'false');
+    if (rightModel) rightModel.setAttribute('visible', 'false');
+    
+    const contentScale = content.scale || 1;
+    const baseSize = 3 * contentScale;
+    
+    // Play audio if present
+    if (content.audio && content.audio !== "") {
+        this.playContentAudio(content.audio);
+    }
+    
+    switch(content.type) {
+        case 'image':
+            if (rightImage) {
+                // Create a temporary image to get natural dimensions
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
                 
-            case 'video':
-                if (rightVideo) {
-                    // Create a temporary video element to get dimensions
-                    const videoElement = document.createElement('video');
-                    videoElement.preload = 'metadata';
+                img.onload = () => {
+                    // Calculate aspect ratio
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
                     
-                    videoElement.onloadedmetadata = () => {
-                        // Calculate aspect ratio
-                        const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
-                        
-                        // Determine dimensions based on aspect ratio (16:9 is standard for video)
-                        let width, height;
-                        if (aspectRatio >= 1) {
-                            // Landscape or square
-                            width = baseSize;
-                            height = baseSize / aspectRatio;
-                        } else {
-                            // Portrait video (uncommon but possible)
-                            width = baseSize * aspectRatio;
-                            height = baseSize;
-                        }
-                        
-                        // Set attributes
-                        rightVideo.setAttribute('src', content.value);
-                        rightVideo.setAttribute('width', width);
-                        rightVideo.setAttribute('height', height);
-                        rightVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
-                        rightVideo.setAttribute('visible', 'true');
-                        
-                        // Try to play the video
-                        try {
-                            const material = rightVideo.components?.material?.material;
-                            if (material?.map?.image) {
-                                material.map.image.play().catch(e => {
-                                    console.warn("Could not auto-play right video:", e);
-                                });
-                            }
-                        } catch (e) {
-                            console.warn("Could not play right video:", e);
-                        }
-                        
-                        console.log(`Right video loaded: ${videoElement.videoWidth}x${videoElement.videoHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
-                    };
+                    // Determine dimensions based on aspect ratio
+                    let width, height;
+                    if (aspectRatio >= 1) {
+                        // Landscape or square
+                        width = baseSize;
+                        height = baseSize / aspectRatio;
+                    } else {
+                        // Portrait
+                        width = baseSize * aspectRatio;
+                        height = baseSize;
+                    }
                     
-                    videoElement.onerror = () => {
-                        console.error(`Failed to load right video: ${content.value}`);
-                        // Fallback to default 16:9 ratio
-                        rightVideo.setAttribute('src', content.value);
-                        rightVideo.setAttribute('width', baseSize * 16/9);
-                        rightVideo.setAttribute('height', baseSize);
-                        rightVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
-                        rightVideo.setAttribute('visible', 'true');
-                    };
+                    // Set attributes
+                    rightImage.setAttribute('src', content.value);
+                    rightImage.setAttribute('width', width);
+                    rightImage.setAttribute('height', height);
+                    rightImage.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    rightImage.setAttribute('visible', 'true');
                     
-                    videoElement.src = content.value;
-                }
-                break;
+                    console.log(`Right image loaded: ${img.naturalWidth}x${img.naturalHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
+                };
                 
-            case '3d':
-                if (rightModel) {
-                    rightModel.setAttribute('gltf-model', content.value);
-                    rightModel.setAttribute('scale', { 
-                        x: contentScale, 
-                        y: contentScale, 
-                        z: contentScale 
-                    });
-                    rightModel.setAttribute('visible', 'true');
+                img.onerror = () => {
+                    console.error(`Failed to load right image: ${content.value}`);
+                };
+                
+                img.src = content.value;
+            }
+            break;
+            
+        case 'video':
+            if (rightVideo) {
+                // Create a temporary video element to get dimensions
+                const videoElement = document.createElement('video');
+                videoElement.preload = 'metadata';
+                
+                videoElement.onloadedmetadata = () => {
+                    // Calculate aspect ratio
+                    const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
                     
-                    console.log(`Right 3D model loaded: ${content.value}, scale: ${contentScale}`);
-                }
-                break;
-        }
-    },
+                    // Determine dimensions based on aspect ratio
+                    let width, height;
+                    if (aspectRatio >= 1) {
+                        // Landscape or square
+                        width = baseSize;
+                        height = baseSize / aspectRatio;
+                    } else {
+                        // Portrait video (uncommon but possible)
+                        width = baseSize * aspectRatio;
+                        height = baseSize;
+                    }
+                    
+                    // Set attributes
+                    rightVideo.setAttribute('src', content.value);
+                    rightVideo.setAttribute('width', width);
+                    rightVideo.setAttribute('height', height);
+                    rightVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    rightVideo.setAttribute('visible', 'true');
+                    
+                    // Try to play the video
+                    try {
+                        const material = rightVideo.components?.material?.material;
+                        if (material?.map?.image) {
+                            material.map.image.play().catch(e => {
+                                console.warn("Could not auto-play right video:", e);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn("Could not play right video:", e);
+                    }
+                    
+                    console.log(`Right video loaded: ${videoElement.videoWidth}x${videoElement.videoHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
+                };
+                
+                videoElement.onerror = () => {
+                    console.error(`Failed to load right video: ${content.value}`);
+                    // Fallback to default 16:9 ratio
+                    rightVideo.setAttribute('src', content.value);
+                    rightVideo.setAttribute('width', baseSize * 16/9);
+                    rightVideo.setAttribute('height', baseSize);
+                    rightVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    rightVideo.setAttribute('visible', 'true');
+                };
+                
+                videoElement.src = content.value;
+            }
+            break;
+            
+        case '3d':
+            if (rightModel) {
+                rightModel.setAttribute('gltf-model', content.value);
+                rightModel.setAttribute('scale', { 
+                    x: contentScale, 
+                    y: contentScale, 
+                    z: contentScale 
+                });
+                rightModel.setAttribute('visible', 'true');
+                
+                console.log(`Right 3D model loaded: ${content.value}, scale: ${contentScale}`);
+            }
+            break;
+    }
+},
 
     showLeftPieceContent: function(content, markerValue, scene) {
-        console.log(`Showing left piece content for marker ${markerValue}:`, content);
-        
-        const leftImage = getId('leftImage');
-        leftImage.setAttribute('position', { x: 0, y: 0, z: 0 });
+    console.log(`Showing left piece content for marker ${markerValue}:`, content);
+    
+    const leftImage = getId('leftImage');
+    leftImage.setAttribute('position', { x: 0, y: 0, z: 0 });
 
-        const leftVideo = getId('leftVideo');
-        const leftModel = getId('leftModel');
-        
-        // Hide all left piece content initially
-        if (leftImage) leftImage.setAttribute('visible', 'false');
-        if (leftVideo) leftVideo.setAttribute('visible', 'false');
-        if (leftModel) leftModel.setAttribute('visible', 'false');
-        
-        const contentScale = content.scale || 1;
-        const baseSize = 3 * contentScale;
-        
-        switch(content.type) {
-            case 'image':
-                if (leftImage) {
-                    // Create a temporary image to get natural dimensions
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    
-                    img.onload = () => {
-                        // Calculate aspect ratio
-                        const aspectRatio = img.naturalWidth / img.naturalHeight;
-                        
-                        // Determine dimensions based on aspect ratio
-                        let width, height;
-                        if (aspectRatio >= 1) {
-                            // Landscape or square
-                            width = baseSize;
-                            height = baseSize / aspectRatio;
-                        } else {
-                            // Portrait
-                            width = baseSize * aspectRatio;
-                            height = baseSize;
-                        }
-                        
-                        // Set attributes
-                        leftImage.setAttribute('src', content.value);
-                        leftImage.setAttribute('width', width);
-                        leftImage.setAttribute('height', height);
-                        leftImage.setAttribute('scale', { x: 1, y: 1, z: 1 });
-                        leftImage.setAttribute('visible', 'true');
-                        
-                        console.log(`Left image loaded: ${img.naturalWidth}x${img.naturalHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
-                    };
-                    
-                    img.onerror = () => {
-                        console.error(`Failed to load left image: ${content.value}`);
-                    };
-                    
-                    img.src = content.value;
-                }
-                break;
+    const leftVideo = getId('leftVideo');
+    const leftModel = getId('leftModel');
+    
+    // Hide all left piece content initially
+    if (leftImage) leftImage.setAttribute('visible', 'false');
+    if (leftVideo) leftVideo.setAttribute('visible', 'false');
+    if (leftModel) leftModel.setAttribute('visible', 'false');
+    
+    const contentScale = content.scale || 1;
+    const baseSize = 3 * contentScale;
+    
+    // Play audio if present
+    if (content.audio && content.audio !== "") {
+        this.playContentAudio(content.audio);
+    }
+    
+    switch(content.type) {
+        case 'image':
+            if (leftImage) {
+                // Create a temporary image to get natural dimensions
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
                 
-            case 'video':
-                if (leftVideo) {
-                    // Create a temporary video element to get dimensions
-                    const videoElement = document.createElement('video');
-                    videoElement.preload = 'metadata';
+                img.onload = () => {
+                    // Calculate aspect ratio
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
                     
-                    videoElement.onloadedmetadata = () => {
-                        // Calculate aspect ratio
-                        const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
-                        
-                        // Determine dimensions based on aspect ratio (16:9 is standard for video)
-                        let width, height;
-                        if (aspectRatio >= 1) {
-                            // Landscape or square
-                            width = baseSize;
-                            height = baseSize / aspectRatio;
-                        } else {
-                            // Portrait video (uncommon but possible)
-                            width = baseSize * aspectRatio;
-                            height = baseSize;
-                        }
-                        
-                        // Set attributes
-                        leftVideo.setAttribute('src', content.value);
-                        leftVideo.setAttribute('width', width);
-                        leftVideo.setAttribute('height', height);
-                        leftVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
-                        leftVideo.setAttribute('visible', 'true');
-                        
-                        // Try to play the video
-                        try {
-                            const material = leftVideo.components?.material?.material;
-                            if (material?.map?.image) {
-                                material.map.image.play().catch(e => {
-                                    console.warn("Could not auto-play left video:", e);
-                                });
-                            }
-                        } catch (e) {
-                            console.warn("Could not play left video:", e);
-                        }
-                        
-                        console.log(`Left video loaded: ${videoElement.videoWidth}x${videoElement.videoHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
-                    };
+                    // Determine dimensions based on aspect ratio
+                    let width, height;
+                    if (aspectRatio >= 1) {
+                        // Landscape or square
+                        width = baseSize;
+                        height = baseSize / aspectRatio;
+                    } else {
+                        // Portrait
+                        width = baseSize * aspectRatio;
+                        height = baseSize;
+                    }
                     
-                    videoElement.onerror = () => {
-                        console.error(`Failed to load left video: ${content.value}`);
-                        // Fallback to default 16:9 ratio
-                        leftVideo.setAttribute('src', content.value);
-                        leftVideo.setAttribute('width', baseSize * 16/9);
-                        leftVideo.setAttribute('height', baseSize);
-                        leftVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
-                        leftVideo.setAttribute('visible', 'true');
-                    };
+                    // Set attributes
+                    leftImage.setAttribute('src', content.value);
+                    leftImage.setAttribute('width', width);
+                    leftImage.setAttribute('height', height);
+                    leftImage.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    leftImage.setAttribute('visible', 'true');
                     
-                    videoElement.src = content.value;
-                }
-                break;
+                    console.log(`Left image loaded: ${img.naturalWidth}x${img.naturalHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
+                };
                 
-            case '3d':
-                if (leftModel) {
-                    leftModel.setAttribute('gltf-model', content.value);
-                    leftModel.setAttribute('scale', { 
-                        x: contentScale, 
-                        y: contentScale, 
-                        z: contentScale 
-                    });
-                    leftModel.setAttribute('visible', 'true');
+                img.onerror = () => {
+                    console.error(`Failed to load left image: ${content.value}`);
+                };
+                
+                img.src = content.value;
+            }
+            break;
+            
+        case 'video':
+            if (leftVideo) {
+                // Create a temporary video element to get dimensions
+                const videoElement = document.createElement('video');
+                videoElement.preload = 'metadata';
+                
+                videoElement.onloadedmetadata = () => {
+                    // Calculate aspect ratio
+                    const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
                     
-                    console.log(`Left 3D model loaded: ${content.value}, scale: ${contentScale}`);
-                }
-                break;
-        }
-    },
+                    // Determine dimensions based on aspect ratio
+                    let width, height;
+                    if (aspectRatio >= 1) {
+                        // Landscape or square
+                        width = baseSize;
+                        height = baseSize / aspectRatio;
+                    } else {
+                        // Portrait video (uncommon but possible)
+                        width = baseSize * aspectRatio;
+                        height = baseSize;
+                    }
+                    
+                    // Set attributes
+                    leftVideo.setAttribute('src', content.value);
+                    leftVideo.setAttribute('width', width);
+                    leftVideo.setAttribute('height', height);
+                    leftVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    leftVideo.setAttribute('visible', 'true');
+                    
+                    // Try to play the video
+                    try {
+                        const material = leftVideo.components?.material?.material;
+                        if (material?.map?.image) {
+                            material.map.image.play().catch(e => {
+                                console.warn("Could not auto-play left video:", e);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn("Could not play left video:", e);
+                    }
+                    
+                    console.log(`Left video loaded: ${videoElement.videoWidth}x${videoElement.videoHeight}, aspect: ${aspectRatio.toFixed(2)}, display: ${width.toFixed(2)}x${height.toFixed(2)}`);
+                };
+                
+                videoElement.onerror = () => {
+                    console.error(`Failed to load left video: ${content.value}`);
+                    // Fallback to default 16:9 ratio
+                    leftVideo.setAttribute('src', content.value);
+                    leftVideo.setAttribute('width', baseSize * 16/9);
+                    leftVideo.setAttribute('height', baseSize);
+                    leftVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+                    leftVideo.setAttribute('visible', 'true');
+                };
+                
+                videoElement.src = content.value;
+            }
+            break;
+            
+        case '3d':
+            if (leftModel) {
+                leftModel.setAttribute('gltf-model', content.value);
+                leftModel.setAttribute('scale', { 
+                    x: contentScale, 
+                    y: contentScale, 
+                    z: contentScale 
+                });
+                leftModel.setAttribute('visible', 'true');
+                
+                console.log(`Left 3D model loaded: ${content.value}, scale: ${contentScale}`);
+            }
+            break;
+    }
+},
 
     // In marker-detection-handler.js - update showMarkerImage function
 
@@ -873,202 +910,220 @@ showMarkerImage: function(markerValue, markerElement, scene) {
     },
 
     showImage: function(src, markerValue, scene) {
-        const centerImage = getId('centerImage');
-        const centerVideo = getId('centerVideo');
-        const centerModel = getId('centerModel');
-        const centerVideoControls = getId('centerVideoControls');
-        const center3dControls = getId('center3dControls');
-        
-        centerImage.setVisible();
-        centerModel.setInvisible();
-        
-        centerVideo.setInvisible();
-        pauseVideo(centerVideo);
-        
-        if (centerVideoControls) {
-            centerVideoControls.setInvisible();
+    const centerImage = getId('centerImage');
+    const centerVideo = getId('centerVideo');
+    const centerModel = getId('centerModel');
+    const centerVideoControls = getId('centerVideoControls');
+    const center3dControls = getId('center3dControls');
+    
+    centerImage.setVisible();
+    centerModel.setInvisible();
+    
+    centerVideo.setInvisible();
+    pauseVideo(centerVideo);
+    
+    if (centerVideoControls) {
+        centerVideoControls.setInvisible();
+    }
+    
+    // Hide 3D controls
+    if (center3dControls) {
+        center3dControls.setInvisible();
+    }
+    
+    // Get content and play audio if present
+    const contentManager = scene.components['marker-content-manager'];
+    const content = contentManager?.getMarkerContent(markerValue);
+    if (content && content.audio && content.audio !== "") {
+        this.playContentAudio(content.audio);
+    }
+    
+    const currentSrc = centerImage.getAttribute('src');
+    if (currentSrc !== src) {
+        const imageController = scene.components['image-position-controller'];
+        if (imageController) {
+            imageController.setupImage(src, markerValue, 'marker');
         }
-        
-        // Hide 3D controls
-        if (center3dControls) {
-            center3dControls.setInvisible();
-        }
-        
-        const currentSrc = centerImage.getAttribute('src');
-        if (currentSrc !== src) {
-            const imageController = scene.components['image-position-controller'];
-            if (imageController) {
-                imageController.setupImage(src, markerValue, 'marker');
-            }
-        }
-    },
+    }
+},
 
     showVideo: function(src, markerValue, scene) {
-        const centerImage = getId('centerImage');
-        const centerVideo = getId('centerVideo');
-        const centerModel = getId('centerModel');
-        const centerVideoControls = getId('centerVideoControls');
-        const center3dControls = getId('center3dControls');
-        
-        centerImage.setInvisible();
-        centerModel.setInvisible();
-        centerVideo.setVisible();
-        playVideo(centerVideo);
-        
-        centerVideo.setAttribute('src', src);
-        
-        const contentManager = scene.components['marker-content-manager'];
-        const content = contentManager?.getMarkerContent(markerValue);
-        const contentScale = content?.scale || 1;
-        const hasControls = content?.controls === true || content?.controls === "true";
-        
-        const baseSize = 3 * contentScale;
-        centerVideo.setAttribute('width', baseSize * 16/9);
-        centerVideo.setAttribute('height', baseSize);
-        centerVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
-        centerVideo.setAttribute('position', { x: 0, y: 0, z: 0 });
-        
-        if (centerVideoControls) {
-            if (hasControls) {
-                centerVideoControls.setVisible();
-            } else {
-                centerVideoControls.setInvisible();
-            }
-        }
-        
-        // Hide 3D controls
-        if (center3dControls) {
-            center3dControls.setInvisible();
-        }
-        
-        const centerControls = getId('centerControls');
-        if (centerControls) {
-            centerControls.setInvisible();
-        }
-        
-        console.log(`Video ${src} loaded, scale: ${contentScale}, controls: ${hasControls}`);
-    },
-
-    // In marker-detection-handler.js
-    // In marker-detection-handler.js show3DModel function:
-    show3DModel: function(src, markerValue, scene) {
-        console.log(`Attempting to show 3D model for marker ${markerValue}, src: ${src}`);
-        
-        const centerImage = getId('centerImage');
-        const centerVideo = getId('centerVideo');
-        const centerModel = getId('centerModel');
-        const centerVideoControls = getId('centerVideoControls');
-        const center3dControls = getId('center3dControls');
-        
-        // First, make sure the model element is properly set up
-        if (!centerModel) {
-            console.error('centerModel element not found!');
-            return;
-        }
-        
-        // Hide other media
-        centerImage.setInvisible();
-        centerVideo.setInvisible();
-        centerModel.setVisible();
-        pauseVideo(centerVideo);
-        
-        // Hide video controls
-        if (centerVideoControls) {
+    const centerImage = getId('centerImage');
+    const centerVideo = getId('centerVideo');
+    const centerModel = getId('centerModel');
+    const centerVideoControls = getId('centerVideoControls');
+    const center3dControls = getId('center3dControls');
+    
+    centerImage.setInvisible();
+    centerModel.setInvisible();
+    centerVideo.setVisible();
+    playVideo(centerVideo);
+    
+    centerVideo.setAttribute('src', src);
+    
+    const contentManager = scene.components['marker-content-manager'];
+    const content = contentManager?.getMarkerContent(markerValue);
+    const contentScale = content?.scale || 1;
+    const hasControls = content?.controls === true || content?.controls === "true";
+    
+    // Play audio if present
+    if (content && content.audio && content.audio !== "") {
+        this.playContentAudio(content.audio);
+    }
+    
+    const baseSize = 3 * contentScale;
+    centerVideo.setAttribute('width', baseSize * 16/9);
+    centerVideo.setAttribute('height', baseSize);
+    centerVideo.setAttribute('scale', { x: 1, y: 1, z: 1 });
+    centerVideo.setAttribute('position', { x: 0, y: 0, z: 0 });
+    
+    if (centerVideoControls) {
+        if (hasControls) {
+            centerVideoControls.setVisible();
+        } else {
             centerVideoControls.setInvisible();
         }
+    }
+    
+    // Hide 3D controls
+    if (center3dControls) {
+        center3dControls.setInvisible();
+    }
+    
+    const centerControls = getId('centerControls');
+    if (centerControls) {
+        centerControls.setInvisible();
+    }
+    
+    console.log(`Video ${src} loaded, scale: ${contentScale}, controls: ${hasControls}`);
+},
+
+
+    // In marker-detection-handler.js
+    show3DModel: function(src, markerValue, scene) {
+    console.log(`Attempting to show 3D model for marker ${markerValue}, src: ${src}`);
+    
+    const centerImage = getId('centerImage');
+    const centerVideo = getId('centerVideo');
+    const centerModel = getId('centerModel');
+    const centerVideoControls = getId('centerVideoControls');
+    const center3dControls = getId('center3dControls');
+    
+    // First, make sure the model element is properly set up
+    if (!centerModel) {
+        console.error('centerModel element not found!');
+        return;
+    }
+    
+    // Hide other media
+    centerImage.setInvisible();
+    centerVideo.setInvisible();
+    centerModel.setVisible();
+    pauseVideo(centerVideo);
+    
+    // Hide video controls
+    if (centerVideoControls) {
+        centerVideoControls.setInvisible();
+    }
+    
+    // Set the model source FIRST - this is critical
+    console.log(`Setting gltf-model to: ${src}`);
+    centerModel.setAttribute('gltf-model', src);
+    
+    // Get content information
+    const contentManager = scene.components['marker-content-manager'];
+    let content = null;
+    let controlsEnabled = false;
+    let originalScale = 1;
+    
+    if (contentManager) {
+        content = contentManager.getMarkerContent(markerValue);
+        console.log(`Content for marker ${markerValue}:`, content);
         
-        // Set the model source FIRST - this is critical
-        console.log(`Setting gltf-model to: ${src}`);
-        centerModel.setAttribute('gltf-model', src);
-        
-        // Get content information
-        const contentManager = scene.components['marker-content-manager'];
-        let content = null;
-        let controlsEnabled = false;
-        let originalScale = 1;
-        
-        if (contentManager) {
-            content = contentManager.getMarkerContent(markerValue);
-            console.log(`Content for marker ${markerValue}:`, content);
+        if (content) {
+            // Check controls setting (supports both string "true"/"false" and boolean)
+            controlsEnabled = content.controls === "true" || content.controls === true;
+            originalScale = content.scale || 1;
             
-            if (content) {
-                // Check controls setting (supports both string "true"/"false" and boolean)
-                controlsEnabled = content.controls === "true" || content.controls === true;
-                originalScale = content.scale || 1;
-                console.log(`Controls enabled: ${controlsEnabled}, Original scale: ${originalScale}`);
+            // Play audio if present
+            if (content.audio && content.audio !== "") {
+                this.playContentAudio(content.audio);
+            }
+            
+            console.log(`Controls enabled: ${controlsEnabled}, Original scale: ${originalScale}`);
+        }
+    }
+    
+    // Get model controller
+    const modelController = scene.components['model-controller'];
+    
+    // Get saved rotation for this marker
+    let savedRotation = { x: 0, y: 0, z: 0 };
+    if (modelController && modelController.modelRotations && modelController.modelRotations[markerValue]) {
+        savedRotation = modelController.modelRotations[markerValue];
+        console.log(`Found saved rotation for marker ${markerValue}:`, savedRotation);
+    }
+    
+    // Get the scale to apply
+    let targetScale = originalScale;
+    
+    if (modelController && modelController.getUserScale) {
+        // Get user-adjusted scale if available
+        const userScale = modelController.getUserScale(markerValue);
+        console.log(`User scale for marker ${markerValue}: ${userScale}`);
+        
+        targetScale = userScale || originalScale;
+        
+        // Set current marker in controller
+        if (modelController.setCurrentMarker) {
+            modelController.setCurrentMarker(markerValue, originalScale);
+        }
+    }
+    
+    // Apply scale and saved rotation after a small delay to ensure model is loaded
+    setTimeout(() => {
+        console.log(`Applying scale: ${targetScale} and rotation:`, savedRotation, `to 3D model`);
+        centerModel.setAttribute('scale', { 
+            x: targetScale, 
+            y: targetScale, 
+            z: targetScale 
+        });
+        
+        // Position the model (keep at origin)
+        centerModel.setAttribute('position', { x: 0, y: 0, z: 0 });
+        
+        // Apply saved rotation instead of resetting to 0,0,0
+        centerModel.setAttribute('rotation', savedRotation);
+    }, 100);
+    
+    // Handle 3D controls visibility
+    setTimeout(() => {
+        if (center3dControls) {
+            console.log(`Setting 3D controls visibility: ${controlsEnabled ? 'visible' : 'invisible'}`);
+            if (controlsEnabled) {
+                center3dControls.setVisible();
+                // Make individual control buttons visible
+                document.querySelectorAll('.model-zoom-button, .roller, .3dreset').forEach(btn => {
+                    btn.setVisible();
+                });
+            } else {
+                center3dControls.setInvisible();
+                // Make individual control buttons invisible
+                document.querySelectorAll('.model-zoom-button, .roller, .3dreset').forEach(btn => {
+                    btn.setInvisible();
+                });
             }
         }
-        
-        // Get model controller
-        const modelController = scene.components['model-controller'];
-        
-        // Get saved rotation for this marker
-        let savedRotation = { x: 0, y: 0, z: 0 };
-        if (modelController && modelController.modelRotations && modelController.modelRotations[markerValue]) {
-            savedRotation = modelController.modelRotations[markerValue];
-            console.log(`Found saved rotation for marker ${markerValue}:`, savedRotation);
-        }
-        
-        // Get the scale to apply
-        let targetScale = originalScale;
-        
-        if (modelController && modelController.getUserScale) {
-            // Get user-adjusted scale if available
-            const userScale = modelController.getUserScale(markerValue);
-            console.log(`User scale for marker ${markerValue}: ${userScale}`);
-            
-            targetScale = userScale || originalScale;
-            
-            // Set current marker in controller
-            if (modelController.setCurrentMarker) {
-                modelController.setCurrentMarker(markerValue, originalScale);
-            }
-        }
-        
-        // Apply scale and saved rotation after a small delay to ensure model is loaded
-        setTimeout(() => {
-            console.log(`Applying scale: ${targetScale} and rotation:`, savedRotation, `to 3D model`);
-            centerModel.setAttribute('scale', { 
-                x: targetScale, 
-                y: targetScale, 
-                z: targetScale 
-            });
-            
-            // Position the model (keep at origin)
-            centerModel.setAttribute('position', { x: 0, y: 0, z: 0 });
-            
-            // Apply saved rotation instead of resetting to 0,0,0
-            centerModel.setAttribute('rotation', savedRotation);
-        }, 100);
-        
-        // Handle 3D controls visibility
-        setTimeout(() => {
-            if (center3dControls) {
-                console.log(`Setting 3D controls visibility: ${controlsEnabled ? 'visible' : 'invisible'}`);
-                if (controlsEnabled) {
-                    center3dControls.setVisible();
-                    // Make individual control buttons visible
-                    document.querySelectorAll('.model-zoom-button, .roller, .3dreset').forEach(btn => {
-                        btn.setVisible();
-                    });
-                } else {
-                    center3dControls.setInvisible();
-                    // Make individual control buttons invisible
-                    document.querySelectorAll('.model-zoom-button, .roller, .3dreset').forEach(btn => {
-                        btn.setInvisible();
-                    });
-                }
-            }
-        }, 150);
-        
-        // Hide image controls
-        const centerControls = getId('centerControls');
-        if (centerControls) {
-            centerControls.setInvisible();
-        }
-        
-        console.log(`3D Model loading initiated for ${src}`);
-    },
+    }, 150);
+    
+    // Hide image controls
+    const centerControls = getId('centerControls');
+    if (centerControls) {
+        centerControls.setInvisible();
+    }
+    
+    console.log(`3D Model loading initiated for ${src}`);
+},
     
     // Update grid visibility
     updateGridVisibility: function(markerValue, contentManager) {

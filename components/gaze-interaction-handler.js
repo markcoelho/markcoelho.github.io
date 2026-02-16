@@ -499,7 +499,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         return;
     }
     
-    // If not a side grid item, handle centerpiece grid selection (existing code)
+    // If not a side grid item, handle centerpiece grid selection
     let targetEl = this.el;
     
     const markerValue = targetEl.getAttribute('data-marker-value');
@@ -541,6 +541,11 @@ AFRAME.registerComponent('gaze-interaction-handler', {
         if (centerVideoControls) centerVideoControls.setInvisible();
         if (center3dControls) center3dControls.setInvisible();
         
+        // Play audio if present
+        if (content.audio && content.audio !== "") {
+            detectionHandler.playContentAudio(content.audio);
+        }
+        
         if (imageController) {
             imageController.setupImage(content.value, markerValue, 'centerControls');
         } 
@@ -549,6 +554,11 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     } else if (content.type === '3d') {
         const modelController = scene.components['model-controller'];
         const originalScale = content.scale || 1;
+        
+        // Play audio if present
+        if (content.audio && content.audio !== "") {
+            detectionHandler.playContentAudio(content.audio);
+        }
         
         if (modelController && modelController.handleGridSelection) {
             modelController.handleGridSelection(markerValue, originalScale);
