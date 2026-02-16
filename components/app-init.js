@@ -3,12 +3,11 @@
 document.addEventListener("DOMContentLoaded", () => {
     const scene = document.querySelector('a-scene');
     
-    scene.setAttribute('image-position-controller', '');
+    scene.setAttribute('image-controller', '');
     scene.setAttribute('navigation-ui', '');
     scene.setAttribute('content-manager', '');
     scene.setAttribute('marker-detection', '');
     scene.setAttribute('model-controller', '');
-    scene.setAttribute('video-controller', '');
     
     // Setup AR video feed
     setTimeout(() => {

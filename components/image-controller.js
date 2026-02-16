@@ -1,5 +1,5 @@
-// image-position-controller.js - Fixed version
-AFRAME.registerComponent('image-position-controller', {
+// image-controller.js - Fixed version
+AFRAME.registerComponent('image-controller', {
     schema: {
         moveSpeed: { default: 0.1 },
         moveInterval: { default: 50 }

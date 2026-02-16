@@ -1,6 +1,6 @@
-// gaze-interaction-handler.js - Updated section for mute buttons
+// interaction-handler.js - Updated section for mute buttons
 
-AFRAME.registerComponent('gaze-interaction-handler', {
+AFRAME.registerComponent('interaction-handler', {
     schema: {
         fuseTimeout: { default: 500 },
         action: { type: 'string' },
@@ -272,7 +272,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
             // Rest of your existing reset logic for center/left/right...
             const scene = this.scene;
             const contentManager = scene.components['content-manager'];
-            const imageController = scene.components['image-position-controller'];
+            const imageController = scene.components['image-controller'];
             const detectionHandler = scene.components['marker-detection'];
             
             if (!imageController || !contentManager || !detectionHandler) return;
@@ -515,7 +515,7 @@ AFRAME.registerComponent('gaze-interaction-handler', {
     
     const scene = this.scene;
     const contentManager = scene.components['content-manager'];
-    const imageController = scene.components['image-position-controller'];
+    const imageController = scene.components['image-controller'];
     const detectionHandler = scene.components['marker-detection'];
     
     if (!contentManager || !detectionHandler) return;
