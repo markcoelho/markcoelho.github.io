@@ -44,6 +44,11 @@
       ],
       "marker": [
         {
+          "type": "image",
+          "controls": "false",
+          "src": "",
+          "scale": 0,
+          "audio": ""
         }
       ]
     },
@@ -116,8 +121,8 @@
       ],
       "marker": [
         {
-          "type": "",
-          "controls": "",
+          "type": "image",
+          "controls": "false",
           "src": "",
           "scale": 0,
           "audio": ""
