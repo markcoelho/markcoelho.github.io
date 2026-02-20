@@ -18,7 +18,7 @@ AFRAME.registerComponent('navigation-ui', {
         };
         
         this.checkContentInterval = setInterval(() => {
-            this.contentManager = this.el.sceneEl.components['content-manager'];
+            this.contentManager = this.el.sceneEl.components['marker-content-manager'];
             if (this.contentManager?.contentSequences && !this.data.contentLoaded) {
                 this.data.contentLoaded = true;
                 this.onContentReady();
@@ -125,7 +125,7 @@ AFRAME.registerComponent('navigation-ui', {
             const itemContainer = this.utils.createGridItem(item, i, x, y, cellWidth, cellHeight, markerValue, side);
             
             const gazeAttr = `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`;
-            itemContainer.setAttribute('interaction-handler', 
+            itemContainer.setAttribute('gaze-interaction-handler', 
                 side !== 'center' ? `${gazeAttr}; side: ${side}` : gazeAttr);
             
             container.appendChild(itemContainer);
@@ -190,7 +190,7 @@ AFRAME.registerComponent('navigation-ui', {
             imageEl.setAttribute('data-content-index', index);
             imageEl.setAttribute('data-marker-value', markerValue);
             imageEl.setAttribute('data-media-type', 'image');
-            imageEl.setAttribute('interaction-handler', `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
+            imageEl.setAttribute('gaze-interaction-handler', `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
             container.appendChild(imageEl);
         };
         img.src = imageSrc;
@@ -219,7 +219,7 @@ AFRAME.registerComponent('navigation-ui', {
         thumbnailEl.setAttribute('data-content-index', index);
         thumbnailEl.setAttribute('data-marker-value', markerValue);
         thumbnailEl.setAttribute('data-media-type', type);
-        thumbnailEl.setAttribute('interaction-handler', `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
+        thumbnailEl.setAttribute('gaze-interaction-handler', `action: select-grid-image; fuseTimeout: 1000; markerValue: ${markerValue}`);
         container.appendChild(thumbnailEl);
     },
 

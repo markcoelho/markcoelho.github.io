@@ -1,5 +1,5 @@
-// image-controller.js - Fixed version
-AFRAME.registerComponent('image-controller', {
+// image-position-controller.js - Fixed version
+AFRAME.registerComponent('image-position-controller', {
     schema: {
         moveSpeed: { default: 0.1 },
         moveInterval: { default: 50 }
@@ -357,7 +357,7 @@ AFRAME.registerComponent('image-controller', {
     },
     
     getContent: function(markerValue) {
-        const manager = this.el.sceneEl.components['content-manager'];
+        const manager = this.el.sceneEl.components['marker-content-manager'];
         return manager?.getMarkerContent(markerValue);
     },
     

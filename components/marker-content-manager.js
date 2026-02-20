@@ -1,19 +1,20 @@
-AFRAME.registerComponent('content-manager', {
+AFRAME.registerComponent('marker-content-manager', {
     init: function() {
-    this.centerImage = getId('centerImage');
-    this.centerpiece = getId('centerpiece');
-    this.contentSequences = {};
-    this.currentContentIndex = {};
-    this.narrations = {};
-    this.surroundContent = {};
-    
-    // ADD THESE LINES - stores for marker zoom levels
-    this.markerImageScales = {};  // Stores user-adjusted scale for marker images
-    this.markerModelScales = {};  // Stores user-adjusted scale for marker 3D models
-    this.markerOriginalScales = {}; // Stores original scale from content.json for marker images
-    
-    this.loadContentFromJSON();
-},
+        this.centerImage = getId('centerImage');
+        this.centerpiece = getId('centerpiece');
+        this.contentSequences = {};
+        this.currentContentIndex = {};        // For centerpiece content
+        this.currentMarkerContentIndex = {};  // For marker content (separate!)
+        this.narrations = {};
+        this.surroundContent = {};
+        
+        // Stores for marker zoom levels
+        this.markerImageScales = {};
+        this.markerModelScales = {};
+        this.markerOriginalScales = {};
+        
+        this.loadContentFromJSON();
+    },
     
     // Load content from JSON file
     loadContentFromJSON: function() {
@@ -27,55 +28,60 @@ AFRAME.registerComponent('content-manager', {
     },
     
     // Process JSON into internal structures - TAKES FIRST ELEMENT FROM ARRAYS
-    // In content-manager.js, update processJSONData function
-// In content-manager.js - update processJSONData function
+    // In marker-content-manager.js, update processJSONData function
+// In marker-content-manager.js - update processJSONData function
 
 processJSONData: function(jsonData) {
-    this.contentSequences = {};
-    this.narrations = {};
-    this.currentContentIndex = {};
-    this.surroundContent = {}; 
-    this.markerData = {};
-    this.leftSideContent = {};
-    this.rightSideContent = {};
-    this.markerNavigationFlags = {};
-    this.audioPaths = {}; // Add this line
+            this.contentSequences = {};
+        this.narrations = {};
+        this.currentContentIndex = {};
+        this.currentMarkerContentIndex = {};  // Initialize this too
+        this.surroundContent = {}; 
+        this.markerData = {};
+        this.leftSideContent = {};
+        this.rightSideContent = {};
+        this.markerNavigationFlags = {};
+        this.audioPaths = {};
 
     jsonData.pages.forEach(page => {
-        const marker = page.barcode_number.toString();
-        const centralSide = page.central_side;
-        
-        // Store marker_navigation flag
-        this.markerNavigationFlags[marker] = page.marker_navigation === "true";
-        
-        if (page.narration) this.narrations[marker] = page.narration;
-        
-        this.surroundContent[marker] = page.surround || "";
-        
-        // Store marker data - process ALL marker items (not just first)
-        // Create an array to store all marker content
-        this.markerData[marker] = [];
-        
-        // Initialize audioPaths for this marker
-        this.audioPaths[marker] = {};
-        
-        if (page.marker && Array.isArray(page.marker)) {
-            page.marker.forEach(item => {
-                if (item.type && item.type !== "") {
-                    const contentItem = {
-                        type: item.type,
-                        src: item.src,
-                        scale: item.scale || 1,
-                        controls: item.controls === "true",
-                        audio: item.audio || "" // Store audio path
-                    };
-                    this.markerData[marker].push(contentItem);
-                    
-                    // Store audio path for this index
-                    this.audioPaths[marker][`marker-${this.markerData[marker].length-1}`] = item.audio || "";
-                }
-            });
-        }
+            const marker = page.barcode_number.toString();
+            const centralSide = page.central_side;
+            
+            // Store marker_navigation flag
+            this.markerNavigationFlags[marker] = page.marker_navigation === "true";
+            
+            if (page.narration) this.narrations[marker] = page.narration;
+            
+            this.surroundContent[marker] = page.surround || "";
+            
+            // Initialize BOTH indices for this marker
+            this.currentContentIndex[marker] = 0;        // For centerpiece
+            this.currentMarkerContentIndex[marker] = 0;  // For marker itself (separate!)
+            
+            // Store marker data - process ALL marker items
+            this.markerData[marker] = [];
+            
+            // Initialize audioPaths for this marker
+            this.audioPaths[marker] = {};
+            
+            if (page.marker && Array.isArray(page.marker)) {
+                page.marker.forEach((item, index) => {
+                    if (item.type && item.type !== "") {
+                        const contentItem = {
+                            type: item.type,
+                            src: item.src,
+                            value: item.src || item.value,
+                            scale: item.scale || 1,
+                            controls: item.controls === "true",
+                            audio: item.audio || ""
+                        };
+                        this.markerData[marker].push(contentItem);
+                        
+                        // Store audio path for this index
+                        this.audioPaths[marker][`marker-${index}`] = item.audio || "";
+                    }
+                });
+            }
         
         // Store left_side content - take FIRST ELEMENT if it exists
         if (page.left_side && page.left_side.length > 0 && page.left_side[0].type && page.left_side[0].type !== "") {
@@ -190,20 +196,20 @@ processJSONData: function(jsonData) {
             });
         }
         
-        this.contentSequences[marker] = centralSide.map(item => ({
-            type: item.type,
-            value: item.src || item.value,
-            controls: item.controls === "true",
-            scale: item.scale || 1,
-            audio: item.audio || "" // Store audio
-        }));
+                    this.contentSequences[marker] = centralSide.map(item => ({
+                type: item.type,
+                value: item.src || item.value,
+                controls: item.controls === "true",
+                scale: item.scale || 1,
+                audio: item.audio || ""
+            }));
+        });
         
-        this.currentContentIndex[marker] = 0;
-    });
+        console.log("Marker data loaded (all items):", this.markerData);
+        console.log("Audio paths loaded:", this.audioPaths);
+    },
+
     
-    console.log("Marker data loaded (all items):", this.markerData);
-    console.log("Audio paths loaded:", this.audioPaths);
-},
 
 getAudioForContent: function(markerValue, side, index) {
     if (!this.audioPaths[markerValue]) return "";
@@ -217,11 +223,36 @@ getMarkerItem: function(marker, index) {
     return this.markerData[marker]?.[index] || null;
 },
 
-// Add getter for current marker item (based on current index)
-getCurrentMarkerItem: function(marker) {
-    const index = this.currentContentIndex[marker] || 0;
-    return this.getMarkerItem(marker, index);
-},
+
+    
+        // Add getter for current marker content (separate from centerpiece)
+    getCurrentMarkerItem: function(marker) {
+        const index = this.currentMarkerContentIndex[marker] || 0;
+        return this.markerData[marker]?.[index] || null;
+    },
+    
+    // Add method to set marker content index (separate from centerpiece)
+    setMarkerContentIndex: function(marker, index) {
+        if (this.markerData[marker] && this.markerData[marker][index]) {
+            this.currentMarkerContentIndex[marker] = index;
+            return true;
+        }
+        return false;
+    },
+    
+    // Keep original getCurrentContentIndex for centerpiece
+    getCurrentContentIndex: function(marker) {
+        return this.currentContentIndex[marker] || 0;
+    },
+    
+    // Keep original setCurrentContentIndex for centerpiece
+    setCurrentContentIndex: function(marker, index) {
+        if (this.contentSequences[marker] && this.contentSequences[marker][index]) {
+            this.currentContentIndex[marker] = index;
+            return true;
+        }
+        return false;
+    },
 
 // Add getter for marker navigation flag
 getMarkerNavigationFlag: function(marker) {
@@ -250,9 +281,9 @@ getMarkerNavigationFlag: function(marker) {
     },
     
     // Create single marker element
-    // In content-manager.js - update createMarkerElement function
+    // In marker-content-manager.js - update createMarkerElement function
 
-// In content-manager.js - update createMarkerElement function
+// In marker-content-manager.js - update createMarkerElement function
 
 createMarkerElement: function(markerValue, parent) {
     const markerEl = document.createElement('a-marker');
@@ -319,7 +350,7 @@ createMarkerElement: function(markerValue, parent) {
 },
 
 // Helper function to create marker image controls - BETTER CENTERING
-// In content-manager.js - update the createMarkerControls, createMarkerVideoControls, and createMarker3dControls functions
+// In marker-content-manager.js - update the createMarkerControls, createMarkerVideoControls, and createMarker3dControls functions
 
 // Helper function to create marker image controls - FIXED IDs
 createMarkerControls: function(markerValue, type) {
@@ -344,11 +375,11 @@ createMarkerControls: function(markerValue, type) {
     resetBtn.setAttribute('rotation', '0 0 0');
     resetBtn.setAttribute('material', 'depthTest: false;');
     resetBtn.setAttribute('render-order', '3');
-    resetBtn.setAttribute('interaction-handler', 
+    resetBtn.setAttribute('gaze-interaction-handler', 
         `action: marker-reset; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(resetBtn);
 
-    // Scrolling arrows - FIXED IDs to match what image-controller expects
+    // Scrolling arrows - FIXED IDs to match what image-position-controller expects
     // The controller looks for IDs like 'marker-scroller-up', 'marker-scroller-down', etc.
     const directions = [
         { id: 'up', pos: '0 0.15 0.1' },
@@ -370,7 +401,7 @@ createMarkerControls: function(markerValue, type) {
         arrow.setAttribute('render-order', '3');
         arrow.setAttribute('data-direction', dir.id);
         arrow.setAttribute('data-target', `marker-${markerValue}`);
-        arrow.setAttribute('interaction-handler', 
+        arrow.setAttribute('gaze-interaction-handler', 
             `action: marker-move; markerValue: ${markerValue}; fuseTimeout: 500`);
         controlsPlane.appendChild(arrow);
     });
@@ -386,7 +417,7 @@ createMarkerControls: function(markerValue, type) {
     zoomIn.setAttribute('data-target', `marker-${markerValue}`);
     zoomIn.setAttribute('material', 'depthTest: false;');
     zoomIn.setAttribute('render-order', '3');
-    zoomIn.setAttribute('interaction-handler', 
+    zoomIn.setAttribute('gaze-interaction-handler', 
         `action: increase; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomIn);
 
@@ -400,7 +431,7 @@ createMarkerControls: function(markerValue, type) {
     zoomOut.setAttribute('data-target', `marker-${markerValue}`);
     zoomOut.setAttribute('material', 'depthTest: false;');
     zoomOut.setAttribute('render-order', '3');
-    zoomOut.setAttribute('interaction-handler', 
+    zoomOut.setAttribute('gaze-interaction-handler', 
         `action: decrease; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomOut);
 
@@ -429,7 +460,7 @@ createMarkerVideoControls: function(markerValue) {
     restartBtn.setAttribute('rotation', '0 0 0');
     restartBtn.setAttribute('material', 'depthTest: false;');
     restartBtn.setAttribute('render-order', '3');
-    restartBtn.setAttribute('interaction-handler', 
+    restartBtn.setAttribute('gaze-interaction-handler', 
         `action: marker-restart; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(restartBtn);
 
@@ -442,7 +473,7 @@ createMarkerVideoControls: function(markerValue) {
     muteBtn.setAttribute('rotation', '0 0 0');
     muteBtn.setAttribute('material', 'depthTest: false;');
     muteBtn.setAttribute('render-order', '3');
-    muteBtn.setAttribute('interaction-handler', 
+    muteBtn.setAttribute('gaze-interaction-handler', 
         `action: marker-mute; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(muteBtn);
 
@@ -456,7 +487,7 @@ createMarkerVideoControls: function(markerValue) {
     backwardBtn.setAttribute('data-action', 'backward');
     backwardBtn.setAttribute('material', 'depthTest: false;');
     backwardBtn.setAttribute('render-order', '3');
-    backwardBtn.setAttribute('interaction-handler', 
+    backwardBtn.setAttribute('gaze-interaction-handler', 
         `action: marker-backward; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(backwardBtn);
 
@@ -470,7 +501,7 @@ createMarkerVideoControls: function(markerValue) {
     forwardBtn.setAttribute('data-action', 'forward');
     forwardBtn.setAttribute('material', 'depthTest: false;');
     forwardBtn.setAttribute('render-order', '3');
-    forwardBtn.setAttribute('interaction-handler', 
+    forwardBtn.setAttribute('gaze-interaction-handler', 
         `action: marker-forward; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(forwardBtn);
 
@@ -500,7 +531,7 @@ createMarker3dControls: function(markerValue) {
     resetBtn.setAttribute('material', 'depthTest: false;');
     resetBtn.setAttribute('render-order', '3');
     resetBtn.setAttribute('data-target', `marker-${markerValue}`);
-    resetBtn.setAttribute('interaction-handler', 
+    resetBtn.setAttribute('gaze-interaction-handler', 
         `action: 3dreset; markerValue: ${markerValue}; fuseTimeout: 1000`);
     controlsPlane.appendChild(resetBtn);
 
@@ -526,7 +557,7 @@ createMarker3dControls: function(markerValue) {
         arrow.setAttribute('render-order', '3');
         arrow.setAttribute('data-direction', dir.id);
         arrow.setAttribute('data-target', `marker-${markerValue}`);
-        arrow.setAttribute('interaction-handler', 
+        arrow.setAttribute('gaze-interaction-handler', 
             `action: model-rotate; markerValue: ${markerValue}; fuseTimeout: 500`);
         controlsPlane.appendChild(arrow);
     });
@@ -542,7 +573,7 @@ createMarker3dControls: function(markerValue) {
     zoomIn.setAttribute('data-target', `marker-${markerValue}`);
     zoomIn.setAttribute('material', 'depthTest: false;');
     zoomIn.setAttribute('render-order', '3');
-    zoomIn.setAttribute('interaction-handler', 
+    zoomIn.setAttribute('gaze-interaction-handler', 
         `action: 3dincrease; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomIn);
 
@@ -556,7 +587,7 @@ createMarker3dControls: function(markerValue) {
     zoomOut.setAttribute('data-target', `marker-${markerValue}`);
     zoomOut.setAttribute('material', 'depthTest: false;');
     zoomOut.setAttribute('render-order', '3');
-    zoomOut.setAttribute('interaction-handler', 
+    zoomOut.setAttribute('gaze-interaction-handler', 
         `action: 3ddecrease; markerValue: ${markerValue}; fuseTimeout: 500`);
     controlsPlane.appendChild(zoomOut);
 

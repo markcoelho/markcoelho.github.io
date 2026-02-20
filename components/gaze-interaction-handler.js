@@ -1,6 +1,6 @@
-// interaction-handler.js - Updated section for mute buttons
+// gaze-interaction-handler.js - Updated section for mute buttons
 
-AFRAME.registerComponent('interaction-handler', {
+AFRAME.registerComponent('gaze-interaction-handler', {
     schema: {
         fuseTimeout: { default: 500 },
         action: { type: 'string' },
@@ -191,7 +191,7 @@ AFRAME.registerComponent('interaction-handler', {
             
             if (target.startsWith('marker-')) {
                 const markerValue = target.replace('marker-', '');
-                const contentManager = this.scene.components['content-manager'];
+                const contentManager = this.scene.components['marker-content-manager'];
                 if (contentManager) {
                     contentManager.markerImageScales[markerValue] = currentScale.x * zoomFactor;
                 }
@@ -238,7 +238,7 @@ AFRAME.registerComponent('interaction-handler', {
             // Save the zoom level for this model
             if (target.startsWith('marker-')) {
                 const markerValue = target.replace('marker-', '');
-                const contentManager = this.scene.components['content-manager'];
+                const contentManager = this.scene.components['marker-content-manager'];
                 if (contentManager) {
                     contentManager.markerModelScales[markerValue] = newScale;
                 }
@@ -271,8 +271,8 @@ AFRAME.registerComponent('interaction-handler', {
             
             // Rest of your existing reset logic for center/left/right...
             const scene = this.scene;
-            const contentManager = scene.components['content-manager'];
-            const imageController = scene.components['image-controller'];
+            const contentManager = scene.components['marker-content-manager'];
+            const imageController = scene.components['image-position-controller'];
             const detectionHandler = scene.components['marker-detection'];
             
             if (!imageController || !contentManager || !detectionHandler) return;
@@ -427,13 +427,14 @@ AFRAME.registerComponent('interaction-handler', {
         }
         
         // Grid image selection
-        if (this.buttonType === 'grid-image') {
-    // First check if it's a side grid item
+    if (this.buttonType === 'grid-image') {
+    // First check if it's a side grid item (left/right)
     const side = this.el.getAttribute('data-side') || 
                  (this.el.classList.contains('left-grid-item') ? 'left' : 
                   this.el.classList.contains('right-grid-item') ? 'right' : null);
     
     if (side && !this.triggered) {
+        // Handle side grid items (left/right) - this part remains the same
         const targetEl = this.el;
         const markerValue = targetEl.getAttribute('data-marker-value');
         const contentIndex = parseInt(targetEl.getAttribute('data-content-index'));
@@ -447,7 +448,7 @@ AFRAME.registerComponent('interaction-handler', {
         console.log(`Side grid item selected: ${side}, marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
         
         const scene = this.scene;
-        const contentManager = scene.components['content-manager'];
+        const contentManager = scene.components['marker-content-manager'];
         const detectionHandler = scene.components['marker-detection'];
         
         if (!contentManager || !detectionHandler) {
@@ -511,21 +512,22 @@ AFRAME.registerComponent('interaction-handler', {
         return;
     }
     
-    console.log(`Grid item selected: marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
+    console.log(`Grid item selected for CENTERPIECE: marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
     
     const scene = this.scene;
-    const contentManager = scene.components['content-manager'];
-    const imageController = scene.components['image-controller'];
+    const contentManager = scene.components['marker-content-manager'];
+    const imageController = scene.components['image-position-controller'];
     const detectionHandler = scene.components['marker-detection'];
     
     if (!contentManager || !detectionHandler) return;
     
+    // IMPORTANT: This only updates the centerpiece index, NOT the marker index
     contentManager.currentContentIndex[markerValue] = contentIndex;
     const content = contentManager.getMarkerContent(markerValue);
     
     if (!content) return;
     
-    // Handle different media types
+    // Handle different media types for centerpiece
     if (content.type === 'image') {
         const centerImage = getId('centerImage');
         const centerVideo = getId('centerVideo');
@@ -593,7 +595,7 @@ AFRAME.registerComponent('interaction-handler', {
     console.log(`Side grid item selected: ${side}, marker=${markerValue}, index=${contentIndex}, type=${mediaType}`);
     
     const scene = this.scene;
-    const contentManager = scene.components['content-manager'];
+    const contentManager = scene.components['marker-content-manager'];
     const detectionHandler = scene.components['marker-detection'];
     
     if (!contentManager || !detectionHandler) return;
@@ -748,7 +750,7 @@ AFRAME.registerComponent('interaction-handler', {
             return;
         }
         
-        const contentManager = scene.components['content-manager'];
+        const contentManager = scene.components['marker-content-manager'];
         const currentIndex = contentManager?.currentContentIndex[markerValue] || 0;
         const markerItems = contentManager?.markerData?.[markerValue] || [];
         const currentItem = markerItems[currentIndex];
