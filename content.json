@@ -46,8 +46,8 @@
         {
           "type": "image",
           "controls": "false",
-          "src": "",
-          "scale": 0,
+          "src": "assets/images/1.1.jpg",
+          "scale": 0.0001,
           "audio": ""
         }
       ]
@@ -123,8 +123,8 @@
         {
           "type": "image",
           "controls": "false",
-          "src": "",
-          "scale": 0,
+          "src": "assets/images/2.jpg",
+          "scale": 0.001,
           "audio": ""
         }
       ]
@@ -181,13 +181,6 @@
           "controls": "true",
           "src": "assets/models/ship_example.glb",
           "scale": 0.02,
-          "audio": ""
-        },
-        {
-          "type": "image",
-          "controls": "false",
-          "src": "assets/images/1.4.jpg",
-          "scale": 0.5,
           "audio": ""
         }
       ]
