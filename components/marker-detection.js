@@ -94,7 +94,6 @@ AFRAME.registerComponent('marker-detection', {
 },
     
     // Marker detected
-    // marker-detection.js - Updated onMarkerFound function
 
 onMarkerFound: function(marker) {
     const value = marker.getAttribute('value');
@@ -105,7 +104,8 @@ onMarkerFound: function(marker) {
     
     console.log(`=== MARKER ${value} FOUND === (previous: ${previousMarker}, new: ${isNewMarker})`);
     
-    if (this.currentPlayingAudio) {
+    // AUDIO FIX: Only pause/stop audio if it's a DIFFERENT marker
+    if (isNewMarker && this.currentPlayingAudio) {
         this.currentPlayingAudio.pause();
         this.currentPlayingAudio.currentTime = 0;
     }
@@ -115,14 +115,26 @@ onMarkerFound: function(marker) {
     
     console.log(`Content manager exists: ${!!contentManager}`);
     
-    if (contentManager?.narrations?.[value]) {
-        this.playAudio(value, contentManager.narrations[value]);
+    // AUDIO FIX: Only play narration audio if it's a NEW marker AND audio isn't already playing for this marker
+    if (isNewMarker && contentManager?.narrations?.[value]) {
+        // Check if we're already playing audio for this marker
+        const audioForThisMarker = this.audioElements[value];
+        const isPlaying = audioForThisMarker && !audioForThisMarker.paused && !audioForThisMarker.ended;
+        
+        if (!isPlaying) {
+            this.playAudio(value, contentManager.narrations[value]);
+        } else {
+            console.log(`Audio already playing for marker ${value}, continuing...`);
+        }
     }
     
     // ALWAYS reposition the parent containers (centerpiece, leftpiece, rightpiece)
     if (this.centerpiece && this.camera) {
         positionBetweenCameraAndMarker(this.camera, marker, this.centerpiece);
     }
+    
+    // Rest of your existing onMarkerFound code...
+    // [Keep all the existing code for loading content, updating grids, etc.]
     
     // ONLY load/reload content if it's a NEW marker
     if (isNewMarker) {
@@ -158,52 +170,47 @@ onMarkerFound: function(marker) {
             }
         }
 
-
+        // Handle left grid
         if (contentManager) {
-    const leftContent = contentManager.getLeftSideContent(value);
-    if (leftContent) {
-        this.showLeftPieceContent(leftContent, value, scene);
-        this.updateLeftPieceControls(leftContent, value);
-        
-        // ADD THIS - Update left grid
-        const navUI = scene.components['navigation-ui'];
-        if (navUI) {
-            navUI.updateLeftGrid(value);
+            const leftContent = contentManager.getLeftSideContent(value);
+            if (leftContent) {
+                this.showLeftPieceContent(leftContent, value, scene);
+                this.updateLeftPieceControls(leftContent, value);
+                
+                const navUI = scene.components['navigation-ui'];
+                if (navUI) {
+                    navUI.updateLeftGrid(value);
+                }
+            } else {
+                this.hideLeftPieceControls();
+                const navUI = scene.components['navigation-ui'];
+                if (navUI && navUI.leftGrid) {
+                    navUI.leftGrid.setAttribute('visible', 'false');
+                }
+            }
         }
-    } else {
-        this.hideLeftPieceControls();
-        // Hide left grid if no left content
-        const navUI = scene.components['navigation-ui'];
-        if (navUI && navUI.leftGrid) {
-            navUI.leftGrid.setAttribute('visible', 'false');
-        }
-    }
-}
 
-// After showing right piece content
-if (contentManager) {
-    const rightContent = contentManager.getRightSideContent(value);
-    if (rightContent) {
-        this.showRightPieceContent(rightContent, value, scene);
-        this.updateRightPieceControls(rightContent, value);
-        
-        // ADD THIS - Update right grid
-        const navUI = scene.components['navigation-ui'];
-        if (navUI) {
-            navUI.updateRightGrid(value);
+        // Handle right grid
+        if (contentManager) {
+            const rightContent = contentManager.getRightSideContent(value);
+            if (rightContent) {
+                this.showRightPieceContent(rightContent, value, scene);
+                this.updateRightPieceControls(rightContent, value);
+                
+                const navUI = scene.components['navigation-ui'];
+                if (navUI) {
+                    navUI.updateRightGrid(value);
+                }
+            } else {
+                this.hideRightPieceControls();
+                const navUI = scene.components['navigation-ui'];
+                if (navUI && navUI.rightGrid) {
+                    navUI.rightGrid.setAttribute('visible', 'false');
+                }
+            }
         }
-    } else {
-        this.hideRightPieceControls();
-        // Hide right grid if no right content
-        const navUI = scene.components['navigation-ui'];
-        if (navUI && navUI.rightGrid) {
-            navUI.rightGrid.setAttribute('visible', 'false');
-        }
-    }
-}
-
-
         
+        // Handle center content
         if (contentManager) {
             const content = contentManager.getMarkerContent(value);
             console.log(`Retrieved content for ${value}:`, content);
@@ -226,25 +233,23 @@ if (contentManager) {
 
         // Handle marker content based on current index
         if (contentManager) {
-    // IMPORTANT: Use currentMarkerContentIndex, NOT currentContentIndex
-    const currentMarkerIndex = contentManager.currentMarkerContentIndex[value] || 0;
-    const markerItems = contentManager.markerData?.[value] || [];
-    const currentMarkerItem = markerItems[currentMarkerIndex];
-    
-    if (currentMarkerItem) {
-        console.log(`Showing marker content for ${value} at index ${currentMarkerIndex}:`, currentMarkerItem);
-        this.showMarkerImage(value, marker, scene);
-    } else {
-        // If no marker item, hide all marker content
-        const markerImage = document.querySelector(`#marker-${value}-container #marker-${value}-image`);
-        const markerModel = document.querySelector(`#marker-${value}-container #marker-${value}-model`);
-        const markerVideo = document.querySelector(`#marker-${value}-container #marker-${value}-video`);
-        
-        if (markerImage) markerImage.setAttribute('visible', 'false');
-        if (markerModel) markerModel.setAttribute('visible', 'false');
-        if (markerVideo) markerVideo.setAttribute('visible', 'false');
-    }
-}
+            const currentMarkerIndex = contentManager.currentMarkerContentIndex[value] || 0;
+            const markerItems = contentManager.markerData?.[value] || [];
+            const currentMarkerItem = markerItems[currentMarkerIndex];
+            
+            if (currentMarkerItem) {
+                console.log(`Showing marker content for ${value} at index ${currentMarkerIndex}:`, currentMarkerItem);
+                this.showMarkerImage(value, marker, scene);
+            } else {
+                const markerImage = document.querySelector(`#marker-${value}-container #marker-${value}-image`);
+                const markerModel = document.querySelector(`#marker-${value}-container #marker-${value}-model`);
+                const markerVideo = document.querySelector(`#marker-${value}-container #marker-${value}-video`);
+                
+                if (markerImage) markerImage.setAttribute('visible', 'false');
+                if (markerModel) markerModel.setAttribute('visible', 'false');
+                if (markerVideo) markerVideo.setAttribute('visible', 'false');
+            }
+        }
         
         // Update navigation and grid visibility only for new markers
         this.updateNavigationVisibility(marker, value, contentManager);
@@ -255,7 +260,6 @@ if (contentManager) {
         const navUI = scene.components['navigation-ui'];
 
         if (navUI) {
-            // Hide ALL marker grids initially
             document.querySelectorAll('a-marker').forEach(m => {
                 if (m._imageGrid) {
                     m._imageGrid.setAttribute('visible', 'false');
@@ -263,40 +267,32 @@ if (contentManager) {
             });
             
             if (useMarkerNavigation) {
-                // Show marker grid if multiple media
                 const hasMultipleMedia = navUI.hasMultipleImages(value);
                 const currentMarker = document.querySelector(`a-marker[value="${value}"]`);
                 if (currentMarker && currentMarker._imageGrid) {
                     currentMarker._imageGrid.setAttribute('visible', hasMultipleMedia);
                     console.log(`Showing marker grid for ${value}: ${hasMultipleMedia}`);
                 }
-                // Hide centerpiece grid
                 navUI.setCenterpieceGridVisibility(false);
                 
             } else {
-                // Update centerpiece grid with this marker's content
                 navUI.updateCenterpieceGrid(value);
-                
-                // Show centerpiece grid if multiple media
                 const hasMultipleMedia = navUI.hasMultipleImages(value);
                 navUI.setCenterpieceGridVisibility(hasMultipleMedia);
             }
         }
     } else {
         console.log(`SAME MARKER DETECTED - Preserving content state for ${value}`);
-        // NO CONTENT LOADING - just the containers have been repositioned above
         
         // Update grid visibility but don't reload content
         if (contentManager) {
             this.updateGridVisibility(value, contentManager);
             
-            // Update navigation UI visibility without reloading
             const navUI = scene.components['navigation-ui'];
             if (navUI) {
                 const useMarkerNavigation = contentManager?.getMarkerNavigationFlag?.(value);
                 
                 if (useMarkerNavigation) {
-                    // Show marker grid if multiple media
                     const hasMultipleMedia = navUI.hasMultipleImages(value);
                     const currentMarker = document.querySelector(`a-marker[value="${value}"]`);
                     if (currentMarker && currentMarker._imageGrid) {
@@ -304,7 +300,6 @@ if (contentManager) {
                     }
                     navUI.setCenterpieceGridVisibility(false);
                 } else {
-                    // Update centerpiece grid visibility without reloading content
                     const hasMultipleMedia = navUI.hasMultipleImages(value);
                     navUI.setCenterpieceGridVisibility(hasMultipleMedia);
                 }
@@ -1113,10 +1108,20 @@ showMarkerImage: function(markerValue, markerElement, scene) {
         if (!this.audioElements[markerValue]) {
             this.audioElements[markerValue] = new Audio(url);
             this.audioElements[markerValue].preload = 'auto';
+            
+            // Add ended event listener to clean up when audio finishes
+            this.audioElements[markerValue].addEventListener('ended', () => {
+                console.log(`Audio for marker ${markerValue} ended`);
+                if (this.currentPlayingAudio === this.audioElements[markerValue]) {
+                    this.currentPlayingAudio = null;
+                }
+            });
         }
         
         this.currentPlayingAudio = this.audioElements[markerValue];
         this.currentPlayingAudio.currentTime = 0;
-        this.currentPlayingAudio.play();
-    }
+        this.currentPlayingAudio.play().catch(e => {
+            console.warn("Could not play audio:", e);
+        });
+    },
 });
