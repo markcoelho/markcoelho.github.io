@@ -25,8 +25,8 @@
         {
           "type": "3d",
           "controls": "true",
-          "src": "assets/models/ship_example.glb",
-          "scale": 0.02,
+          "src": "assets/models/fullagar3d.glb",
+          "scale": 1.5,
           "audio": ""
         }
       ]
