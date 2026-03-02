@@ -8,20 +8,19 @@
       "surround_rotation": 0,
       "marker_navigation": "true",
       "central_side": [
-        
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/0.jpg",
+          "scale": 3,
+          "audio": ""
+        },
         {
           "type": "3d",
           "controls": "true",
           "src": "assets/models/fullagar3d.glb",
           "scale": 1.5,
           "rotation": 90,
-          "audio": ""
-        },
-        {
-          "type": "image",
-          "controls": "true",
-          "src": "assets/images/0.jpg",
-          "scale": 3,
           "audio": ""
         },
         {

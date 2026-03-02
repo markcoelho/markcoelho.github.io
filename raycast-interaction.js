@@ -2,6 +2,9 @@
 (function() {
     console.log('🔍 Raycast interaction initializing...');
     
+    // Store currently visible media for each piece
+    const visibleMediaMap = new Map();
+    
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
@@ -23,35 +26,30 @@
         scene.addEventListener('loaded', function() {
             console.log('✅ Scene loaded, setting up raycast listeners');
             
-            // Add data-raycastable attribute to all interactive elements
             function addRaycastableAttributes() {
-                // Use valid CSS selectors only (no classes starting with numbers)
-                const selectors = [
-                    '.zoom-button', '.nav-button', '#centerImage', '.scroller', '.roller',
-                    '.centerpiece-grid-item', '.image-grid-item', '.left-grid-item', '.right-grid-item',
-                    '.left-zoom-button', '.right-zoom-button', '.left-model-zoom-button', '.right-model-zoom-button',
-                    '.marker-zoom-button', '.marker-model-zoom-button', '.marker-reset', '.marker-3dreset',
-                    '.marker-restart', '.marker-mute', '.marker-fast-backward', '.marker-fast-forward',
-                    '.marker-scroller', '.marker-roller', '.left-scroller', '.right-scroller',
-                    '.left-roller', '.right-roller', '.reset', '.model-zoom-button'
-                ].join(',');
+                console.log('🔧 Adding raycastable attributes to all children of Controls containers...');
                 
-                const elements = document.querySelectorAll(selectors);
-                elements.forEach(el => {
-                    el.setAttribute('data-raycastable', '');
+                // Find all elements with ID containing "Controls"
+                const controlContainers = document.querySelectorAll('[id*="Controls"]');
+                console.log(`📦 Found ${controlContainers.length} control containers`);
+                
+                let totalCount = 0;
+                
+                // Add data-raycastable to every child of each Controls container
+                controlContainers.forEach(container => {
+                    const children = container.children;
+                    Array.from(children).forEach(child => {
+                        child.setAttribute('data-raycastable', '');
+                        totalCount++;
+                    });
+                    console.log(`  ${container.id}: added to ${children.length} children`);
                 });
-                
-                // Handle 3dreset separately (starts with number, so can't use class selector)
-                const resetElements = document.querySelectorAll('[class*="3dreset"]');
-                resetElements.forEach(el => {
-                    el.setAttribute('data-raycastable', '');
-                });
-                
-                console.log(`🏷️ Added data-raycastable to ${elements.length + resetElements.length} elements`);
-            }
+            }                                       
             
             // Run initially and watch for new elements
-            addRaycastableAttributes();
+            setTimeout(() => {
+                addRaycastableAttributes();
+            }, 3000); // Delay to ensure all elements are present
             
             // Watch for DOM changes to add attribute to new elements
             const observer = new MutationObserver(function(mutations) {
@@ -69,6 +67,12 @@
                                 if (node.getAttribute && node.getAttribute('class')?.includes('3dreset')) {
                                     node.setAttribute('data-raycastable', '');
                                 }
+                                // Check if it's a navigation thumbnail
+                                if (node.id && node.id.includes('_navigation')) {
+                                    node.querySelectorAll('a-image').forEach(child => {
+                                        child.setAttribute('data-raycastable', '');
+                                    });
+                                }
                             }
                             
                             // Check children with valid selectors
@@ -81,6 +85,12 @@
                                 // Check for elements with class containing 3dreset
                                 const resetChildren = node.querySelectorAll('[class*="3dreset"]');
                                 resetChildren.forEach(child => {
+                                    child.setAttribute('data-raycastable', '');
+                                });
+                                
+                                // Check for navigation thumbnails
+                                const navChildren = node.querySelectorAll('[id$="_navigation"] a-image');
+                                navChildren.forEach(child => {
                                     child.setAttribute('data-raycastable', '');
                                 });
                             }
@@ -148,22 +158,33 @@
                 let type = 'unknown';
                 let direction = '';
                 
+                // Log for debugging
+                if (classes.includes('marker-model-zoom-button')) {
+                    console.log('🔍 Processing marker zoom button:', classes, 'data-action:', dataAction);
+                }
+                
                 // Determine button type - check in order from most specific to least specific
-                if (classes.includes('3dreset')) {
+                
+                // Check for 3D reset buttons (marker and regular)
+                if (classes.includes('3dreset') || classes.includes('marker-3dreset')) {
                     type = '3d-reset';
-                } else if (classes.includes('model-zoom-button')) {
+                }
+                // Check for 3D zoom buttons (marker and regular)
+                else if (classes.includes('model-zoom-button') || classes.includes('marker-model-zoom-button')) {
                     type = '3d-zoom';
                     // Check for zoom direction from data-action attribute
-                    if (dataAction === '3dincrease') {
+                    if (dataAction === '3dincrease' || dataAction === 'marker3dincrease') {
                         direction = 'in';
-                    } else if (dataAction === '3ddecrease') {
+                    } else if (dataAction === '3ddecrease' || dataAction === 'marker3ddecrease') {
                         direction = 'out';
                     } else if (button.src?.includes('zoom-in')) {
                         direction = 'in';
                     } else if (button.src?.includes('zoom-out')) {
                         direction = 'out';
                     }
-                } else if (classes.includes('zoom-button')) {
+                }
+                // Check for regular zoom buttons
+                else if (classes.includes('zoom-button')) {
                     type = 'zoom';
                     // Check for zoom direction from data-action attribute
                     if (dataAction === 'increase') {
@@ -175,9 +196,13 @@
                     } else if (button.src?.includes('zoom-out')) {
                         direction = 'out';
                     }
-                } else if (classes.includes('reset')) {
+                }
+                // Check for reset buttons
+                else if (classes.includes('reset')) {
                     type = 'reset';
-                } else if (classes.includes('scroller')) {
+                }
+                // Check for scroller buttons (marker and regular)
+                else if (classes.includes('scroller') || classes.includes('marker-scroller')) {
                     type = 'scroller';
                     // Extract direction from data-direction attribute or ID
                     direction = dataDirection || '';
@@ -185,7 +210,9 @@
                         const dirMatch = button.id?.match(/_(up|down|left|right)_/);
                         direction = dirMatch ? dirMatch[1] : '';
                     }
-                } else if (classes.includes('roller')) {
+                }
+                // Check for roller buttons (marker and regular)
+                else if (classes.includes('roller') || classes.includes('marker-roller')) {
                     type = 'roller';
                     // Extract direction from data-direction attribute or ID
                     direction = dataDirection || '';
@@ -193,13 +220,18 @@
                         const dirMatch = button.id?.match(/_(up|down|left|right)_/);
                         direction = dirMatch ? dirMatch[1] : '';
                     }
-                } else if (classes.includes('restart') || classes.includes('marker-restart')) {
+                }
+                // Check for video control buttons (marker and regular)
+                else if (classes.includes('restart') || classes.includes('marker-restart')) {
                     type = 'restart';
-                } else if (classes.includes('mute') || classes.includes('marker-mute')) {
+                }
+                else if (classes.includes('mute') || classes.includes('marker-mute')) {
                     type = 'mute';
-                } else if (classes.includes('fast-forward') || classes.includes('marker-fast-forward')) {
+                }
+                else if (classes.includes('fast-forward') || classes.includes('marker-fast-forward')) {
                     type = 'fast-forward';
-                } else if (classes.includes('fast-backward') || classes.includes('marker-fast-backward')) {
+                }
+                else if (classes.includes('fast-backward') || classes.includes('marker-fast-backward')) {
                     type = 'fast-backward';
                 }
                 
@@ -219,24 +251,39 @@
                 if (!container) return 'unknown';
                 
                 const containerId = container.id || '';
+                const buttonId = button.id || '';
                 const buttonClasses = button.className || '';
                 
-                // Determine the media index from the control plane ID
-                let mediaIndex = '0';
-                const controlPlaneId = controlPlane.id || '';
-                const indexMatch = controlPlaneId.match(/_(\d+)$/);
-                if (indexMatch) {
-                    mediaIndex = indexMatch[1];
-                }
-                
-                // Determine media type from button class
+                // Determine media type from button class or ID
                 let mediaType = 'image';
-                if (buttonClasses.includes('roller') || buttonClasses.includes('model-zoom-button') || 
-                    buttonClasses.includes('3dreset')) {
+                if (buttonClasses.includes('roller') || 
+                    buttonClasses.includes('model-zoom-button') || 
+                    buttonClasses.includes('3dreset') || 
+                    buttonClasses.includes('marker-roller') ||
+                    buttonClasses.includes('marker-model-zoom-button') || 
+                    buttonClasses.includes('marker-3dreset') ||
+                    buttonId.includes('_3d_')) {
                     mediaType = '3d';
                 } else if (buttonClasses.includes('restart') || buttonClasses.includes('mute') ||
-                           buttonClasses.includes('fast-backward') || buttonClasses.includes('fast-forward')) {
-                    mediaType = 'video';
+                            buttonClasses.includes('fast-backward') || buttonClasses.includes('fast-forward') ||
+                            buttonId.includes('_video_')) {
+                        mediaType = 'video';
+                    }
+                
+                // Extract the media index from the button ID or control plane ID
+                let mediaIndex = '0';
+                
+                // Try to get index from button ID first (e.g., centerpiece_0_3d_up_0 -> index 0)
+                const buttonIndexMatch = buttonId.match(/_(\d+)$/);
+                if (buttonIndexMatch) {
+                    mediaIndex = buttonIndexMatch[1];
+                } else {
+                    // Fall back to control plane ID
+                    const controlPlaneId = controlPlane.id || '';
+                    const planeIndexMatch = controlPlaneId.match(/_(\d+)$/);
+                    if (planeIndexMatch) {
+                        mediaIndex = planeIndexMatch[1];
+                    }
                 }
                 
                 // Look for the media element in the container
@@ -256,58 +303,99 @@
                     mediaId = video ? video.id : `${containerId}_video_${mediaIndex}`;
                 }
                 
+                // Verify this media element is actually the one that should be controlled
+                // by checking if the control plane is for this media type
+                const controlPlaneId = controlPlane.id || '';
+                const expectedPattern = mediaType === '3d' ? '3dControls' : 
+                                       (mediaType === 'video' ? 'VideoControls' : 'Controls');
+                
+                if (!controlPlaneId.includes(expectedPattern)) {
+                    // Try to determine correct type from control plane
+                    if (controlPlaneId.includes('3dControls')) {
+                        mediaType = '3d';
+                    } else if (controlPlaneId.includes('VideoControls')) {
+                        mediaType = 'video';
+                    } else if (controlPlaneId.includes('Controls')) {
+                        mediaType = 'image';
+                    }
+                    
+                    // Re-find with corrected type
+                    if (mediaType === 'image') {
+                        const image = container.querySelector(`[id$="_image_${mediaIndex}"]`);
+                        mediaId = image ? image.id : `${containerId}_image_${mediaIndex}`;
+                    } else if (mediaType === '3d') {
+                        const model = container.querySelector(`[id$="_3d_${mediaIndex}"]`);
+                        mediaId = model ? model.id : `${containerId}_3d_${mediaIndex}`;
+                    } else if (mediaType === 'video') {
+                        const video = container.querySelector(`[id$="_video_${mediaIndex}"]`);
+                        mediaId = video ? video.id : `${containerId}_video_${mediaIndex}`;
+                    }
+                }
+                
                 return mediaId;
             }
 
-            // Add intersection event listeners - only log visible elements (self AND parent)
             raycaster.addEventListener('raycaster-intersection', function(evt) {
                 evt.detail.intersections.forEach(intersection => {
                     const el = intersection.object.el;
-                    if (el && isElementVisible(el)) {
-                        const buttonInfo = getButtonInfo(el);
-                        const targetMedia = findTargetMedia(el);
-                        
-                        if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
-                            console.log(`👉 ENTER: zoom ${buttonInfo.direction} on ${targetMedia}`);
-                        } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
-                            console.log(`👉 ENTER: 3d-zoom ${buttonInfo.direction} on ${targetMedia}`);
-                        } else if (buttonInfo.type === 'reset') {
-                            console.log(`👉 ENTER: reset on ${targetMedia}`);
-                        } else if (buttonInfo.type === '3d-reset') {
-                            console.log(`👉 ENTER: 3d-reset on ${targetMedia}`);
-                        } else if (buttonInfo.direction) {
-                            console.log(`👉 ENTER: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia}`);
-                        } else {
-                            console.log(`👉 ENTER: ${buttonInfo.type} on ${targetMedia}`);
-                        }
+                    if (el) {
+                        // Use setTimeout to ensure visibility updates have taken effect
+                        setTimeout(() => {
+                            const buttonInfo = getButtonInfo(el);
+                            
+                            // For regular controls, only log if they're actually visible
+                            if (isElementVisible(el)) {
+                                const targetMedia = findTargetMedia(el);
+                                
+                                if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
+                                    console.log(`👉 ENTER: zoom ${buttonInfo.direction} on ${targetMedia}`);
+                                } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
+                                    console.log(`👉 ENTER: 3d-zoom ${buttonInfo.direction} on ${targetMedia}`);
+                                } else if (buttonInfo.type === 'reset') {
+                                    console.log(`👉 ENTER: reset on ${targetMedia}`);
+                                } else if (buttonInfo.type === '3d-reset') {
+                                    console.log(`👉 ENTER: 3d-reset on ${targetMedia}`);
+                                } else if (buttonInfo.direction) {
+                                    console.log(`👉 ENTER: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia}`);
+                                } else {
+                                    console.log(`👉 ENTER: ${buttonInfo.type} on ${targetMedia}`);
+                                }
+                            }
+                        }, 50); // Small delay to allow visibility updates
                     }
                 });
             });
 
             raycaster.addEventListener('raycaster-intersection-cleared', function(evt) {
                 evt.detail.elms?.forEach(el => {
-                    if (el && isElementVisible(el)) {
-                        const buttonInfo = getButtonInfo(el);
-                        const targetMedia = findTargetMedia(el);
-                        
-                        if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
-                            console.log(`👈 LEAVE: zoom ${buttonInfo.direction} on ${targetMedia}`);
-                        } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
-                            console.log(`👈 LEAVE: 3d-zoom ${buttonInfo.direction} on ${targetMedia}`);
-                        } else if (buttonInfo.type === 'reset') {
-                            console.log(`👈 LEAVE: reset on ${targetMedia}`);
-                        } else if (buttonInfo.type === '3d-reset') {
-                            console.log(`👈 LEAVE: 3d-reset on ${targetMedia}`);
-                        } else if (buttonInfo.direction) {
-                            console.log(`👈 LEAVE: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia}`);
-                        } else {
-                            console.log(`👈 LEAVE: ${buttonInfo.type} on ${targetMedia}`);
-                        }
+                    if (el) {
+                        // Use setTimeout to ensure visibility updates have taken effect
+                        setTimeout(() => {
+                            const buttonInfo = getButtonInfo(el);
+                            
+                            if (isElementVisible(el)) {
+                                const targetMedia = findTargetMedia(el);
+                                
+                                if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
+                                    console.log(`👈 LEAVE: zoom ${buttonInfo.direction} on ${targetMedia}`);
+                                } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
+                                    console.log(`👈 LEAVE: 3d-zoom ${buttonInfo.direction} on ${targetMedia}`);
+                                } else if (buttonInfo.type === 'reset') {
+                                    console.log(`👈 LEAVE: reset on ${targetMedia}`);
+                                } else if (buttonInfo.type === '3d-reset') {
+                                    console.log(`👈 LEAVE: 3d-reset on ${targetMedia}`);
+                                } else if (buttonInfo.direction) {
+                                    console.log(`👈 LEAVE: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia}`);
+                                } else {
+                                    console.log(`👈 LEAVE: ${buttonInfo.type} on ${targetMedia}`);
+                                }
+                            }
+                        }, 50); // Small delay to allow visibility updates
                     }
                 });
             });
 
-            console.log('👆 Ready - only buttons with visible self AND parent will trigger logs');
+            console.log('👆 Ready - raycast interaction initialized');
         });
     }
 })();

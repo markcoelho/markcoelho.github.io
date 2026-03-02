@@ -4,20 +4,24 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
     <script src="js/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
     <script src="js/aframe-ar.js"></script>
-    <script src="content-loader.js"></script>
     <script src="script.js"></script>
-    <script src="marker-found.js"></script>
+
+    <script src="content-loader.js"></script>
+
     <script src="raycast-interaction.js"></script>
+    <script src="navigation-creator.js"></script>
+    <script src="marker-found.js"></script>
+    <script src="navigation.js"></script>
     
     <style>
         body { margin: 0; overflow: hidden; position: fixed; width: 100%; height: 100%; font-family: monospace; }
         .a-canvas { z-index: 1 !important; position: absolute !important; }
         .a-enter-vr { z-index: 2 !important; }
     </style>
-
 </head>
 <body>
 <a-scene renderer="sortObjects: true" vr-mode-ui="enabled: true" arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
