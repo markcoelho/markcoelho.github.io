@@ -1,4 +1,4 @@
-// marker-found.js - Complete version with new ID format
+// marker-found.js - Complete version with navigation support
 (function() {
     // Store current visible marker
     let currentVisibleMarker = null;
@@ -23,6 +23,15 @@
         // Hide all rightpieces
         document.querySelectorAll('[id^="rightpiece_"]').forEach(el => {
             el.setAttribute('visible', false);
+        });
+        
+        // Hide all navigation panels and their children
+        document.querySelectorAll('[id$="_navigation"]').forEach(el => {
+            el.setAttribute('visible', false);
+            // Hide all children of navigation panel
+            el.querySelectorAll('*').forEach(child => {
+                child.setAttribute('visible', false);
+            });
         });
     }
 
@@ -110,6 +119,12 @@
                     showElementWithChildren(markerControls, `${controlsId} (controls)`);
                 }
             }
+            
+            // Show marker navigation if it exists
+            var markerNavigation = markerPiece.querySelector(`#markerpiece_${value}_navigation`);
+            if (markerNavigation) {
+                showElementWithChildren(markerNavigation, `markerpiece_${value}_navigation`);
+            }
         }
         
         // Show centerpiece
@@ -139,6 +154,12 @@
                 var centerControls = centerPiece.querySelector('#' + controlsId);
                 showElementWithChildren(centerControls, `${controlsId} (controls)`);
             }
+            
+            // Show center navigation if it exists
+            var centerNavigation = centerPiece.querySelector(`#centerpiece_${value}_navigation`);
+            if (centerNavigation) {
+                showElementWithChildren(centerNavigation, `centerpiece_${value}_navigation`);
+            }
         }
         
         // Show leftpiece
@@ -156,6 +177,12 @@
                 // Show first controls for leftpiece
                 var leftControls = leftPiece.querySelector(`#leftpiece_${value}_Controls_0`);
                 showElementWithChildren(leftControls, `leftpiece_${value}_Controls_0 (controls)`);
+            }
+            
+            // Show left navigation if it exists
+            var leftNavigation = leftPiece.querySelector(`#leftpiece_${value}_navigation`);
+            if (leftNavigation) {
+                showElementWithChildren(leftNavigation, `leftpiece_${value}_navigation`);
             }
         }
         
@@ -183,6 +210,12 @@
                 
                 var rightControls = rightPiece.querySelector('#' + controlsId);
                 showElementWithChildren(rightControls, `${controlsId} (controls)`);
+            }
+            
+            // Show right navigation if it exists
+            var rightNavigation = rightPiece.querySelector(`#rightpiece_${value}_navigation`);
+            if (rightNavigation) {
+                showElementWithChildren(rightNavigation, `rightpiece_${value}_navigation`);
             }
         }
         

@@ -12,6 +12,7 @@ const AppContent = {
             
             // Generate elements after content is loaded
             this.generateContentElements();
+            console.log('Content generated:', this.data);
             
             return this.data;
         } catch (error) {
@@ -176,7 +177,7 @@ createSideElements(containerType, items, pageIndex, scene) {
                 element.setAttribute('visible', 'false');
                 element.setAttribute('autoplay', 'false');
                 element.autoplay = false;
-                
+
                 // Create video controls if needed
                 if (item.controls === "true") {
                     controlId = `${containerId}_VideoControls_${mediaIndex}`;
@@ -513,3 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export (works in both browser and Node)
 if (typeof module !== 'undefined') module.exports = AppContent;
+
+
+
