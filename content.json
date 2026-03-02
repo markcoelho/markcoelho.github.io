@@ -8,11 +8,27 @@
       "surround_rotation": 0,
       "marker_navigation": "true",
       "central_side": [
+        
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/fullagar3d.glb",
+          "scale": 1.5,
+          "rotation": 90,
+          "audio": ""
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/0.jpg",
-          "scale": 1,
+          "scale": 3,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/3.jpg",
+          "scale": 3,
           "audio": ""
         }
       ],
@@ -73,9 +89,19 @@
         
         {
           "type": "image",
-          "controls": "false",
+          "controls": "true",
           "src": "assets/images/1.2.jpg",
           "scale": 1,
+          "audio": ""
+        }
+      ],
+      "marker": [
+        {
+          "type": "3d",
+          "controls": "true",
+          "src": "assets/models/fullagar3d.glb",
+          "scale": 1.5,
+          "rotation": 90,
           "audio": ""
         }
       ]
@@ -202,7 +228,7 @@
         {
           "type": "image",
           "controls": "true",
-          "src": "assets/images/freeboard1.jpg",
+          "src": "assets/images/freeboard1.png",
           "scale": 0.9,
           "audio": ""
         }
