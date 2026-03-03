@@ -155,6 +155,9 @@
                 allMedia.forEach(media => {
                     if (!media.id.includes('_navigation')) {
                         media.setAttribute('visible', 'false');
+
+                        if (media.tagName === 'A-VIDEO') {
+                                media.components.material.material.map.image.pause();                    }
                     }
                 });
                 
@@ -193,6 +196,7 @@
                 } else if (mediaType === '3d') {
                     controlsId = `${pieceId}_3dControls_${mediaIndex}`;
                 } else if (mediaType === 'video') {
+                    targetMedia.components.material.material.map.image.play();
                     controlsId = `${pieceId}_VideoControls_${mediaIndex}`;
                 }
                 

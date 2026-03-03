@@ -178,6 +178,11 @@ createSideElements(containerType, items, pageIndex, scene) {
                 element.setAttribute('autoplay', 'false');
                 element.autoplay = false;
 
+                // PAUSE VIDEO IMMEDIATELY
+                element.addEventListener('loadedmetadata', () => {
+                    element.components.material.material.map.image.pause();
+                });
+
                 // Create video controls if needed
                 if (item.controls === "true") {
                     controlId = `${containerId}_VideoControls_${mediaIndex}`;
@@ -342,7 +347,17 @@ createMarkerElements(items, barcodeNumber, camera) {
                     const baseWidth = item.scale ? parseFloat(item.scale) : 2;
                     element.setAttribute('width', baseWidth);
                     element.setAttribute('height', baseWidth * 9/16); // 16:9 aspect ratio
-                    
+                    element.setAttribute('render-order', '1');
+                
+                    element.setAttribute('visible', 'false');
+                    element.setAttribute('autoplay', 'false');
+                    element.autoplay = false;
+
+                    // PAUSE VIDEO IMMEDIATELY
+                    element.addEventListener('loadedmetadata', () => {
+                        element.components.material.material.map.image.pause();
+                    });
+
                     element.setAttribute('render-order', '1');
                     element.setAttribute('visible', 'false');
                     

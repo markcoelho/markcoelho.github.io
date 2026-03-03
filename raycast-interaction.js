@@ -346,19 +346,43 @@
                             // For regular controls, only log if they're actually visible
                             if (isElementVisible(el)) {
                                 const targetMedia = findTargetMedia(el);
-                                
+
                                 if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
-                                    console.log(`👉 ENTER: zoom ${buttonInfo.direction} on ${targetMedia}`);
+                                    console.log(`👉 ENTER: zoom ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
+                                    // Call controls.js function with button ID
+                                    if (window.controlsAPI) {
+                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
+                                    }
                                 } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
-                                    console.log(`👉 ENTER: 3d-zoom ${buttonInfo.direction} on ${targetMedia}`);
+                                    console.log(`👉 ENTER: 3d-zoom ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
+                                    // Call controls.js function with button ID
+                                    if (window.controlsAPI) {
+                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
+                                    }
                                 } else if (buttonInfo.type === 'reset') {
-                                    console.log(`👉 ENTER: reset on ${targetMedia}`);
+                                    console.log(`👉 ENTER: reset on ${targetMedia} (button: ${el})`);
+                                    // Call controls.js function with button ID
+                                    if (window.controlsAPI) {
+                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
+                                    }
                                 } else if (buttonInfo.type === '3d-reset') {
-                                    console.log(`👉 ENTER: 3d-reset on ${targetMedia}`);
+                                    console.log(`👉 ENTER: 3d-reset on ${targetMedia} (button: ${el})`);
+                                    // Call controls.js function with button ID
+                                    if (window.controlsAPI) {
+                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
+                                    }
                                 } else if (buttonInfo.direction) {
-                                    console.log(`👉 ENTER: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia}`);
+                                    console.log(`👉 ENTER: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
+                                    // Call controls.js function with button ID
+                                    if (window.controlsAPI) {
+                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
+                                    }
                                 } else {
-                                    console.log(`👉 ENTER: ${buttonInfo.type} on ${targetMedia}`);
+                                    console.log(`👉 ENTER: ${buttonInfo.type} on ${targetMedia} (button: ${el})`);
+                                    // Call controls.js function with button ID
+                                    if (window.controlsAPI) {
+                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
+                                    }
                                 }
                             }
                         }, 50); // Small delay to allow visibility updates
@@ -375,19 +399,20 @@
                             
                             if (isElementVisible(el)) {
                                 const targetMedia = findTargetMedia(el);
+                                const buttonId = el.id;
                                 
                                 if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
-                                    console.log(`👈 LEAVE: zoom ${buttonInfo.direction} on ${targetMedia}`);
+                                    console.log(`👈 LEAVE: zoom ${buttonInfo.direction} on ${targetMedia} (button: ${buttonId})`);
                                 } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
-                                    console.log(`👈 LEAVE: 3d-zoom ${buttonInfo.direction} on ${targetMedia}`);
+                                    console.log(`👈 LEAVE: 3d-zoom ${buttonInfo.direction} on ${targetMedia} (button: ${buttonId})`);
                                 } else if (buttonInfo.type === 'reset') {
-                                    console.log(`👈 LEAVE: reset on ${targetMedia}`);
+                                    console.log(`👈 LEAVE: reset on ${targetMedia} (button: ${buttonId})`);
                                 } else if (buttonInfo.type === '3d-reset') {
-                                    console.log(`👈 LEAVE: 3d-reset on ${targetMedia}`);
+                                    console.log(`👈 LEAVE: 3d-reset on ${targetMedia} (button: ${buttonId})`);
                                 } else if (buttonInfo.direction) {
-                                    console.log(`👈 LEAVE: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia}`);
+                                    console.log(`👈 LEAVE: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia} (button: ${buttonId})`);
                                 } else {
-                                    console.log(`👈 LEAVE: ${buttonInfo.type} on ${targetMedia}`);
+                                    console.log(`👈 LEAVE: ${buttonInfo.type} on ${targetMedia} (button: ${buttonId})`);
                                 }
                             }
                         }, 50); // Small delay to allow visibility updates

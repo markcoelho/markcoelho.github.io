@@ -1,4 +1,4 @@
-// marker-found.js - Complete version with navigation support
+// marker-found.js - Complete version with navigation support and video playback
 (function() {
     // Store current visible marker
     let currentVisibleMarker = null;
@@ -8,21 +8,37 @@
         // Hide all markers
         document.querySelectorAll('[id^="markerpiece_"]').forEach(el => {
             el.setAttribute('visible', false);
+            if(el.tagName === 'A-VIDEO'){
+                console.log("video hidden   📸 " + el.id);
+                el.components.material.material.map.image.pause();
+            }
         });
         
         // Hide all centerpieces
         document.querySelectorAll('[id^="centerpiece_"]').forEach(el => {
             el.setAttribute('visible', false);
+            if(el.tagName === 'A-VIDEO'){
+                console.log("video hidden   📸 " + el.id);
+                el.components.material.material.map.image.pause();
+            }
         });
         
         // Hide all leftpieces
         document.querySelectorAll('[id^="leftpiece_"]').forEach(el => {
             el.setAttribute('visible', false);
+            if(el.tagName === 'A-VIDEO'){
+                console.log("video hidden   📸 " + el.id);
+                el.components.material.material.map.image.pause();
+            }
         });
         
         // Hide all rightpieces
         document.querySelectorAll('[id^="rightpiece_"]').forEach(el => {
             el.setAttribute('visible', false);
+            if(el.tagName === 'A-VIDEO'){
+                console.log("video hidden   📸 " + el.id);
+                el.components.material.material.map.image.pause();
+            }
         });
         
         // Hide all navigation panels and their children
@@ -100,11 +116,19 @@
                 if (firstMarkerMedia) {
                     firstMarkerMedia.setAttribute('visible', true);
                     console.log(`  📸 ${firstMarkerMedia.id}`);
+
+                    // Play video if it's a video element
+                    if (firstMarkerMedia.tagName === 'A-VIDEO') {
+                        firstMarkerMedia.components.material.material.map.image.play();
+                    }
                     
                     // Find and show the matching controls for the first media
                     var mediaType = 'image';
-                    if (firstMarkerMedia.tagName === 'A-VIDEO') mediaType = 'video';
-                    else if (firstMarkerMedia.tagName === 'A-ENTITY' || firstMarkerMedia.hasAttribute('gltf-model')) mediaType = '3d';
+                    if (firstMarkerMedia.tagName === 'A-VIDEO'){
+                        mediaType = 'video';
+                    } else if (firstMarkerMedia.tagName === 'A-ENTITY' || firstMarkerMedia.hasAttribute('gltf-model')) {
+                        mediaType = '3d';
+                    }
                     
                     var controlsId;
                     if (mediaType === 'image') {
@@ -147,6 +171,8 @@
                     controlsId = `centerpiece_${value}_Controls_${mediaIndex}`;
                 } else if (firstCenterMedia.tagName === 'A-VIDEO') {
                     controlsId = `centerpiece_${value}_VideoControls_${mediaIndex}`;
+                    // Play video
+                    firstCenterMedia.components.material.material.map.image.play();
                 } else if (firstCenterMedia.tagName === 'A-ENTITY' || firstCenterMedia.hasAttribute('gltf-model')) {
                     controlsId = `centerpiece_${value}_3dControls_${mediaIndex}`;
                 }
@@ -168,15 +194,28 @@
             leftPiece.setAttribute('visible', true);
             console.log(`⬅️ leftpiece_${value}`);
             
-            // Find first image in leftpiece
+            // Find first media in leftpiece
             var firstLeftMedia = findFirstMediaElement(leftPiece);
             if (firstLeftMedia) {
                 firstLeftMedia.setAttribute('visible', true);
                 console.log(`  📸 ${firstLeftMedia.id}`);
                 
-                // Show first controls for leftpiece
-                var leftControls = leftPiece.querySelector(`#leftpiece_${value}_Controls_0`);
-                showElementWithChildren(leftControls, `leftpiece_${value}_Controls_0 (controls)`);
+                // Determine media type and show matching controls
+                var mediaIndex = '0';
+                var controlsId;
+                
+                if (firstLeftMedia.tagName === 'A-IMAGE') {
+                    controlsId = `leftpiece_${value}_Controls_${mediaIndex}`;
+                } else if (firstLeftMedia.tagName === 'A-VIDEO') {
+                    controlsId = `leftpiece_${value}_VideoControls_${mediaIndex}`;
+                    // Play video
+                    firstLeftMedia.components.material.material.map.image.play();
+                } else if (firstLeftMedia.tagName === 'A-ENTITY' || firstLeftMedia.hasAttribute('gltf-model')) {
+                    controlsId = `leftpiece_${value}_3dControls_${mediaIndex}`;
+                }
+                
+                var leftControls = leftPiece.querySelector('#' + controlsId);
+                showElementWithChildren(leftControls, `${controlsId} (controls)`);
             }
             
             // Show left navigation if it exists
@@ -206,6 +245,8 @@
                     controlsId = `rightpiece_${value}_Controls_${mediaIndex}`;
                 } else if (firstRightMedia.tagName === 'A-VIDEO') {
                     controlsId = `rightpiece_${value}_VideoControls_${mediaIndex}`;
+                    // Play video
+                    firstRightMedia.components.material.material.map.image.play();
                 }
                 
                 var rightControls = rightPiece.querySelector('#' + controlsId);
@@ -239,9 +280,19 @@
             marker.addEventListener('markerLost', function() {
                 console.log(`\n👋 Marker ${value} lost`);
                 if (currentVisibleMarker === value) {
-                    // Optional: hide content when marker is lost
-                    // Uncomment next line if you want to hide when marker disappears
-                    // hideAllContent();
+                    // Find and pause any videos on this marker
+                    const markerPiece = document.getElementById('markerpiece_' + value);
+                    if (markerPiece) {
+                        const videos = markerPiece.querySelectorAll('a-video');
+                        videos.forEach(video => {
+                            try {
+                                video.components.material.material.map.image.pause();
+                                console.log(`⏸️ Paused video on marker ${value}: ${video.id}`);
+                            } catch(e) {
+                                console.warn(`Could not pause video: ${e}`);
+                            }
+                        });
+                    }
                     currentVisibleMarker = null;
                 }
             });
