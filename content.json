@@ -195,6 +195,13 @@
       ],
       "right_side": [
         {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/0.jpg",
+          "scale": 0.5,
+          "audio": ""
+        },
+        {
           "type": "video",
           "controls": "true",
           "src": "assets/video/video-test.mp4",
@@ -204,10 +211,10 @@
       ],
       "marker": [
         {
-          "type": "image",
+          "type": "video",
           "controls": "true",
-          "src": "assets/images/0.jpg",
-          "scale": 0.5,
+          "src": "assets/video/video-test.mp4",
+          "scale": 0.6,
           "audio": ""
         }
       ]
