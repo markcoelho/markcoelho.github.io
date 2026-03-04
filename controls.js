@@ -94,10 +94,16 @@
     function handleReset(mediaElement) {
         console.log(`🔄 Reset ${mediaElement.id}`);
         
-        // Reset position and scale
+        // Get original rotation and scale from data attributes
+        const originalRotation = mediaElement.getAttribute('data-original-rotation') || 0;
+        const originalScale = mediaElement.getAttribute('data-original-scale') || 1;
+        
+        // Reset position, and use original rotation and scale
         mediaElement.setAttribute('position', {x: 0, y: 0, z: 0});
-        mediaElement.setAttribute('scale', {x: 1, y: 1, z: 1});
-        mediaElement.setAttribute('rotation', {x: 0, y: 0, z: 0});
+        mediaElement.setAttribute('scale', {x: originalScale, y: originalScale, z: originalScale});
+        mediaElement.setAttribute('rotation', {x: 0, y: originalRotation, z: 0});
+        
+        console.log(`  Reset to original rotation: ${originalRotation}°, original scale: ${originalScale}`);
     }
     
     function handleScroller(mediaElement, direction) {

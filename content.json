@@ -5,28 +5,13 @@
       "barcode_number": 0,
       "narration": "assets/audio/pag 1.mp3",
       "surround": "",
-      "surround_rotation": 0,
+      "surround_rotation": 90,
       "marker_navigation": "true",
       "central_side": [
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/0.jpg",
-          "scale": 3,
-          "audio": ""
-        },
-        {
-          "type": "3d",
-          "controls": "true",
-          "src": "assets/models/fullagar3d.glb",
-          "scale": 1.5,
-          "rotation": 90,
-          "audio": ""
-        },
-        {
-          "type": "image",
-          "controls": "true",
-          "src": "assets/images/3.jpg",
           "scale": 3,
           "audio": ""
         }
@@ -55,8 +40,9 @@
           "controls": "true",
           "src": "assets/models/fullagar3d.glb",
           "scale": 1.5,
-          "rotation": 90,
-          "audio": ""
+          "rotation": 0,
+          "audio": "",
+          "auto_rotate": true
         }
       ]
     },
@@ -64,7 +50,7 @@
       "barcode_number": 1,
       "narration": "assets/audio/pag 2.mp3",
       "surround": "",
-      "surround_rotation": 0,
+      "surround_rotation": 90,
       "marker_navigation": "false",
       "central_side": [
         {
@@ -96,19 +82,13 @@
       ],
       "marker": [
         {
-          "type": "3d",
-          "controls": "true",
-          "src": "assets/models/fullagar3d.glb",
-          "scale": 1.5,
-          "rotation": 90,
-          "audio": ""
         }
       ]
     },
     {
       "barcode_number": 2,
       "narration": "assets/audio/pag 3.mp3",
-      "surround": "assets/360/360-video-test.mp4",
+      "surround": "",
       "surround_rotation": 0,
       "marker_navigation": "",
       "central_side": [
@@ -133,7 +113,8 @@
           "src": "assets/models/ship_example.glb",
           "scale": 0.02,
           "rotation": 0,
-          "audio": ""
+          "audio": "",
+          "auto_rotate": false
         }
       ]
     },
