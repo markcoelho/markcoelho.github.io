@@ -14,6 +14,7 @@
             }
         });
         
+        
         // Hide all centerpieces
         document.querySelectorAll('[id^="centerpiece_"]').forEach(el => {
             el.setAttribute('visible', false);
@@ -49,6 +50,34 @@
                 child.setAttribute('visible', false);
             });
         });
+        
+        // Hide all surround elements
+        document.querySelectorAll('[id^="surround_"]').forEach(el => {
+            el.setAttribute('visible', false);
+            // If it's a videosphere, pause it
+            if (el.tagName === 'A-VIDEOSPHERE') {
+                try {
+                    el.components.material.material.map.image.pause();
+                    console.log(`⏸️ Paused surround video: ${el.id}`);
+                } catch(e) {
+                    console.warn(`Could not pause surround video: ${e}`);
+                }
+            }
+        });
+    }
+
+    function stopAllNarration() {
+            const allNarrations = document.querySelectorAll('[id^="narration_"]');
+            allNarrations.forEach(narration => {
+                try {
+                    if (narration.components.sound && narration.components.sound.isPlaying) {
+                        narration.components.sound.stopSound();
+                        console.log(`⏹️ Stopped narration: ${narration.id}`);
+                    }
+                } catch(e) {
+                    // Ignore errors
+                }
+            });
     }
 
     // Helper function to show an element and all its children
@@ -96,9 +125,45 @@
     // Show content for specific marker value
     function showContentForMarker(value) {
         console.log(`\n=== MARKER ${value} FOUND ===`);
+
+        if (currentVisibleMarker === value) {
+            console.log(`⏭️ Marker ${value} already visible, ignoring`);
+            return;
+        }
         
+        stopAllNarration();
+
         // Hide all content first
         hideAllContent();
+
+
+            const narrationElement = document.getElementById(`narration_${value}`);
+            if (narrationElement) {
+                try {
+                    narrationElement.components.sound.playSound();
+                    console.log(`🔊 Playing narration for marker ${value}`);
+                } catch(e) {
+                    console.warn(`Could not play narration for marker ${value}: ${e}`);
+                }
+            }
+
+        
+        // Show surround element for this marker if it exists
+        const surroundElement = document.getElementById(`surround_${value}`);
+        if (surroundElement) {
+            surroundElement.setAttribute('visible', true);
+            console.log(`🌐 surround_${value} visible`);
+            
+            // If it's a videosphere, play it
+            if (surroundElement.tagName === 'A-VIDEOSPHERE') {
+                try {
+                    surroundElement.components.material.material.map.image.play();
+                    console.log(`▶️ Playing surround video: surround_${value}`);
+                } catch(e) {
+                    console.warn(`Could not play surround video: ${e}`);
+                }
+            }
+        }
         
         // Show marker piece
         var markerPiece = document.getElementById('markerpiece_' + value);
@@ -293,7 +358,6 @@
                             }
                         });
                     }
-                    currentVisibleMarker = null;
                 }
             });
         });

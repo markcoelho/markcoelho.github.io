@@ -56,6 +56,15 @@ const AppContent = {
         
         // Generate elements for each page
         this.data.pages.forEach((page, index) => {
+                    // Generate surround element if present
+        if (page.surround) {
+            this.createSurroundElements(page.surround, page.surround_rotation, index, scene);
+        }
+
+            if (page.narration) {
+                this.createNarrationAudio(page.narration, index, scene);
+            }
+
             // Generate centerpiece elements
             if (page.central_side && page.central_side.length > 0) {
                 this.createSideElements('centerpiece', page.central_side, index, scene);
@@ -76,6 +85,62 @@ const AppContent = {
         });
         
         console.log('Content elements generated');
+    },
+
+    createNarrationAudio(audioSrc, pageIndex, scene) {
+        if (!audioSrc) return null;
+        
+        // Create audio entity
+        const audio = document.createElement('a-entity');
+        audio.id = `narration_${pageIndex}`;
+        audio.setAttribute('sound', `src: ${audioSrc}; autoplay: false; volume: 1`);
+        audio.setAttribute('visible', 'false'); // Hide the audio entity
+        
+        scene.appendChild(audio);
+        console.log(`Created narration audio for page ${pageIndex}: ${audioSrc}`);
+        
+        return audio;
+    },
+
+    createSurroundElements(surroundSrc, surroundRotation, pageIndex, scene) {
+        if (!surroundSrc) return null;
+        
+        // Determine if it's a video or image based on file extension
+        const isVideo = surroundSrc.match(/\.(mp4|webm|ogg)$/i);
+        let surroundElement;
+        
+        if (isVideo) {
+            // Create videosphere
+            surroundElement = document.createElement('a-videosphere');
+            surroundElement.id = `surround_${pageIndex}`;
+            surroundElement.setAttribute('src', surroundSrc);
+            surroundElement.setAttribute('rotation', `0 ${surroundRotation || 0} 0`);  // ✅ This sets the Y rotation
+            surroundElement.setAttribute('radius', '40');
+            surroundElement.setAttribute('visible', 'false');
+            
+            // Pause video immediately
+            surroundElement.addEventListener('loadedmetadata', () => {
+                try {
+                    surroundElement.components.material.material.map.image.pause();
+                } catch(e) {
+                    console.warn('Could not pause surround video:', e);
+                }
+            });
+        } else {
+            // Create sphere for 360 image
+            surroundElement = document.createElement('a-sphere');
+            surroundElement.id = `surround_${pageIndex}`;
+            surroundElement.setAttribute('src', surroundSrc);
+            surroundElement.setAttribute('rotation', `0 ${surroundRotation || 0} 0`);  // ✅ This sets the Y rotation
+            surroundElement.setAttribute('radius', '40');
+            surroundElement.setAttribute('material', 'shader: flat; side: back');
+            surroundElement.setAttribute('visible', 'false');
+        }
+        
+        scene.appendChild(surroundElement);
+        console.log(`Created surround element for page ${pageIndex}: ${surroundSrc} with rotation: ${surroundRotation || 0}°`);
+        
+        return surroundElement;
     },
     
     // Create elements for centerpiece, leftpiece, rightpiece
@@ -207,18 +272,27 @@ createSideElements(containerType, items, pageIndex, scene) {
                 mediaIndex = modelCounter++;
                 element = document.createElement('a-entity');
                 element.id = `${containerId}_3d_${mediaIndex}`;
-                // Set gltf-model src
                 element.setAttribute('gltf-model', item.src);
-                // Apply scale properly - 3D models use uniform scale
+                
+                // Store original rotation and scale as data attributes
+                const originalRotation = item.rotation || 0;
+                const originalScale = item.scale || 1;
+                element.setAttribute('data-original-rotation', originalRotation);
+                element.setAttribute('data-original-scale', originalScale);
+                
+                // Apply scale
                 if (item.scale) {
                     element.setAttribute('scale', `${item.scale} ${item.scale} ${item.scale}`);
                 } else {
                     element.setAttribute('scale', '1 1 1');
                 }
-                // Apply rotation if present
-                if (item.rotation) {
-                    element.setAttribute('rotation', `0 ${item.rotation} 0`);
-                }
+                // Apply rotation
+                element.setAttribute('rotation', `0 ${originalRotation} 0`);
+
+                if (item.auto_rotate === true || item.auto_rotate === "true") {
+                element.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
+    }
+                
                 element.setAttribute('render-order', '1');
                 element.setAttribute('visible', 'false');
                 
@@ -385,18 +459,27 @@ createMarkerElements(items, barcodeNumber, camera) {
                     mediaIndex = modelCounter++;
                     element = document.createElement('a-entity');
                     element.id = `marker_${barcodeNumber}_3d_${mediaIndex}`;
-                    // Set gltf-model src
                     element.setAttribute('gltf-model', item.src);
-                    // Apply scale properly - 3D models use uniform scale
+                    
+                    // Store original rotation and scale as data attributes
+                    const originalRotation = item.rotation || 0;
+                    const originalScale = item.scale || 1;
+                    element.setAttribute('data-original-rotation', originalRotation);
+                    element.setAttribute('data-original-scale', originalScale);
+                    
+                    // Apply scale
                     if (item.scale) {
                         element.setAttribute('scale', `${item.scale} ${item.scale} ${item.scale}`);
                     } else {
                         element.setAttribute('scale', '1 1 1');
                     }
-                    // Apply rotation if present
-                    if (item.rotation) {
-                        element.setAttribute('rotation', `0 ${item.rotation} 0`);
+                    // Apply rotation
+                    element.setAttribute('rotation', `0 ${originalRotation} 0`);
+
+                    if (item.auto_rotate === true || item.auto_rotate === "true") {
+                        element.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
                     }
+                    
                     element.setAttribute('render-order', '1');
                     element.setAttribute('visible', 'false');
                     
@@ -455,6 +538,7 @@ createGeneralControls(config) {
     controlsPlane.setAttribute('width', '1.8');
     controlsPlane.setAttribute('height', '0.4');
     controlsPlane.setAttribute('material', 'depthTest: false;');
+    controlsPlane.setAttribute('render-order', '2'); 
     
     // Create all buttons from the configuration array
     buttons.forEach(buttonConfig => {
@@ -473,7 +557,7 @@ createGeneralControls(config) {
         
         button.setAttribute('position', buttonConfig.position);
         button.setAttribute('scale', '0.18 0.18 0.18');
-        button.setAttribute('material', 'depthTest: false;');
+        button.setAttribute('render-order', '3'); 
         
         // Set data attributes
         if (buttonConfig.direction) {

@@ -349,39 +349,37 @@
 
                                 if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
                                     console.log(`👉 ENTER: zoom ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
-                                    // Call controls.js function with button ID
-                                    if (window.controlsAPI) {
-                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
-                                    }
+                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
+                                    el.removeAttribute('data-raycastable'); 
+                                    setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
                                 } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
                                     console.log(`👉 ENTER: 3d-zoom ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
-                                    // Call controls.js function with button ID
-                                    if (window.controlsAPI) {
-                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
-                                    }
+                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
+                                    el.removeAttribute('data-raycastable'); 
+                                    setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
                                 } else if (buttonInfo.type === 'reset') {
                                     console.log(`👉 ENTER: reset on ${targetMedia} (button: ${el})`);
-                                    // Call controls.js function with button ID
-                                    if (window.controlsAPI) {
-                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
-                                    }
+                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
+                                    el.removeAttribute('data-raycastable'); 
+                                    setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
                                 } else if (buttonInfo.type === '3d-reset') {
                                     console.log(`👉 ENTER: 3d-reset on ${targetMedia} (button: ${el})`);
-                                    // Call controls.js function with button ID
-                                    if (window.controlsAPI) {
-                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
-                                    }
+                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
+                                    el.removeAttribute('data-raycastable'); 
+                                    setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
                                 } else if (buttonInfo.direction) {
                                     console.log(`👉 ENTER: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
-                                    // Call controls.js function with button ID
-                                    if (window.controlsAPI) {
-                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
+                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
+                                    if (buttonInfo.type === 'scroller' || buttonInfo.type === 'roller') {
+                                        el.removeAttribute('data-raycastable'); 
+                                        setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
                                     }
                                 } else {
                                     console.log(`👉 ENTER: ${buttonInfo.type} on ${targetMedia} (button: ${el})`);
-                                    // Call controls.js function with button ID
-                                    if (window.controlsAPI) {
-                                        window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
+                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
+                                    if (buttonInfo.type === 'scroller' || buttonInfo.type === 'roller') {
+                                        el.removeAttribute('data-raycastable'); 
+                                        setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
                                     }
                                 }
                             }
