@@ -577,6 +577,7 @@ createGeneralControls(config) {
             }
         }
         button.setAttribute('gaze-interaction-handler', gazeHandler);
+        button.setAttribute('raycastable', '');
         
         controlsPlane.appendChild(button);
     });

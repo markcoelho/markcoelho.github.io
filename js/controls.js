@@ -23,9 +23,8 @@
         scene.addEventListener('loaded', function() {
             console.log('✅ Scene loaded, controls API ready');
             
-            // Create the public API
-            window.controlsAPI = {
-                handleButtonAction: function(mediaId, actionType, direction, button) {
+            
+                 window.handleButtonAction = function(mediaId, actionType, direction, button) {
                     console.log(`🎮 Control action: ${actionType} ${direction || ''} on ${mediaId} (button: ${button})`);
                     
                     // Find the media element
@@ -67,7 +66,7 @@
                             console.log(`Unknown action type: ${actionType}`);
                     }
                 }
-            };
+            
             
             console.log('✅ Controls API ready - window.controlsAPI available');
         });
