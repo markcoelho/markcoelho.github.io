@@ -263,7 +263,6 @@
                 if (!isElementVisible(el)) return;
                 
                     const dir = info.direction ? ` ${info.direction}` : '';
-                    console.log(`👉 ENTER: ${info.type}${dir} on ${target} (button: ${el})`);
                     
                     handleButtonAction(target, info.type, info.direction || null, el);
                     
@@ -285,35 +284,7 @@
                     });
                 });
 
-            raycaster.addEventListener('raycaster-intersection-cleared', function(evt) {
-                evt.detail.elms?.forEach(el => {
-                    if (el) {
-                        // Use setTimeout to ensure visibility updates have taken effect
-                        setTimeout(() => {
-                            const buttonInfo = getButtonInfo(el);
-                            
-                            if (isElementVisible(el)) {
-                                const targetMedia = findTargetMedia(el);
-                                const buttonId = el.id;
-                                
-                                if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
-                                    console.log(`👈 LEAVE: zoom ${buttonInfo.direction} on ${targetMedia} (button: ${buttonId})`);
-                                } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
-                                    console.log(`👈 LEAVE: 3d-zoom ${buttonInfo.direction} on ${targetMedia} (button: ${buttonId})`);
-                                } else if (buttonInfo.type === 'reset') {
-                                    console.log(`👈 LEAVE: reset on ${targetMedia} (button: ${buttonId})`);
-                                } else if (buttonInfo.type === '3d-reset') {
-                                    console.log(`👈 LEAVE: 3d-reset on ${targetMedia} (button: ${buttonId})`);
-                                } else if (buttonInfo.direction) {
-                                    console.log(`👈 LEAVE: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia} (button: ${buttonId})`);
-                                } else {
-                                    console.log(`👈 LEAVE: ${buttonInfo.type} on ${targetMedia} (button: ${buttonId})`);
-                                }
-                            }
-                        }, 50); // Small delay to allow visibility updates
-                    }
-                });
-            });
+            
 
             console.log('👆 Ready - raycast interaction initialized');
         });

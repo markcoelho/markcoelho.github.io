@@ -144,8 +144,6 @@ const AppContent = {
     },
     
     // Create elements for centerpiece, leftpiece, rightpiece
-    // Create elements for centerpiece, leftpiece, rightpiece
-// Create elements for centerpiece, leftpiece, rightpiece
 createSideElements(containerType, items, pageIndex, scene) {
     // Filter out invalid items first - only filter if we actually have items with type and src
     const validItems = items.filter(item => item && item.type && item.src);
@@ -170,7 +168,7 @@ createSideElements(containerType, items, pageIndex, scene) {
     container.id = containerId;
     container.setAttribute('position', position);
     container.setAttribute('rotation', rotation);
-    container.setAttribute('visible', 'false');
+    container.setAttribute('visible', 'false'); // Container starts invisible
     
     // Track counters for each media type
     let imageCounter = 0;
@@ -185,7 +183,9 @@ createSideElements(containerType, items, pageIndex, scene) {
         
         switch(item.type) {
             case 'image':
-                mediaIndex = imageCounter++;
+                mediaIndex = imageCounter;
+                imageCounter++;
+                
                 element = document.createElement('a-image');
                 element.id = `${containerId}_image_${mediaIndex}`;
                 element.setAttribute('src', item.src);
@@ -202,17 +202,23 @@ createSideElements(containerType, items, pageIndex, scene) {
                 img.src = item.src;
                 
                 element.setAttribute('render-order', '1');
-                element.setAttribute('visible', 'false');
+                
+                // Only the FIRST image (index 0) gets NO visible attribute
+                // All other images get visible="false"
+                if (mediaIndex > 0) {
+                    element.setAttribute('visible', 'false');
+                }
+                // mediaIndex === 0 gets NO visible attribute
                 
                 // Create image controls if needed
                 if (item.controls === "true") {
                     controlId = `${containerId}_Controls_${mediaIndex}`;
                     const imageControls = this.createGeneralControls({
                         id: controlId,
-                        prefix: containerType,
                         containerId: containerId,
                         suffix: mediaIndex,
                         type: 'image',
+                        isFirstOfType: (mediaIndex === 0), // Pass this flag
                         buttons: [
                             { src: 'reset.png', class: 'reset', position: '-0.7 0 0.1', action: 'reset', fuseTimeout: 1000 },
                             { src: 'up.png', class: 'scroller', position: '0 0.1 0.1', direction: 'up' },
@@ -228,7 +234,9 @@ createSideElements(containerType, items, pageIndex, scene) {
                 break;
                 
             case 'video':
-                mediaIndex = videoCounter++;
+                mediaIndex = videoCounter;
+                videoCounter++;
+                
                 element = document.createElement('a-video');
                 element.id = `${containerId}_video_${mediaIndex}`;
                 element.setAttribute('src', item.src);
@@ -239,9 +247,10 @@ createSideElements(containerType, items, pageIndex, scene) {
                 element.setAttribute('height', baseWidth * 9/16); // 16:9 aspect ratio
                 
                 element.setAttribute('render-order', '1');
-                element.setAttribute('visible', 'false');
                 element.setAttribute('autoplay', 'false');
-                element.autoplay = false;
+
+                // ALL videos get visible="false" (only the first image should be visible initially)
+                element.setAttribute('visible', 'false');
 
                 // PAUSE VIDEO IMMEDIATELY
                 element.addEventListener('loadedmetadata', () => {
@@ -253,10 +262,10 @@ createSideElements(containerType, items, pageIndex, scene) {
                     controlId = `${containerId}_VideoControls_${mediaIndex}`;
                     const videoControls = this.createGeneralControls({
                         id: controlId,
-                        prefix: containerType,
                         containerId: containerId,
                         suffix: mediaIndex,
                         type: 'video',
+                        isFirstOfType: false, // All video controls get visible="false"
                         buttons: [
                             { src: 'reset.png', class: 'restart', position: '-0.7 0 0.1', action: 'restart', fuseTimeout: 1000 },
                             { src: 'mute.png', class: 'mute', position: '-0.2 0 0.1', action: 'mute', fuseTimeout: 1000 },
@@ -269,7 +278,9 @@ createSideElements(containerType, items, pageIndex, scene) {
                 break;
                 
             case '3d':
-                mediaIndex = modelCounter++;
+                mediaIndex = modelCounter;
+                modelCounter++;
+                
                 element = document.createElement('a-entity');
                 element.id = `${containerId}_3d_${mediaIndex}`;
                 element.setAttribute('gltf-model', item.src);
@@ -291,9 +302,11 @@ createSideElements(containerType, items, pageIndex, scene) {
 
                 if (item.auto_rotate === true || item.auto_rotate === "true") {
                 element.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
-    }
+                }
                 
                 element.setAttribute('render-order', '1');
+                
+                // ALL 3D models get visible="false" (only the first image should be visible initially)
                 element.setAttribute('visible', 'false');
                 
                 // Create 3D controls if needed
@@ -301,10 +314,10 @@ createSideElements(containerType, items, pageIndex, scene) {
                     controlId = `${containerId}_3dControls_${mediaIndex}`;
                     const modelControls = this.createGeneralControls({
                         id: controlId,
-                        prefix: containerType,
                         containerId: containerId,
                         suffix: mediaIndex,
                         type: '3d',
+                        isFirstOfType: false, // All 3D controls get visible="false"
                         buttons: [
                             { src: 'reset.png', class: '3dreset', position: '-0.7 0 0.1', action: '3dreset', fuseTimeout: 1000 },
                             { src: 'up.png', class: 'roller', position: '0 0.1 0.1', direction: 'up' },
@@ -526,19 +539,26 @@ createMarkerElements(items, barcodeNumber, camera) {
 },
     
     // GENERAL FUNCTION to create controls - replaces all the duplicate create*Controls functions
+// GENERAL FUNCTION to create controls
 createGeneralControls(config) {
-    const { id, prefix, containerId, suffix, type, buttons } = config;
+    const { id, containerId, suffix, type, isFirstOfType, buttons } = config;
     
     const controlsPlane = document.createElement('a-plane');
     controlsPlane.id = id;
-    controlsPlane.setAttribute('visible', 'false');
     controlsPlane.setAttribute('opacity', '0');
     controlsPlane.setAttribute('position', '0 -1.8 0.1');
     controlsPlane.setAttribute('rotation', '0 0 0');
     controlsPlane.setAttribute('width', '1.8');
     controlsPlane.setAttribute('height', '0.4');
     controlsPlane.setAttribute('material', 'depthTest: false;');
-    controlsPlane.setAttribute('render-order', '2'); 
+    controlsPlane.setAttribute('render-order', '2');
+    
+    // Only the FIRST image controls (index 0) get NO visible attribute
+    // All other controls get visible="false"
+    if (!isFirstOfType) {
+        controlsPlane.setAttribute('visible', 'false');
+    }
+    // isFirstOfType === true gets NO visible attribute
     
     // Create all buttons from the configuration array
     buttons.forEach(buttonConfig => {
@@ -550,7 +570,7 @@ createGeneralControls(config) {
             button.setAttribute('class', buttonConfig.class);
         }
         
-        // Set ID if direction is provided - NOW USES containerId
+        // Set ID if direction is provided
         if (buttonConfig.direction) {
             button.setAttribute('id', `${containerId}_${type}_${buttonConfig.direction}_${suffix}`);
         }

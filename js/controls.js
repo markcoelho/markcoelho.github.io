@@ -24,9 +24,7 @@
             console.log('✅ Scene loaded, controls API ready');
             
             
-                 window.handleButtonAction = function(mediaId, actionType, direction, button) {
-                    console.log(`🎮 Control action: ${actionType} ${direction || ''} on ${mediaId} (button: ${button})`);
-                    
+                 window.handleButtonAction = function(mediaId, actionType, direction, button) {                    
                     // Find the media element
                     const mediaElement = document.getElementById(mediaId);
                     if (!mediaElement) {
