@@ -23,83 +23,7 @@
             return;
         }
 
-        scene.addEventListener('loaded', function() {
-            console.log('✅ Scene loaded, setting up raycast listeners');
-            
-            function addRaycastableAttributes() {
-                console.log('🔧 Adding raycastable attributes to all children of Controls containers...');
-                
-                // Find all elements with ID containing "Controls"
-                const controlContainers = document.querySelectorAll('[id*="Controls"]');
-                console.log(`📦 Found ${controlContainers.length} control containers`);
-                
-                let totalCount = 0;
-                
-                // Add data-raycastable to every child of each Controls container
-                controlContainers.forEach(container => {
-                    const children = container.children;
-                    Array.from(children).forEach(child => {
-                        child.setAttribute('data-raycastable', '');
-                        totalCount++;
-                    });
-                    console.log(`  ${container.id}: added to ${children.length} children`);
-                });
-            }                                       
-            
-            // Run initially and watch for new elements
-            setTimeout(() => {
-                addRaycastableAttributes();
-            }, 3000); // Delay to ensure all elements are present
-            
-            // Watch for DOM changes to add attribute to new elements
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    mutation.addedNodes.forEach(function(node) {
-                        if (node.nodeType === 1) { // Element node
-                            // Check if this element or its children are interactive
-                            if (node.matches) {
-                                // Valid class selectors (no classes starting with numbers)
-                                if (node.matches('.zoom-button, .scroller, .roller, .marker-zoom-button, .marker-scroller, .marker-roller, .reset, .restart, .mute, .fast-backward, .fast-forward, .model-zoom-button')) {
-                                    node.setAttribute('data-raycastable', '');
-                                    console.log('Added raycastable to:', node.className);
-                                }
-                                // Use attribute selector for classes containing 3dreset
-                                if (node.getAttribute && node.getAttribute('class')?.includes('3dreset')) {
-                                    node.setAttribute('data-raycastable', '');
-                                }
-                                // Check if it's a navigation thumbnail
-                                if (node.id && node.id.includes('_navigation')) {
-                                    node.querySelectorAll('a-image').forEach(child => {
-                                        child.setAttribute('data-raycastable', '');
-                                    });
-                                }
-                            }
-                            
-                            // Check children with valid selectors
-                            if (node.querySelectorAll) {
-                                const children = node.querySelectorAll('.zoom-button, .scroller, .roller, .marker-zoom-button, .marker-scroller, .marker-roller, .reset, .restart, .mute, .fast-backward, .fast-forward, .model-zoom-button');
-                                children.forEach(child => {
-                                    child.setAttribute('data-raycastable', '');
-                                });
-                                
-                                // Check for elements with class containing 3dreset
-                                const resetChildren = node.querySelectorAll('[class*="3dreset"]');
-                                resetChildren.forEach(child => {
-                                    child.setAttribute('data-raycastable', '');
-                                });
-                                
-                                // Check for navigation thumbnails
-                                const navChildren = node.querySelectorAll('[id$="_navigation"] a-image');
-                                navChildren.forEach(child => {
-                                    child.setAttribute('data-raycastable', '');
-                                });
-                            }
-                        }
-                    });
-                });
-            });
-            
-            observer.observe(document.body, { childList: true, subtree: true });
+        scene.addEventListener('loaded', function() {               
             
             // Get the raycaster entity
             const raycaster = document.getElementById('raycaster');
@@ -335,58 +259,31 @@
                 return mediaId;
             }
 
-            raycaster.addEventListener('raycaster-intersection', function(evt) {
-                evt.detail.intersections.forEach(intersection => {
-                    const el = intersection.object.el;
-                    if (el) {
-                        // Use setTimeout to ensure visibility updates have taken effect
-                        setTimeout(() => {
-                            const buttonInfo = getButtonInfo(el);
-                            
-                            // For regular controls, only log if they're actually visible
-                            if (isElementVisible(el)) {
-                                const targetMedia = findTargetMedia(el);
-
-                                if (buttonInfo.type === 'zoom' && buttonInfo.direction) {
-                                    console.log(`👉 ENTER: zoom ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
-                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
-                                    el.removeAttribute('data-raycastable'); 
-                                    setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
-                                } else if (buttonInfo.type === '3d-zoom' && buttonInfo.direction) {
-                                    console.log(`👉 ENTER: 3d-zoom ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
-                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
-                                    el.removeAttribute('data-raycastable'); 
-                                    setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
-                                } else if (buttonInfo.type === 'reset') {
-                                    console.log(`👉 ENTER: reset on ${targetMedia} (button: ${el})`);
-                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
-                                    el.removeAttribute('data-raycastable'); 
-                                    setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
-                                } else if (buttonInfo.type === '3d-reset') {
-                                    console.log(`👉 ENTER: 3d-reset on ${targetMedia} (button: ${el})`);
-                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
-                                    el.removeAttribute('data-raycastable'); 
-                                    setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
-                                } else if (buttonInfo.direction) {
-                                    console.log(`👉 ENTER: ${buttonInfo.type} ${buttonInfo.direction} on ${targetMedia} (button: ${el})`);
-                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, buttonInfo.direction, el);
-                                    if (buttonInfo.type === 'scroller' || buttonInfo.type === 'roller') {
-                                        el.removeAttribute('data-raycastable'); 
-                                        setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
-                                    }
-                                } else {
-                                    console.log(`👉 ENTER: ${buttonInfo.type} on ${targetMedia} (button: ${el})`);
-                                    window.controlsAPI.handleButtonAction(targetMedia, buttonInfo.type, null, el);
-                                    if (buttonInfo.type === 'scroller' || buttonInfo.type === 'roller') {
-                                        el.removeAttribute('data-raycastable'); 
-                                        setTimeout(() => el.setAttribute('data-raycastable', ''), 500);
-                                    }
-                                }
-                            }
-                        }, 50); // Small delay to allow visibility updates
+            function handleButton(el, info, target) {
+                if (!isElementVisible(el)) return;
+                
+                    const dir = info.direction ? ` ${info.direction}` : '';
+                    console.log(`👉 ENTER: ${info.type}${dir} on ${target} (button: ${el})`);
+                    
+                    handleButtonAction(target, info.type, info.direction || null, el);
+                    
+                    if (['zoom', '3d-zoom', 'reset', '3d-reset', 'scroller', 'roller'].includes(info.type)) {
+                        el.removeAttribute('raycastable');
+                        setTimeout(() => el.setAttribute('raycastable', ''), 500);
                     }
+                }
+
+                raycaster.addEventListener('raycaster-intersection', function(evt) {
+                    evt.detail.intersections.forEach(intersection => {
+                        const el = intersection.object.el;
+                        if (el) {
+                                const buttonInfo = getButtonInfo(el);
+                                if (buttonInfo) {
+                                    handleButton(el, buttonInfo, findTargetMedia(el));
+                                }
+                        }
+                    });
                 });
-            });
 
             raycaster.addEventListener('raycaster-intersection-cleared', function(evt) {
                 evt.detail.elms?.forEach(el => {

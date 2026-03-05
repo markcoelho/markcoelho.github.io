@@ -245,7 +245,7 @@
             thumbnail.setAttribute('width', width);
             thumbnail.setAttribute('height', height);
             thumbnail.setAttribute('position', `${xPos} 0 0`);
-            thumbnail.setAttribute('data-raycastable', '');
+            thumbnail.setAttribute('raycastable', '');
             thumbnail.setAttribute('visible', 'true');
             navPanel.appendChild(thumbnail);
         });
