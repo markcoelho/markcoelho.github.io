@@ -4,80 +4,25 @@
     let currentVisibleMarker = null;
 
     // Hide all content initially
-    function hideAllContent() {
-        // Hide all markers
-        document.querySelectorAll('[id^="markerpiece_"]').forEach(el => {
-            el.setAttribute('visible', false);
-            if(el.tagName === 'A-VIDEO'){
-                console.log("video hidden   📸 " + el.id);
-                el.components.material.material.map.image.pause();
-            }
-        });
-        
-        
-        // Hide all centerpieces
-        document.querySelectorAll('[id^="centerpiece_"]').forEach(el => {
-            el.setAttribute('visible', false);
-            if(el.tagName === 'A-VIDEO'){
-                console.log("video hidden   📸 " + el.id);
-                el.components.material.material.map.image.pause();
-            }
-        });
-        
-        // Hide all leftpieces
-        document.querySelectorAll('[id^="leftpiece_"]').forEach(el => {
-            el.setAttribute('visible', false);
-            if(el.tagName === 'A-VIDEO'){
-                console.log("video hidden   📸 " + el.id);
-                el.components.material.material.map.image.pause();
-            }
-        });
-        
-        // Hide all rightpieces
-        document.querySelectorAll('[id^="rightpiece_"]').forEach(el => {
-            el.setAttribute('visible', false);
-            if(el.tagName === 'A-VIDEO'){
-                console.log("video hidden   📸 " + el.id);
-                el.components.material.material.map.image.pause();
-            }
-        });
-        
-        // Hide all navigation panels and their children
-        document.querySelectorAll('[id$="_navigation"]').forEach(el => {
-            el.setAttribute('visible', false);
-            // Hide all children of navigation panel
-            el.querySelectorAll('*').forEach(child => {
-                child.setAttribute('visible', false);
-            });
-        });
-        
-        // Hide all surround elements
-        document.querySelectorAll('[id^="surround_"]').forEach(el => {
-            el.setAttribute('visible', false);
-            // If it's a videosphere, pause it
-            if (el.tagName === 'A-VIDEOSPHERE') {
-                try {
-                    el.components.material.material.map.image.pause();
-                    console.log(`⏸️ Paused surround video: ${el.id}`);
-                } catch(e) {
-                    console.warn(`Could not pause surround video: ${e}`);
-                }
-            }
+    function pauseAllVideos() {
+        document.querySelectorAll('a-video[id*="_video_"]').forEach(el => {
+                console.log("Attempting to pause: " + el.id);
+                el.components.material.material.map.imagepause();
         });
     }
 
     function stopAllNarration() {
-            const allNarrations = document.querySelectorAll('[id^="narration_"]');
-            allNarrations.forEach(narration => {
-                try {
-                    if (narration.components.sound && narration.components.sound.isPlaying) {
-                        narration.components.sound.stopSound();
-                        console.log(`⏹️ Stopped narration: ${narration.id}`);
-                    }
-                } catch(e) {
-                    // Ignore errors
+        const allNarrations = document.querySelectorAll('[id^="narration_"]');
+        allNarrations.forEach(narration => {
+            try {
+                if (narration.components.sound && narration.components.sound.isPlaying) {
+                    narration.components.sound.stopSound();
+                    console.log(`⏹️ Stopped narration: ${narration.id}`);
                 }
-            });
+            } catch(e) {
+                // Ignore errors
+            }
+        });
     }
 
     // Helper function to show an element and all its children
@@ -122,6 +67,55 @@
         return null;
     }
 
+    // Unified function to handle any piece (center, left, right)
+    function handlePiece(pieceType, value) {
+        const piece = document.getElementById(`${pieceType}_${value}`);
+        if (!piece) return;
+        
+        piece.setAttribute('visible', true);
+        
+        // Map piece type to icon for logging
+        const icons = {
+            'centerpiece': '🖼️',
+            'leftpiece': '⬅️',
+            'rightpiece': '➡️'
+        };
+        console.log(`${icons[pieceType] || '📦'} ${pieceType}_${value}`);
+        
+        // Find first media element in piece
+        const firstMedia = findFirstMediaElement(piece);
+        if (firstMedia) {
+            firstMedia.setAttribute('visible', true);
+            console.log(`  📸 ${firstMedia.id}`);
+            
+            // Determine media type and find matching controls
+            let controlsId;
+            
+            if (firstMedia.tagName === 'A-IMAGE') {
+                controlsId = `${pieceType}_${value}_Controls_0`;
+            } else if (firstMedia.tagName === 'A-VIDEO') {
+                controlsId = `${pieceType}_${value}_VideoControls_0`;
+                // Play video
+                try {
+                    firstMedia.components.material.material.map.image.play();
+                } catch(e) {
+                    console.warn(`Could not play video: ${e}`);
+                }
+            } else if (firstMedia.tagName === 'A-ENTITY' || firstMedia.hasAttribute('gltf-model')) {
+                controlsId = `${pieceType}_${value}_3dControls_0`;
+            }
+            
+            const controls = piece.querySelector('#' + controlsId);
+            showElementWithChildren(controls, `${controlsId} (controls)`);
+        }
+        
+        // Show navigation if it exists
+        const navigation = piece.querySelector(`#${pieceType}_${value}_navigation`);
+        if (navigation) {
+            showElementWithChildren(navigation, `${pieceType}_${value}_navigation`);
+        }
+    }
+
     // Show content for specific marker value
     function showContentForMarker(value) {
         console.log(`\n=== MARKER ${value} FOUND ===`);
@@ -130,24 +124,31 @@
             console.log(`⏭️ Marker ${value} already visible, ignoring`);
             return;
         }
+
+        // Hide all pieces from previous marker
+        ['markerpiece_', 'centerpiece_', 'leftpiece_', 'rightpiece_'].forEach(prefix => {
+            const element = document.getElementById(prefix + currentVisibleMarker);
+            if (element) {
+                element.setAttribute('visible', 'false');
+                console.log(` ${prefix}${currentVisibleMarker} hidden`);
+            }
+        });
         
         stopAllNarration();
 
         // Hide all content first
-        hideAllContent();
+        pauseAllVideos();
 
-
-            const narrationElement = document.getElementById(`narration_${value}`);
-            if (narrationElement) {
-                try {
-                    narrationElement.components.sound.playSound();
-                    console.log(`🔊 Playing narration for marker ${value}`);
-                } catch(e) {
-                    console.warn(`Could not play narration for marker ${value}: ${e}`);
-                }
+        const narrationElement = document.getElementById(`narration_${value}`);
+        if (narrationElement) {
+            try {
+                narrationElement.components.sound.playSound();
+                console.log(`🔊 Playing narration for marker ${value}`);
+            } catch(e) {
+                console.warn(`Could not play narration for marker ${value}: ${e}`);
             }
+        }
 
-        
         // Show surround element for this marker if it exists
         const surroundElement = document.getElementById(`surround_${value}`);
         if (surroundElement) {
@@ -184,7 +185,11 @@
 
                     // Play video if it's a video element
                     if (firstMarkerMedia.tagName === 'A-VIDEO') {
-                        firstMarkerMedia.components.material.material.map.image.play();
+                        try {
+                            firstMarkerMedia.components.material.material.map.image.play();
+                        } catch(e) {
+                            console.warn(`Could not play video: ${e}`);
+                        }
                     }
                     
                     // Find and show the matching controls for the first media
@@ -216,114 +221,10 @@
             }
         }
         
-        // Show centerpiece
-        var centerPiece = document.getElementById('centerpiece_' + value);
-        if (centerPiece) {
-            centerPiece.setAttribute('visible', true);
-            console.log(`🖼️ centerpiece_${value}`);
-            
-            // Find first media element in centerpiece
-            var firstCenterMedia = findFirstMediaElement(centerPiece);
-            if (firstCenterMedia) {
-                firstCenterMedia.setAttribute('visible', true);
-                console.log(`  📸 ${firstCenterMedia.id}`);
-                
-                // Determine media type and find matching controls
-                var mediaIndex = '0';
-                var controlsId;
-                
-                if (firstCenterMedia.tagName === 'A-IMAGE') {
-                    controlsId = `centerpiece_${value}_Controls_${mediaIndex}`;
-                } else if (firstCenterMedia.tagName === 'A-VIDEO') {
-                    controlsId = `centerpiece_${value}_VideoControls_${mediaIndex}`;
-                    // Play video
-                    firstCenterMedia.components.material.material.map.image.play();
-                } else if (firstCenterMedia.tagName === 'A-ENTITY' || firstCenterMedia.hasAttribute('gltf-model')) {
-                    controlsId = `centerpiece_${value}_3dControls_${mediaIndex}`;
-                }
-                
-                var centerControls = centerPiece.querySelector('#' + controlsId);
-                showElementWithChildren(centerControls, `${controlsId} (controls)`);
-            }
-            
-            // Show center navigation if it exists
-            var centerNavigation = centerPiece.querySelector(`#centerpiece_${value}_navigation`);
-            if (centerNavigation) {
-                showElementWithChildren(centerNavigation, `centerpiece_${value}_navigation`);
-            }
-        }
-        
-        // Show leftpiece
-        var leftPiece = document.getElementById('leftpiece_' + value);
-        if (leftPiece) {
-            leftPiece.setAttribute('visible', true);
-            console.log(`⬅️ leftpiece_${value}`);
-            
-            // Find first media in leftpiece
-            var firstLeftMedia = findFirstMediaElement(leftPiece);
-            if (firstLeftMedia) {
-                firstLeftMedia.setAttribute('visible', true);
-                console.log(`  📸 ${firstLeftMedia.id}`);
-                
-                // Determine media type and show matching controls
-                var mediaIndex = '0';
-                var controlsId;
-                
-                if (firstLeftMedia.tagName === 'A-IMAGE') {
-                    controlsId = `leftpiece_${value}_Controls_${mediaIndex}`;
-                } else if (firstLeftMedia.tagName === 'A-VIDEO') {
-                    controlsId = `leftpiece_${value}_VideoControls_${mediaIndex}`;
-                    // Play video
-                    firstLeftMedia.components.material.material.map.image.play();
-                } else if (firstLeftMedia.tagName === 'A-ENTITY' || firstLeftMedia.hasAttribute('gltf-model')) {
-                    controlsId = `leftpiece_${value}_3dControls_${mediaIndex}`;
-                }
-                
-                var leftControls = leftPiece.querySelector('#' + controlsId);
-                showElementWithChildren(leftControls, `${controlsId} (controls)`);
-            }
-            
-            // Show left navigation if it exists
-            var leftNavigation = leftPiece.querySelector(`#leftpiece_${value}_navigation`);
-            if (leftNavigation) {
-                showElementWithChildren(leftNavigation, `leftpiece_${value}_navigation`);
-            }
-        }
-        
-        // Show rightpiece
-        var rightPiece = document.getElementById('rightpiece_' + value);
-        if (rightPiece) {
-            rightPiece.setAttribute('visible', true);
-            console.log(`➡️ rightpiece_${value}`);
-            
-            // Find first media in rightpiece
-            var firstRightMedia = findFirstMediaElement(rightPiece);
-            if (firstRightMedia) {
-                firstRightMedia.setAttribute('visible', true);
-                console.log(`  📸 ${firstRightMedia.id}`);
-                
-                // Determine media type and show matching controls
-                var mediaIndex = '0';
-                var controlsId;
-                
-                if (firstRightMedia.tagName === 'A-IMAGE') {
-                    controlsId = `rightpiece_${value}_Controls_${mediaIndex}`;
-                } else if (firstRightMedia.tagName === 'A-VIDEO') {
-                    controlsId = `rightpiece_${value}_VideoControls_${mediaIndex}`;
-                    // Play video
-                    firstRightMedia.components.material.material.map.image.play();
-                }
-                
-                var rightControls = rightPiece.querySelector('#' + controlsId);
-                showElementWithChildren(rightControls, `${controlsId} (controls)`);
-            }
-            
-            // Show right navigation if it exists
-            var rightNavigation = rightPiece.querySelector(`#rightpiece_${value}_navigation`);
-            if (rightNavigation) {
-                showElementWithChildren(rightNavigation, `rightpiece_${value}_navigation`);
-            }
-        }
+        // Use unified handler for center, left, and right pieces
+        handlePiece('centerpiece', value);
+        handlePiece('leftpiece', value);
+        handlePiece('rightpiece', value);
         
         console.log(`=== DONE ===\n`);
         currentVisibleMarker = value;

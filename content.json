@@ -192,11 +192,6 @@
       ],
       "marker": [
         {
-          "type": "video",
-          "controls": "true",
-          "src": "assets/video/video-test.mp4",
-          "scale": 0.6,
-          "audio": ""
         }
       ]
     },

@@ -228,7 +228,6 @@
                         setTimeout(() => {
                             if (isElementVisible(el)) {
                                 const navInfo = getNavigationInfo(el);
-                                console.log(`👉 NAV ENTER: ${navInfo.mediaType} ${navInfo.mediaId}`);
                                 switchMedia(navInfo.mediaId);
                             }
                         }, 50);
