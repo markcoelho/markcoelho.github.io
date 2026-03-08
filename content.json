@@ -113,8 +113,8 @@
         {
           "type": "3d",
           "controls": "false",
-          "src": "assets/models/ship_example.glb",
-          "scale": 0.02,
+          "src": "assets/models/liverpoolcardiffanimation.glb",
+          "scale": 1,
           "rotation": 0,
           "audio": "",
           "auto_rotate": false

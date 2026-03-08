@@ -7,7 +7,13 @@
     function pauseAllVideos() {
         document.querySelectorAll('a-video[id*="_video_"]').forEach(el => {
                 console.log("Attempting to pause: " + el.id);
-                el.components.material.material.map.imagepause();
+                        if (el.components.material && el.components.material.material) {
+                            const videoTexture = el.components.material.material.map;
+                            if (videoTexture && videoTexture.image && videoTexture.image instanceof HTMLVideoElement) {
+                                videoTexture.image.pause();
+                                console.log(`✅ Paused video: ${el.id}`);
+                            }
+                        }
         });
     }
 
