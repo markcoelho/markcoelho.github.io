@@ -5,8 +5,7 @@
       "barcode_number": 0,
       "narration": "assets/audio/pag 1.mp3",
       "surround": "",
-      "surround_rotation": 90,
-      "marker_navigation": "true",
+      "surround_rotation": 0,
       "central_side": [
         {
           "type": "image",
@@ -50,13 +49,19 @@
       "barcode_number": 1,
       "narration": "assets/audio/pag 2.mp3",
       "surround": "",
-      "surround_rotation": 90,
-      "marker_navigation": "false",
+      "surround_rotation": 0,
       "central_side": [
         {
           "type": "image",
           "controls": "true",
-          "src": "assets/images/1.4.jpg",
+          "src": "assets/images/1.2.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/1.3.jpg",
           "scale": 1,
           "audio": ""
         }
@@ -71,11 +76,10 @@
         }
       ],
       "right_side": [
-        
         {
           "type": "image",
           "controls": "true",
-          "src": "assets/images/1.2.jpg",
+          "src": "assets/images/1.4.jpg",
           "scale": 1,
           "audio": ""
         }
@@ -90,7 +94,6 @@
       "narration": "assets/audio/pag 3.mp3",
       "surround": "",
       "surround_rotation": 0,
-      "marker_navigation": "",
       "central_side": [
         {
           "type": "image",
@@ -123,7 +126,6 @@
       "narration": "assets/audio/pag 4.mp3",
       "surround": "",
       "surround_rotation": 0,
-      "marker_navigation": "",
       "central_side": [
         {
           "type": "image",
@@ -155,7 +157,6 @@
       "narration": "assets/audio/pag 5.mp3",
       "surround": "",
       "surround_rotation": 0,
-      "marker_navigation": true,
       "central_side": [
         {
           "type": "image",
@@ -200,7 +201,6 @@
       "narration": "assets/audio/pag 6.mp3",
       "surround": "",
       "surround_rotation": 0,
-      "marker_navigation": true,
       "central_side": [
         {
          
@@ -231,7 +231,6 @@
       "narration": "assets/audio/pag 7.mp3",
       "surround": "",
       "surround_rotation": 0,
-      "marker_navigation": true,
       "central_side": [
         {
           "type": "image",
@@ -266,7 +265,6 @@
       "narration": "assets/audio/pag 8.mp3",
       "surround": "",
       "surround_rotation": 0,
-      "marker_navigation": true,
       "central_side": [
         {
           "type": "image",
@@ -305,7 +303,6 @@
       "narration": "assets/audio/pag 9.mp3",
       "surround": "",
       "surround_rotation": 0,
-      "marker_navigation": "",
       "central_side": [
         {
           "type": "image",
@@ -362,7 +359,6 @@
       "narration": "assets/audio/pag 10.mp3",
       "surround": "",
       "surround_rotation": 0,
-      "marker_navigation": "",
       "central_side": [
         {
           "type": "image",
