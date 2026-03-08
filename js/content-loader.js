@@ -474,6 +474,9 @@ createMarkerElements(items, barcodeNumber, camera) {
                     element.id = `marker_${barcodeNumber}_3d_${mediaIndex}`;
                     element.setAttribute('gltf-model', item.src);
                     
+                    // Add animation-mixer to play embedded animations immediately when loaded
+                    element.setAttribute('animation-mixer', 'clip: *; loop: repeat;');
+                    
                     // Store original rotation and scale as data attributes
                     const originalRotation = item.rotation || 0;
                     const originalScale = item.scale || 1;
