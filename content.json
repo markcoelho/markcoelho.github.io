@@ -104,10 +104,22 @@
         }
       ],
       "left_side": [
-        
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/example iron and steel shipment.png",
+          "scale": 1,
+          "audio": ""
+        }
       ],
       "right_side": [
-        
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/cargo of coal or similar.png",
+          "scale": 1,
+          "audio": ""
+        }
       ],
       "marker": [
         {
@@ -137,18 +149,37 @@
       ],
       "left_side": [
         {
-          
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/1924 crash.png",
+          "scale": 1,
+          "audio": ""
         }
         
       ],
       "right_side": [
         {
-         
+         "type": "image",
+          "controls": "true",
+          "src": "assets/images/liverpool docks circa 1920 aerial.png",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/liverpool docks circa 1920.png",
+          "scale": 1,
+          "audio": ""
         }
       ],
       "marker": [
         {
-        
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/sandbankdiagram.png",
+          "scale": 1,
+          "audio": ""
         }
       ]
     },
@@ -179,20 +210,27 @@
         {
           "type": "image",
           "controls": "true",
-          "src": "assets/images/0.jpg",
-          "scale": 0.5,
+          "src": "assets/images/bc cement co.png",
+          "scale": 1,
           "audio": ""
         },
         {
-          "type": "video",
+          "type": "image",
           "controls": "true",
-          "src": "assets/video/video-test.mp4",
-          "scale": 0.6,
+          "src": "assets/images/bc cement co sign.png",
+          "scale": 2,
           "audio": ""
         }
       ],
       "marker": [
         {
+          "type": "3d",
+          "controls": "false",
+          "src": "assets/models/liverpoolvancouveranimation.glb",
+          "scale": 1,
+          "rotation": 0,
+          "audio": "",
+          "auto_rotate": false
         }
       ]
     },
@@ -203,21 +241,29 @@
       "surround_rotation": 0,
       "central_side": [
         {
-         
+          "type": "video",
+          "controls": "true",
+          "src": "assets/images/THE PLIMSOLL LINE pt.mp4",
+          "scale": 1,
+          "audio": ""
         }
       ],
       "left_side": [
         {
           "type": "image",
           "controls": "true",
-          "src": "assets/images/freeboard1.png",
+          "src": "assets/images/freeboard1.jpg",
           "scale": 0.9,
           "audio": ""
         }
       ],
       "right_side": [
         {
-        
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/plimsoll on ship.png",
+          "scale": 0.9,
+          "audio": ""
         }
       ],
       "marker": [
@@ -251,7 +297,11 @@
       ],
       "right_side": [
         {
-         
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/vc bc 1930.png",
+          "scale": 1,
+          "audio": ""
         }
       ],
       "marker": [
