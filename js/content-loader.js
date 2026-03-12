@@ -490,7 +490,7 @@ createMarkerElements(items, barcodeNumber, camera) {
                         element.setAttribute('scale', '1 1 1');
                     }
                     // Apply rotation
-                    element.setAttribute('rotation', `0 ${originalRotation} 0`);
+                    element.setAttribute('rotation', `90 ${originalRotation} 0`);
 
                     if (item.auto_rotate === true || item.auto_rotate === "true") {
                         element.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
