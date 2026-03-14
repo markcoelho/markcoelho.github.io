@@ -319,6 +319,13 @@
         {
           "type": "image",
           "controls": "true",
+          "src": "assets/images/6.1.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
           "src": "assets/images/6.2.jpg",
           "scale": 1,
           "audio": ""
@@ -328,8 +335,8 @@
         {
           "type": "image",
           "controls": "true",
-          "src": "assets/images/6.1.jpg",
-          "scale": 0.7,
+          "src": "assets/images/10kcement.png",
+          "scale": 1,
           "audio": ""
         }
       ],
@@ -344,7 +351,13 @@
       ],
       "marker": [
         {
-          
+          "type": "3d",
+          "controls": "false",
+          "src": "assets/models/rockcrash.glb",
+          "scale": 1,
+          "rotation": 0,
+          "audio": "",
+          "auto_rotate": false
         }
       ]
     },
@@ -360,6 +373,27 @@
           "src": "assets/images/7.1.jpg",
           "scale": 1,
           "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/7.2.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/7.3.jpg",
+          "scale": 1,
+          "audio": ""
+        },
+        {
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/7.4.jpg",
+          "scale": 1,
+          "audio": ""
         }
       ],
       "left_side": [
@@ -367,7 +401,7 @@
           "type": "image",
           "controls": "true",
           "src": "assets/images/8.jpg",
-          "scale": 0.9,
+          "scale": 1,
           "audio": ""
         }
       ],
@@ -375,32 +409,27 @@
         {
           "type": "image",
           "controls": "true",
-          "src": "assets/images/7.2.jpg",
-          "scale": 0.9,
+          "src": "assets/images/superstructures.png",
+          "scale": 1,
           "audio": ""
         },
         {
           "type": "image",
           "controls": "true",
-          "src": "assets/images/7.3.jpg",
-          "scale": 0.9,
-          "audio": ""
-        },
-        {
-          "type": "image",
-          "controls": "true",
-          "src": "assets/images/7.4.jpg",
-          "scale": 0.9,
+          "src": "assets/images/sheercorrection.png",
+          "scale": 1,
           "audio": ""
         }
       ],
       "marker": [
         {
-          "type": "image",
-          "controls": "true",
-          "src": "assets/images/8.jpg",
-          "scale": 0.5,
-          "audio": ""
+          "type": "3d",
+          "controls": "false",
+          "src": "assets/models/vc mexico la.glb",
+          "scale": 1,
+          "rotation": 0,
+          "audio": "",
+          "auto_rotate": false
         }
       ]
     },
@@ -420,17 +449,31 @@
       ],
       "left_side": [
         {
-         
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/trapped.png",
+          "scale": 1,
+          "audio": ""
         }
       ],
       "right_side": [
         {
-          
+          "type": "image",
+          "controls": "true",
+          "src": "assets/images/rescued.png",
+          "scale": 1,
+          "audio": ""
         }
       ],
       "marker": [
         {
-          
+          "type": "3d",
+          "controls": "false",
+          "src": "assets/models/sinking.glb",
+          "scale": 1,
+          "rotation": 0,
+          "audio": "",
+          "auto_rotate": false
         }
       ]
     }
