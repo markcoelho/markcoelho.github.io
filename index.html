@@ -30,9 +30,7 @@
     
     <a-camera look-controls="enabled: true"   far="10000">
         
-        <a-cursor id="raycaster" color="red" scale="0.01 0.01 0.01" raycaster="objects: [raycastable]; showLine: false;" >
-                <a-ring radius-inner="0.01" radius-outer="0.7" color="red"></a-ring>
-        </a-cursor>
+        <a-cursor id="raycaster" color="red" scale="2 2 2" position="0 0 -4" raycaster="objects: [raycastable]; showLine: false;" > </a-cursor>
         
         <!-- AR video feed -->
         <a-video id="arjs_feed" position="0 0 -50" width="83" height="83" render-order="0" transparent="true" opacity="0.9"></a-video>

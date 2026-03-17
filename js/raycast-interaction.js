@@ -108,12 +108,12 @@
                     }
                 }
                 // Check for regular zoom buttons
-                else if (classes.includes('zoom-button')) {
+                else if (classes.includes('zoom-button') || classes.includes('marker-zoom-button')) {
                     type = 'zoom';
                     // Check for zoom direction from data-action attribute
-                    if (dataAction === 'increase') {
+                    if (dataAction.toLowerCase().includes('increase')) {
                         direction = 'in';
-                    } else if (dataAction === 'decrease') {
+                    } else if (dataAction.toLowerCase().includes('decrease')) {
                         direction = 'out';
                     } else if (button.src?.includes('zoom-in')) {
                         direction = 'in';
@@ -155,6 +155,9 @@
                 else if (classes.includes('fast-forward') || classes.includes('marker-fast-forward')) {
                     type = 'fast-forward';
                 }
+                else if (classes.includes('play')) {  // <-- ADD THIS
+                    type = 'play';
+                }
                 else if (classes.includes('fast-backward') || classes.includes('marker-fast-backward')) {
                     type = 'fast-backward';
                 }
@@ -190,7 +193,7 @@
                     mediaType = '3d';
                 } else if (buttonClasses.includes('restart') || buttonClasses.includes('mute') ||
                             buttonClasses.includes('fast-backward') || buttonClasses.includes('fast-forward') ||
-                            buttonId.includes('_video_')) {
+                            buttonClasses.includes('play') || buttonId.includes('_video_') ) {
                         mediaType = 'video';
                     }
                 
@@ -263,12 +266,16 @@
                 if (!isElementVisible(el)) return;
                 
                     const dir = info.direction ? ` ${info.direction}` : '';
-                    
                     handleButtonAction(target, info.type, info.direction || null, el);
                     
                     if (['zoom', '3d-zoom', 'reset', '3d-reset', 'scroller', 'roller'].includes(info.type)) {
                         el.removeAttribute('raycastable');
-                        setTimeout(() => el.setAttribute('raycastable', ''), 500);
+                        if(info.type.includes("scroller") || info.type.includes("roller")){
+                            setTimeout(() => el.setAttribute('raycastable', ''), 100);
+                        }else{
+                            setTimeout(() => el.setAttribute('raycastable', ''), 200);
+                        }
+                        
                     }
                 }
 
