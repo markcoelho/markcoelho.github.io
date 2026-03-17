@@ -54,6 +54,9 @@
                         case 'mute':
                             handleMute(mediaElement, button);
                             break;
+                        case 'play':
+                            handlePlay(mediaElement, button);
+                            break;
                         case 'fast-forward':
                             handleFastForward(mediaElement);
                             break;
@@ -91,16 +94,55 @@
     function handleReset(mediaElement) {
         console.log(`🔄 Reset ${mediaElement.id}`);
         
-        // Get original rotation and scale from data attributes
-        const originalRotation = mediaElement.getAttribute('data-original-rotation') || 0;
-        const originalScale = mediaElement.getAttribute('data-original-scale') || 1;
         
-        // Reset position, and use original rotation and scale
-        mediaElement.setAttribute('position', {x: 0, y: 0, z: 0});
+        
+
+        if(mediaElement.id.includes("3d")){
+            // Get original rotation values from data attributes
+            const rotX = parseFloat(mediaElement.getAttribute('data-original-rotation-x')) || 0;
+            const rotY = parseFloat(mediaElement.getAttribute('data-original-rotation-y')) || 0;
+            const rotZ = parseFloat(mediaElement.getAttribute('data-original-rotation-z')) || 0;
+            
+            mediaElement.setAttribute('rotation', {x: rotX, y: rotY, z: rotZ});
+            console.log(`  Reset to original rotation: x=${rotX}°, y=${rotY}°, z=${rotZ}°, scale: ${originalScale}`);
+        }else if(mediaElement.id.includes("marker")){
+            mediaElement.setAttribute('rotation', {x: -90, y: 0, z: 0});
+            console.log("Reset to original rotation: -90 0 0") ;
+        }else{
+            mediaElement.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            console.log("Reset to original rotation: 0 0 0") ;        }
+        
+        // Get original scale
+        const originalScale = parseFloat(mediaElement.getAttribute('data-original-scale')) || 1;
         mediaElement.setAttribute('scale', {x: originalScale, y: originalScale, z: originalScale});
-        mediaElement.setAttribute('rotation', {x: 0, y: originalRotation, z: 0});
+        // Reset position, scale, and rotation using all three axes
+        mediaElement.setAttribute('position', {x: 0, y: 0, z: 0});
         
-        console.log(`  Reset to original rotation: ${originalRotation}°, original scale: ${originalScale}`);
+        
+        
+        
+    }
+
+    // Add this new handler function
+    function handlePlay(mediaElement, button) {
+        console.log(`▶️ Play/pause video ${mediaElement.id}`);
+        
+        try {
+            const video = mediaElement.components.material.material.map.image;
+            if (video) {
+                if (video.paused) {
+                    video.play();
+                    button.setAttribute('src', 'assets/icons/pause.png');
+                    console.log(`  Video playing`);
+                } else {
+                    video.pause();
+                    button.setAttribute('src', 'assets/icons/play.png');
+                    console.log(`  Video paused`);
+                }
+            }
+        } catch(e) {
+            console.warn(`Could not play/pause video: ${e}`);
+        }
     }
     
     function handleScroller(mediaElement, direction) {
@@ -113,20 +155,38 @@
         let newPos = {...currentPos};
         const step = 0.1; // Movement step
         
-        switch(direction) {
-            case 'up':
-                newPos.y += step;
-                break;
-            case 'down':
-                newPos.y -= step;
-                break;
-            case 'left':
-                newPos.x -= step;
-                break;
-            case 'right':
-                newPos.x += step;
-                break;
+        if(!mediaElement.id.includes("marker")){
+            switch(direction) {
+                case 'up':
+                    newPos.y += step;
+                    break;
+                case 'down':
+                    newPos.y -= step;
+                    break;
+                case 'left':
+                    newPos.x -= step;
+                    break;
+                case 'right':
+                    newPos.x += step;
+                    break;
+            }
+        }else {
+            switch(direction) {
+                case 'up':
+                    newPos.z -= step;
+                    break;
+                case 'down':
+                    newPos.z += step;
+                    break;
+                case 'left':
+                    newPos.x -= step;
+                    break;
+                case 'right':
+                    newPos.x += step;
+                    break;
+            }
         }
+        
         
         // Apply new position
         mediaElement.setAttribute('position', newPos);
@@ -134,7 +194,7 @@
     
     function handleRoller(mediaElement, direction) {
         console.log(`🔄 Roller ${direction} on ${mediaElement.id}`);
-        
+        console.log(mediaElement);
         // Get current rotation
         let currentRot = mediaElement.getAttribute('rotation') || {x: 0, y: 0, z: 0};
         
@@ -150,10 +210,10 @@
                 newRot.x -= step;
                 break;
             case 'left':
-                newRot.y -= step;
+                newRot.y += step;
                 break;
             case 'right':
-                newRot.y += step;
+                newRot.y -= step;
                 break;
         }
         

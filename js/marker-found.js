@@ -101,11 +101,13 @@
                 controlsId = `${pieceType}_${value}_Controls_0`;
             } else if (firstMedia.tagName === 'A-VIDEO') {
                 controlsId = `${pieceType}_${value}_VideoControls_0`;
-                // Play video
-                try {
-                    firstMedia.components.material.material.map.image.play();
-                } catch(e) {
-                    console.warn(`Could not play video: ${e}`);
+                // Play video only if autoplay is true
+                if (firstMedia.getAttribute('auto-play') === 'true') {
+                    try {
+                        firstMedia.components.material.material.map.image.play();
+                    } catch(e) {
+                        console.warn(`Could not play video: ${e}`);
+                    }
                 }
             } else if (firstMedia.tagName === 'A-ENTITY' || firstMedia.hasAttribute('gltf-model')) {
                 controlsId = `${pieceType}_${value}_3dControls_0`;
@@ -190,7 +192,7 @@
                     console.log(`  📸 ${firstMarkerMedia.id}`);
 
                     // Play video if it's a video element
-                    if (firstMarkerMedia.tagName === 'A-VIDEO') {
+                    if (firstMarkerMedia.tagName === 'A-VIDEO' && firstMarkerMedia.getAttribute('auto-play') === 'true') {
                         try {
                             firstMarkerMedia.components.material.material.map.image.play();
                         } catch(e) {

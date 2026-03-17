@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+process.setMaxListeners(50);
+
 // Generate self-signed certificates
 const generateCertificates = () => {
     const selfsigned = require('selfsigned');

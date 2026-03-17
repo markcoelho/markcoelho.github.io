@@ -247,9 +247,18 @@ createSideElements(containerType, items, pageIndex, scene) {
                 element.setAttribute('height', baseWidth * 9/16); // 16:9 aspect ratio
                 
                 element.setAttribute('render-order', '1');
-                element.setAttribute('autoplay', 'false');
 
-                // ALL videos get visible="false" (only the first image should be visible initially)
+                element.setAttribute('auto-play', item.autoplay)
+                setTimeout(() => {
+                    element.components.material.material.map.image.pause();
+                }, 6000);
+                setTimeout(() => {
+                    element.components.material.material.map.image.pause();
+                }, 8000);
+                setTimeout(() => {
+                    element.components.material.material.map.image.pause();
+                }, 10000);
+                
                 element.setAttribute('visible', 'false');
 
                 // PAUSE VIDEO IMMEDIATELY
@@ -269,6 +278,7 @@ createSideElements(containerType, items, pageIndex, scene) {
                         buttons: [
                             { src: 'reset.png', class: 'restart', position: '-0.7 0 0.1', action: 'restart', fuseTimeout: 1000 },
                             { src: 'mute.png', class: 'mute', position: '-0.2 0 0.1', action: 'mute', fuseTimeout: 1000 },
+                            { src: item.autoplay === 'true' ? 'pause.png' : 'play.png', class: 'play', position: '0.1 0 0.1', action: 'play', fuseTimeout: 100 },
                             { src: 'fastbackward.png', class: 'fast-backward', position: '0.5 0 0.1', action: 'backward', fuseTimeout: 500 },
                             { src: 'fastforward.png', class: 'fast-forward', position: '0.7 0 0.1', action: 'forward', fuseTimeout: 500 }
                         ]
@@ -284,29 +294,34 @@ createSideElements(containerType, items, pageIndex, scene) {
                 element = document.createElement('a-entity');
                 element.id = `${containerId}_3d_${mediaIndex}`;
                 element.setAttribute('gltf-model', item.src);
+
+                // Add animation-mixer
+                element.setAttribute('animation-mixer', 'clip: *; loop: repeat;');
                 
-                // Store original rotation and scale as data attributes
-                const originalRotation = item.rotation || 0;
-                const originalScale = item.scale || 1;
-                element.setAttribute('data-original-rotation', originalRotation);
-                element.setAttribute('data-original-scale', originalScale);
+                // Get rotation directly from file - MUST be object with x,y,z
+                const rotX = item.rotation.x || 0;
+                const rotY = item.rotation.y || 0;
+                const rotZ = item.rotation.z || 0;
+                
+                // Store original rotation values
+                element.setAttribute('data-original-rotation-x', rotX);
+                element.setAttribute('data-original-rotation-y', rotY);
+                element.setAttribute('data-original-rotation-z', rotZ);
+                element.setAttribute('data-original-scale', item.scale || 1);
                 
                 // Apply scale
-                if (item.scale) {
-                    element.setAttribute('scale', `${item.scale} ${item.scale} ${item.scale}`);
-                } else {
-                    element.setAttribute('scale', '1 1 1');
-                }
-                // Apply rotation
-                element.setAttribute('rotation', `0 ${originalRotation} 0`);
+                const scale = item.scale || 1;
+                element.setAttribute('scale', `${scale} ${scale} ${scale}`);
+                
+                // Apply rotation with all three axes
+                element.setAttribute('rotation', `${rotX} ${rotY} ${rotZ}`);
 
+                // Auto-rotate around Y axis
                 if (item.auto_rotate === true || item.auto_rotate === "true") {
-                element.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
+                    element.setAttribute('animation', `property: rotation; to: ${rotX} ${rotY + 360} ${rotZ}; loop: true; dur: 10000; easing: linear`);
                 }
                 
                 element.setAttribute('render-order', '1');
-                
-                // ALL 3D models get visible="false" (only the first image should be visible initially)
                 element.setAttribute('visible', 'false');
                 
                 // Create 3D controls if needed
@@ -363,7 +378,7 @@ createMarkerElements(items, barcodeNumber, camera) {
     const markerContent = document.createElement('a-entity');
     markerContent.id = `markerContent_${barcodeNumber}`;
     markerContent.setAttribute('position', '0 0 0');
-    markerContent.setAttribute('rotation', '-90 0 0');
+    markerContent.setAttribute('rotation', '0 0 0');
     
     // Filter valid items
     const validItems = items.filter(item => item && item.type && item.src);
@@ -395,6 +410,7 @@ createMarkerElements(items, barcodeNumber, camera) {
                         const baseWidth = item.scale ? parseFloat(item.scale) : 1;
                         element.setAttribute('width', baseWidth);
                         element.setAttribute('height', baseWidth / aspect);
+                        element.setAttribute('rotation', "-90 0 0");
                     };
                     img.src = item.src;
                     
@@ -434,16 +450,23 @@ createMarkerElements(items, barcodeNumber, camera) {
                     const baseWidth = item.scale ? parseFloat(item.scale) : 2;
                     element.setAttribute('width', baseWidth);
                     element.setAttribute('height', baseWidth * 9/16); // 16:9 aspect ratio
+
                     element.setAttribute('render-order', '1');
+                    element.setAttribute('auto-play', item.autoplay)
+                    setTimeout(() => {
+                        element.components.material.material.map.image.pause();
+                    }, 6000);
+                    setTimeout(() => {
+                        element.components.material.material.map.image.pause();
+                    }, 8000);
+                    setTimeout(() => {
+                        element.components.material.material.map.image.pause();
+                    }, 10000);
                 
                     element.setAttribute('visible', 'false');
-                    element.setAttribute('autoplay', 'false');
-                    element.autoplay = false;
+                    
 
-                    // PAUSE VIDEO IMMEDIATELY
-                    element.addEventListener('loadedmetadata', () => {
-                        element.components.material.material.map.image.pause();
-                    });
+                    element.autoplay = false;
 
                     element.setAttribute('render-order', '1');
                     element.setAttribute('visible', 'false');
@@ -460,6 +483,7 @@ createMarkerElements(items, barcodeNumber, camera) {
                             buttons: [
                                 { src: 'reset.png', class: 'marker-restart', position: '-0.7 0 0.1', action: 'markerRestart', fuseTimeout: 1000 },
                                 { src: 'mute.png', class: 'marker-mute', position: '-0.2 0 0.1', action: 'markerMute', fuseTimeout: 1000 },
+                                { src: item.autoplay === 'true' ? 'pause.png' : 'play.png', class: 'play', position: '0.1 0 0.1', action: 'play', fuseTimeout: 100 },
                                 { src: 'fastbackward.png', class: 'marker-fast-backward', position: '0.5 0 0.1', action: 'markerBackward', fuseTimeout: 500 },
                                 { src: 'fastforward.png', class: 'marker-fast-forward', position: '0.7 0 0.1', action: 'markerForward', fuseTimeout: 500 }
                             ]
@@ -474,26 +498,37 @@ createMarkerElements(items, barcodeNumber, camera) {
                     element.id = `marker_${barcodeNumber}_3d_${mediaIndex}`;
                     element.setAttribute('gltf-model', item.src);
                     
-                    // Add animation-mixer to play embedded animations immediately when loaded
+                    // Add animation-mixer
                     element.setAttribute('animation-mixer', 'clip: *; loop: repeat;');
                     
-                    // Store original rotation and scale as data attributes
-                    const originalRotation = item.rotation || 0;
-                    const originalScale = item.scale || 1;
-                    element.setAttribute('data-original-rotation', originalRotation);
-                    element.setAttribute('data-original-scale', originalScale);
+                    // Handle rotation - support both old and new formats
+                    let rotX = 0, rotY = 0, rotZ = 0;
+                    if (item.rotation) {
+                        if (typeof item.rotation === 'object') {
+                            rotX = item.rotation.x || 0;
+                            rotY = item.rotation.y || 0;
+                            rotZ = item.rotation.z || 0;
+                        } else {
+                            rotY = parseFloat(item.rotation) || 0; // Old format
+                        }
+                    }
+                    
+                    // Store original rotation values
+                    element.setAttribute('data-original-rotation-x', rotX);
+                    element.setAttribute('data-original-rotation-y', rotY);
+                    element.setAttribute('data-original-rotation-z', rotZ);
+                    element.setAttribute('data-original-scale', item.scale || 1);
                     
                     // Apply scale
-                    if (item.scale) {
-                        element.setAttribute('scale', `${item.scale} ${item.scale} ${item.scale}`);
-                    } else {
-                        element.setAttribute('scale', '1 1 1');
-                    }
-                    // Apply rotation
-                    element.setAttribute('rotation', `90 ${originalRotation} 0`);
+                    const scale = item.scale || 1;
+                    element.setAttribute('scale', `${scale} ${scale} ${scale}`);
+                    
+                    // Apply rotation with all three axes (plus marker's base rotation)
+                    element.setAttribute('rotation', `${rotX} ${rotY} ${rotZ}`);
 
+                    // Auto-rotate around Y axis
                     if (item.auto_rotate === true || item.auto_rotate === "true") {
-                        element.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
+                        element.setAttribute('animation', `property: rotation; to: ${rotX} ${rotY + 360} ${rotZ}; loop: true; dur: 10000; easing: linear`);
                     }
                     
                     element.setAttribute('render-order', '1');
@@ -549,8 +584,14 @@ createGeneralControls(config) {
     const controlsPlane = document.createElement('a-plane');
     controlsPlane.id = id;
     controlsPlane.setAttribute('opacity', '0');
-    controlsPlane.setAttribute('position', '0 -1.8 0.1');
-    controlsPlane.setAttribute('rotation', '0 0 0');
+
+    if(containerId.includes("marker")){
+        controlsPlane.setAttribute('position', '0 0.1 1');
+        controlsPlane.setAttribute('rotation', '-90 0 0');
+    }else{
+        controlsPlane.setAttribute('position', '0 -1.8 0.1');
+        controlsPlane.setAttribute('rotation', '0 0 0');
+    }
     controlsPlane.setAttribute('width', '1.8');
     controlsPlane.setAttribute('height', '0.4');
     controlsPlane.setAttribute('material', 'depthTest: false;');

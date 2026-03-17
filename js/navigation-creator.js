@@ -159,27 +159,27 @@
         // Create navigation panel container
         const navPanel = document.createElement('a-entity');
         navPanel.id = `${pieceId}_navigation`;
-        navPanel.setAttribute('position', '0 1.2 0');
+        navPanel.setAttribute('position', '0 2.4 0.1');
         navPanel.setAttribute('visible', 'true');
         
         // Calculate positions
         const thumbnailCount = mediaElements.length;
-        const panelWidth = thumbnailCount * 0.35;
-        const startX = -(panelWidth / 2) + 0.175;
+        const panelWidth = thumbnailCount * 1.4;
+        const startX = -(panelWidth / 2) + 0.7;
         
         console.log(`  Panel width: ${panelWidth}, startX: ${startX}`);
         
         // Create thumbnails for each media element in sorted order
         mediaElements.forEach((mediaId, index) => {
-            const xPos = startX + (index * 0.35);
+            const xPos = startX + (index * 1.4);
             console.log(`  Creating thumbnail ${index + 1}/${thumbnailCount}: ${mediaId}_navigation at x=${xPos}`);
             
             const thumbnail = document.createElement('a-image');
             thumbnail.id = `${mediaId}_navigation`;
             
-            // Default thumbnail size (will be adjusted for images)
-            let width = 0.3;
-            let height = 0.3;
+            // Default thumbnail size
+            let width = 1.2;
+            let height = 1.2;
             
             // Determine the correct thumbnail source based on media type
             let thumbnailSrc = 'assets/images/0.jpg'; // Default fallback
@@ -197,17 +197,15 @@
                         img.onload = function() {
                             // Calculate aspect ratio and adjust dimensions
                             const aspectRatio = img.naturalWidth / img.naturalHeight;
-                            
-                            // Set width to 0.3 and calculate height based on aspect ratio
-                            // or set height to 0.3 and calculate width - whichever keeps it within bounds
+
                             if (aspectRatio >= 1) {
                                 // Landscape or square image
-                                width = 0.3;
-                                height = 0.3 / aspectRatio;
+                                width = 1;
+                                height = 1 / aspectRatio;
                             } else {
                                 // Portrait image
-                                height = 0.3;
-                                width = 0.3 * aspectRatio;
+                                height = 1;
+                                width = 1 * aspectRatio;
                             }
                             
                             // Update the thumbnail dimensions
