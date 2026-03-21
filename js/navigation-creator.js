@@ -169,13 +169,15 @@
         
         console.log(`  Panel width: ${panelWidth}, startX: ${startX}`);
         
-        // Create thumbnails for each media element in sorted order
+        // Create thumbnails for each media element with borders
         mediaElements.forEach((mediaId, index) => {
             const xPos = startX + (index * 1.4);
             console.log(`  Creating thumbnail ${index + 1}/${thumbnailCount}: ${mediaId}_navigation at x=${xPos}`);
             
-            const thumbnail = document.createElement('a-image');
-            thumbnail.id = `${mediaId}_navigation`;
+            // Create container for thumbnail + border
+            const container = document.createElement('a-entity');
+            container.id = `${mediaId}_navigation_container`;
+            container.setAttribute('position', `${xPos} 0 0`);
             
             // Default thumbnail size
             let width = 1.2;
@@ -183,6 +185,18 @@
             
             // Determine the correct thumbnail source based on media type
             let thumbnailSrc = 'assets/images/0.jpg'; // Default fallback
+            
+            // Create border (will be resized if needed)
+            const border = document.createElement('a-plane');
+            border.setAttribute('color', 'black');
+            border.setAttribute('width', width + 0.08);
+            border.setAttribute('height', height + 0.08);
+            border.setAttribute('position', '0 0 -0.05');
+            border.setAttribute('material', 'side: double; opacity: 1');
+            
+            // Thumbnail image
+            const thumbnail = document.createElement('a-image');
+            thumbnail.id = `${mediaId}_navigation`;
             
             if (mediaId.includes('_image_')) {
                 // For images, try to get the original image source and maintain aspect ratio
@@ -197,20 +211,24 @@
                         img.onload = function() {
                             // Calculate aspect ratio and adjust dimensions
                             const aspectRatio = img.naturalWidth / img.naturalHeight;
-
+                            
                             if (aspectRatio >= 1) {
                                 // Landscape or square image
-                                width = 1;
-                                height = 1 / aspectRatio;
+                                width = 1.2;
+                                height = 1.2 / aspectRatio;
                             } else {
                                 // Portrait image
-                                height = 1;
-                                width = 1 * aspectRatio;
+                                height = 1.2;
+                                width = 1.2 * aspectRatio;
                             }
                             
                             // Update the thumbnail dimensions
                             thumbnail.setAttribute('width', width);
                             thumbnail.setAttribute('height', height);
+                            
+                            // Update border size to match new dimensions
+                            border.setAttribute('width', width + 0.08);
+                            border.setAttribute('height', height + 0.08);
                             
                             console.log(`    📷 Image thumbnail: using original source ${src} with aspect ratio ${aspectRatio.toFixed(2)} (${width.toFixed(3)} x ${height.toFixed(3)})`);
                         };
@@ -242,10 +260,15 @@
             thumbnail.setAttribute('src', thumbnailSrc);
             thumbnail.setAttribute('width', width);
             thumbnail.setAttribute('height', height);
-            thumbnail.setAttribute('position', `${xPos} 0 0`);
             thumbnail.setAttribute('raycastable', '');
             thumbnail.setAttribute('visible', 'true');
-            navPanel.appendChild(thumbnail);
+            
+            // Add border and thumbnail to container
+            container.appendChild(border);
+            container.appendChild(thumbnail);
+            
+            // Add container to navigation panel
+            navPanel.appendChild(container);
         });
         
         return navPanel;

@@ -94,9 +94,9 @@
     function handleReset(mediaElement) {
         console.log(`🔄 Reset ${mediaElement.id}`);
         
+        // Get original scale
+        const originalScale = parseFloat(mediaElement.getAttribute('data-original-scale')) || 1;
         
-        
-
         if(mediaElement.id.includes("3d")){
             // Get original rotation values from data attributes
             const rotX = parseFloat(mediaElement.getAttribute('data-original-rotation-x')) || 0;
@@ -105,22 +105,19 @@
             
             mediaElement.setAttribute('rotation', {x: rotX, y: rotY, z: rotZ});
             console.log(`  Reset to original rotation: x=${rotX}°, y=${rotY}°, z=${rotZ}°, scale: ${originalScale}`);
-        }else if(mediaElement.id.includes("marker")){
+        } else if(mediaElement.id.includes("marker")){
             mediaElement.setAttribute('rotation', {x: -90, y: 0, z: 0});
             console.log("Reset to original rotation: -90 0 0") ;
-        }else{
+        } else {
             mediaElement.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            console.log("Reset to original rotation: 0 0 0") ;        }
+            console.log("Reset to original rotation: 0 0 0") ;
+        }
         
-        // Get original scale
-        const originalScale = parseFloat(mediaElement.getAttribute('data-original-scale')) || 1;
+        // Reset scale for ALL media types (including 3D models)
         mediaElement.setAttribute('scale', {x: originalScale, y: originalScale, z: originalScale});
-        // Reset position, scale, and rotation using all three axes
+        
+        // Reset position
         mediaElement.setAttribute('position', {x: 0, y: 0, z: 0});
-        
-        
-        
-        
     }
 
     // Add this new handler function

@@ -277,6 +277,20 @@
                         }
                         
                     }
+
+                    if (!el.id.includes("navigation") && !el.classList.contains('istriggered')) {
+                        el.classList.add('istriggered');
+                        const origWidth = el.getAttribute('width');
+                        const origHeight = el.getAttribute('height');
+                        el.setAttribute('width', 0.8);
+                        el.setAttribute('height', 0.8);
+                        
+                        setTimeout(() => {
+                            el.classList.remove('istriggered');
+                            el.setAttribute('width', origWidth);
+                            el.setAttribute('height', origHeight);
+                        }, 500);
+                    }
                 }
 
                 raycaster.addEventListener('raycaster-intersection', function(evt) {
