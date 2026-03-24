@@ -3,7 +3,7 @@
   "pages": [
     {
       "barcode_number": 0,
-      "narration": "assets/audio/pag 1.mp3",
+      "narration": "assets/audio/1.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -48,7 +48,7 @@
     },
     {
       "barcode_number": 1,
-      "narration": "assets/audio/pag 2.mp3",
+      "narration": "assets/audio/2.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -87,7 +87,7 @@
     },
     {
       "barcode_number": 2,
-      "narration": "assets/audio/pag 3.mp3",
+      "narration": "assets/audio/3.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -132,7 +132,7 @@
     },
     {
       "barcode_number": 3,
-      "narration": "assets/audio/pag 4.mp3",
+      "narration": "assets/audio/4.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -178,7 +178,7 @@
     },
     {
       "barcode_number": 4,
-      "narration": "assets/audio/pag 5.mp3",
+      "narration": "assets/audio/5.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -230,7 +230,7 @@
     },
     {
       "barcode_number": 5,
-      "narration": "assets/audio/pag 6.mp3",
+      "narration": "assets/audio/6.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -263,7 +263,7 @@
     },
     {
       "barcode_number": 6,
-      "narration": "assets/audio/pag 7.mp3",
+      "narration": "assets/audio/7.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -295,7 +295,7 @@
     },
     {
       "barcode_number": 7,
-      "narration": "assets/audio/pag 8.mp3",
+      "narration": "assets/audio/8.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -347,7 +347,7 @@
     },
     {
       "barcode_number": 8,
-      "narration": "assets/audio/pag 9.mp3",
+      "narration": "assets/audio/9.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
@@ -420,7 +420,7 @@
     },
     {
       "barcode_number": 9,
-      "narration": "assets/audio/pag 10.mp3",
+      "narration": "assets/audio/10.mp3",
       "surround": "",
       "surround_rotation": 0,
       "central_side": [
