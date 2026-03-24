@@ -13,27 +13,21 @@
           "src": "assets/images/0.jpg",
           "scale": 10,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "false",
           "src": "assets/images/fullagar1.jpg",
           "scale": 8,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "false",
           "src": "assets/images/fullagar2.jpg",
           "scale": 8,
           "audio": ""
-        }
-      ],
-      "marker": [
+        },
         {
           "type": "3d",
           "controls": "true",
@@ -47,7 +41,10 @@
           "audio": "",
           "auto_rotate": false
         }
-      ]
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 1,
@@ -68,18 +65,14 @@
           "src": "assets/images/1.3.jpg",
           "scale": 16,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/1.1.jpg",
           "scale": 12,
           "audio": " "
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
@@ -88,9 +81,9 @@
           "audio": ""
         }
       ],
-      "marker": [
-        {}
-      ]
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 2,
@@ -104,27 +97,21 @@
           "src": "assets/images/2.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/example iron and steel shipment.png",
           "scale": 8,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/cargo of coal or similar.png",
           "scale": 8,
           "audio": ""
-        }
-      ],
-      "marker": [
+        },
         {
           "type": "3d",
           "controls": "false",
@@ -138,7 +125,10 @@
           "audio": "",
           "auto_rotate": false
         }
-      ]
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 3,
@@ -152,18 +142,14 @@
           "src": "assets/images/3.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/1924 crash.png",
           "scale": 8,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
@@ -177,9 +163,7 @@
           "src": "assets/images/liverpool docks circa 1920.png",
           "scale": 8,
           "audio": ""
-        }
-      ],
-      "marker": [
+        },
         {
           "type": "image",
           "controls": "true",
@@ -187,7 +171,10 @@
           "scale": 4.4,
           "audio": ""
         }
-      ]
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 4,
@@ -201,18 +188,14 @@
           "src": "assets/images/4.2.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/4.1.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
@@ -226,9 +209,7 @@
           "src": "assets/images/bc cement co sign.png",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "marker": [
+        },
         {
           "type": "3d",
           "controls": "false",
@@ -242,7 +223,10 @@
           "audio": "",
           "auto_rotate": false
         }
-      ]
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 5,
@@ -257,18 +241,14 @@
           "scale": 14,
           "audio": "",
           "autoplay": "false"
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/freeboard1.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
@@ -277,9 +257,9 @@
           "audio": ""
         }
       ],
-      "marker": [
-        {}
-      ]
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 6,
@@ -293,18 +273,14 @@
           "src": "assets/images/5.2.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/5.1.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
@@ -313,9 +289,9 @@
           "audio": ""
         }
       ],
-      "marker": [
-        {}
-      ]
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 7,
@@ -336,27 +312,21 @@
           "src": "assets/images/6.2.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/10kcement.png",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/6.3.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "marker": [
+        },
         {
           "type": "3d",
           "controls": "false",
@@ -370,7 +340,10 @@
           "audio": "",
           "auto_rotate": false
         }
-      ]
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 8,
@@ -405,18 +378,14 @@
           "src": "assets/images/7.4.jpg",
           "scale": 5.6,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/8.jpg",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
@@ -430,9 +399,7 @@
           "src": "assets/images/sheercorrection.png",
           "scale": 6,
           "audio": ""
-        }
-      ],
-      "marker": [
+        },
         {
           "type": "3d",
           "controls": "false",
@@ -446,7 +413,10 @@
           "audio": "",
           "auto_rotate": false
         }
-      ]
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     },
     {
       "barcode_number": 9,
@@ -460,27 +430,21 @@
           "src": "assets/images/9.jpg",
           "scale": 7,
           "audio": ""
-        }
-      ],
-      "left_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/trapped.png",
           "scale": 8,
           "audio": ""
-        }
-      ],
-      "right_side": [
+        },
         {
           "type": "image",
           "controls": "true",
           "src": "assets/images/rescued.png",
           "scale": 8,
           "audio": ""
-        }
-      ],
-      "marker": [
+        },
         {
           "type": "3d",
           "controls": "false",
@@ -494,7 +458,10 @@
           "audio": "",
           "auto_rotate": false
         }
-      ]
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": []
     }
   ]
 }
