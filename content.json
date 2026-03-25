@@ -129,7 +129,7 @@
           "type": "3d",
           "controls": "false",
           "src": "assets/models/liverpoolcardiffanimation.glb",
-          "scale": 2,
+          "scale": 0.1,
           "rotation": {
             "x": 0,
             "y": 0,
@@ -233,7 +233,7 @@
           "type": "3d",
           "controls": "false",
           "src": "assets/models/liverpoolvancouveranimation.glb",
-          "scale": 0.8,
+          "scale": 0.1,
           "rotation": {
             "x": 0,
             "y": 0,
@@ -437,7 +437,7 @@
           "type": "3d",
           "controls": "false",
           "src": "assets/models/vc mexico la.glb",
-          "scale": 0.09,
+          "scale": 0.1,
           "rotation": {
             "x": 0,
             "y": 0,
@@ -485,7 +485,7 @@
           "type": "3d",
           "controls": "false",
           "src": "assets/models/sinking.glb",
-          "scale": 0.05,
+          "scale": 0.1,
           "rotation": {
             "x": 0,
             "y": 0,

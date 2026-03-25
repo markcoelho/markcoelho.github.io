@@ -264,6 +264,34 @@
 
             function handleButton(el, info, target) {
                 if (!isElementVisible(el)) return;
+
+
+// Get location
+    let location = '';
+    if (target.includes('marker')) location = '📜 marker';
+    else if (target.includes('centerpiece')) location = '📜 center';
+    else if (target.includes('leftpiece')) location = '📜 left';
+    else if (target.includes('rightpiece')) location = '📜 right';
+    
+    // Get action
+    let action = '';
+    if (info.type === 'scroller') action = `↔️ ${info.direction}`;
+    else if (info.type === 'roller') action = `🔄 ${info.direction}`;
+    else if (info.type === 'zoom') action = `🔍 ${info.direction === 'in' ? '+' : '-'}`;
+    else if (info.type === '3d-zoom') action = `📐 ${info.direction === 'in' ? '+' : '-'}`;
+    else if (info.type === 'reset') action = `🔄 reset`;
+    else if (info.type === '3d-reset') action = `📐 reset`;
+    else if (info.type === 'restart') action = `⏮️ restart`;
+    else if (info.type === 'mute') action = `🔇 mute`;
+    else if (info.type === 'fast-forward') action = `⏩ ff`;
+    else if (info.type === 'fast-backward') action = `⏪ rew`;
+    else if (target.includes('navigation')) action = `📋 navigation`;
+    else return;
+    
+    // Add grouped action
+    addAction(location, action, getTimestamp());
+
+
                 
                     const dir = info.direction ? ` ${info.direction}` : '';
                     handleButtonAction(target, info.type, info.direction || null, el);
