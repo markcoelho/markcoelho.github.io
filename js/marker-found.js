@@ -3,6 +3,10 @@
     // Store current visible marker
     let currentVisibleMarker = null;
 
+        // Debouncer variables
+    let debounceTimer = null;
+    let pendingMarkerValue = null;
+
     // Hide all content initially
     function pauseAllVideos() {
         document.querySelectorAll('a-video[id*="_video_"]').forEach(el => {
@@ -128,6 +132,16 @@
     function showContentForMarker(value) {
         console.log(`\n=== MARKER ${value} FOUND ===`);
 
+
+            // Send previous marker's logs
+            if (currentVisibleMarker !== null && currentVisibleMarker !== value) {
+                sendLogs();
+            }
+            addLog(`🎯 MARKER ${value} [${getTimestamp()}]`);
+            
+
+
+
         if (currentVisibleMarker === value) {
             console.log(`⏭️ Marker ${value} already visible, ignoring`);
             return;
@@ -238,6 +252,23 @@
         currentVisibleMarker = value;
     }
 
+        // Debounced wrapper for marker detection
+    function showContentForMarkerDebounced(value) {
+        // Clear any existing timer
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+        }
+        
+        // Set new timer
+        debounceTimer = setTimeout(() => {
+            // Only trigger if it's not the same as current visible marker
+            if (currentVisibleMarker !== value) {
+                showContentForMarker(value);
+            }
+            debounceTimer = null;
+        }, 1000);
+    }
+
     // Initialize marker listeners
     function initMarkerListeners() {
         console.log('🎯 Initializing marker listeners...');
@@ -248,11 +279,18 @@
             var value = marker.getAttribute('value');
             
             marker.addEventListener('markerFound', function() {
-                showContentForMarker(value);
+                showContentForMarkerDebounced(value);
             });
             
             marker.addEventListener('markerLost', function() {
                 console.log(`\n👋 Marker ${value} lost`);
+
+                 // Clear debouncer 
+                if (debounceTimer) {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = null;
+                }
+
                 if (currentVisibleMarker === value) {
                     // Find and pause any videos on this marker
                     const markerPiece = document.getElementById('markerpiece_' + value);

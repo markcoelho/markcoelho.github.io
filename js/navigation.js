@@ -144,29 +144,32 @@
                 
                 console.log(`  Media type: ${mediaType}, index: ${mediaIndex}`);
                 
-                // Hide all media in this piece
+                // Hide all media in this piece - dynamic selector for any index
                 const allMedia = piece.querySelectorAll(
-                    '[id$="_3d_0"], [id$="_3d_1"], [id$="_3d_2"], [id$="_3d_3"], ' +
-                    '[id$="_image_0"], [id$="_image_1"], [id$="_image_2"], [id$="_image_3"], ' +
-                    '[id$="_video_0"], [id$="_video_1"], [id$="_video_2"], [id$="_video_3"]'
+                    '[id*="_3d_"], [id*="_image_"], [id*="_video_"]'
                 );
                 
                 console.log(`  Found ${allMedia.length} media elements to hide`);
                 allMedia.forEach(media => {
-                    if (!media.id.includes('_navigation')) {
+                    // Don't hide navigation thumbnails or control panels
+                    if (!media.id.includes('_navigation') && 
+                        !media.id.includes('_Controls') && 
+                        !media.id.includes('_3dControls') && 
+                        !media.id.includes('_VideoControls')) {
                         media.setAttribute('visible', 'false');
-
+                        
+                        // Pause videos if they're playing
                         if (media.tagName === 'A-VIDEO') {
-                                media.components.material.material.map.image.pause();                    }
+                            media.components.material.material.map.image.pause();
+                        }
                     }
                 });
                 
                 // Hide ALL control panels AND their children in this piece
-                // This includes 3dControls, Controls, VideoControls, and all their child buttons
+                // Dynamic selector for any control panel
                 const allControlPlanes = piece.querySelectorAll(
-                    '[id$="_3dControls_0"], [id$="_3dControls_1"], [id$="_3dControls_2"], [id$="_3dControls_3"], ' +
-                    '[id$="_Controls_0"], [id$="_Controls_1"], [id$="_Controls_2"], [id$="_Controls_3"], ' +
-                    '[id$="_VideoControls_0"], [id$="_VideoControls_1"], [id$="_VideoControls_2"], [id$="_VideoControls_3"]'
+                    '[id$="_3dControls"], [id$="_Controls"], [id$="_VideoControls"], ' +
+                    '[id*="_3dControls_"], [id*="_Controls_"], [id*="_VideoControls_"]'
                 );
                 
                 console.log(`  Found ${allControlPlanes.length} control planes to hide`);
@@ -196,7 +199,9 @@
                 } else if (mediaType === '3d') {
                     controlsId = `${pieceId}_3dControls_${mediaIndex}`;
                 } else if (mediaType === 'video') {
-                    targetMedia.components.material.material.map.image.play();
+                    if (targetMedia) {
+                        targetMedia.components.material.material.map.image.play();
+                    }
                     controlsId = `${pieceId}_VideoControls_${mediaIndex}`;
                 }
                 

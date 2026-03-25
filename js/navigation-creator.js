@@ -159,7 +159,7 @@
         // Create navigation panel container
         const navPanel = document.createElement('a-entity');
         navPanel.id = `${pieceId}_navigation`;
-        navPanel.setAttribute('position', '0 2.4 0.1');
+        navPanel.setAttribute('position', '0 3 0.1');
         navPanel.setAttribute('visible', 'true');
         
         // Calculate positions

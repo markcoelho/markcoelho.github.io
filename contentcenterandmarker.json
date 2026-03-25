@@ -27,7 +27,11 @@
           "src": "assets/images/fullagar2.jpg",
           "scale": 8,
           "audio": ""
-        },
+        }
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": [
         {
           "type": "3d",
           "controls": "true",
@@ -41,10 +45,7 @@
           "audio": "",
           "auto_rotate": false
         }
-      ],
-      "left_side": [],
-      "right_side": [],
-      "marker": []
+      ]
     },
     {
       "barcode_number": 1,
@@ -111,24 +112,25 @@
           "src": "assets/images/cargo of coal or similar.png",
           "scale": 8,
           "audio": ""
-        },
+        }
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": [
         {
           "type": "3d",
           "controls": "false",
           "src": "assets/models/liverpoolcardiffanimation.glb",
           "scale": 0.1,
           "rotation": {
-            "x": 90,
+            "x": 0,
             "y": 0,
             "z": 0
           },
           "audio": "",
           "auto_rotate": false
         }
-      ],
-      "left_side": [],
-      "right_side": [],
-      "marker": []
+      ]
     },
     {
       "barcode_number": 3,
@@ -209,24 +211,25 @@
           "src": "assets/images/bc cement co sign.png",
           "scale": 6,
           "audio": ""
-        },
+        }
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": [
         {
           "type": "3d",
           "controls": "false",
           "src": "assets/models/liverpoolvancouveranimation.glb",
           "scale": 0.1,
           "rotation": {
-            "x": 90,
+            "x": 0,
             "y": 0,
             "z": 0
           },
           "audio": "",
           "auto_rotate": false
         }
-      ],
-      "left_side": [],
-      "right_side": [],
-      "marker": []
+      ]
     },
     {
       "barcode_number": 5,
@@ -326,24 +329,25 @@
           "src": "assets/images/6.3.jpg",
           "scale": 6,
           "audio": ""
-        },
+        }
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": [
         {
           "type": "3d",
           "controls": "false",
           "src": "assets/models/rockcrash.glb",
           "scale": 0.1,
           "rotation": {
-            "x": 90,
+            "x": 0,
             "y": 0,
             "z": 0
           },
           "audio": "",
           "auto_rotate": false
         }
-      ],
-      "left_side": [],
-      "right_side": [],
-      "marker": []
+      ]
     },
     {
       "barcode_number": 8,
@@ -399,24 +403,25 @@
           "src": "assets/images/sheercorrection.png",
           "scale": 6,
           "audio": ""
-        },
+        }
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": [
         {
           "type": "3d",
           "controls": "false",
           "src": "assets/models/vc mexico la.glb",
           "scale": 0.1,
           "rotation": {
-            "x": 90,
+            "x": 0,
             "y": 0,
             "z": 0
           },
           "audio": "",
           "auto_rotate": false
         }
-      ],
-      "left_side": [],
-      "right_side": [],
-      "marker": []
+      ]
     },
     {
       "barcode_number": 9,
@@ -444,24 +449,25 @@
           "src": "assets/images/rescued.png",
           "scale": 8,
           "audio": ""
-        },
+        }
+      ],
+      "left_side": [],
+      "right_side": [],
+      "marker": [
         {
           "type": "3d",
           "controls": "false",
           "src": "assets/models/sinking.glb",
           "scale": 0.1,
           "rotation": {
-            "x": 90,
+            "x": 0,
             "y": 0,
             "z": 0
           },
           "audio": "",
           "auto_rotate": false
         }
-      ],
-      "left_side": [],
-      "right_side": [],
-      "marker": []
+      ]
     }
   ]
 }
