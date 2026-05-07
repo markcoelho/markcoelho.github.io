@@ -615,6 +615,8 @@ const AppContent = {
             // Set ID if direction is provided
             if (buttonConfig.direction) {
                 button.setAttribute('id', `${containerId}_${type}_${buttonConfig.direction}_${suffix}`);
+            }else if (buttonConfig.action) {
+                button.setAttribute('id', `${containerId}_${type}_${buttonConfig.action}_${suffix}`);
             }
             
             button.setAttribute('position', buttonConfig.position);

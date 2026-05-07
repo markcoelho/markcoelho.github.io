@@ -107,6 +107,9 @@
             // Helper function to switch media
             function switchMedia(targetMediaId) {
                 console.log(`🔄 Switching to media: ${targetMediaId}`);
+
+                // Add this line right after: console.log(`🔄 Switching to media: ${targetMediaId}`);
+                if (window.logNavigationSwitch) window.logNavigationSwitch(targetMediaId);
                 
                 // Extract piece ID from media ID (e.g., "centerpiece_0_image_0" -> "centerpiece_0")
                 const match = targetMediaId.match(/^(centerpiece|leftpiece|rightpiece)_\d+/);

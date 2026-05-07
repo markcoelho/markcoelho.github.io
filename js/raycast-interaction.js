@@ -265,61 +265,35 @@
             function handleButton(el, info, target) {
                 if (!isElementVisible(el)) return;
 
-
-// Get location
-    let location = '';
-    if (target.includes('marker')) location = '📜 marker';
-    else if (target.includes('centerpiece')) location = '📜 center';
-    else if (target.includes('leftpiece')) location = '📜 left';
-    else if (target.includes('rightpiece')) location = '📜 right';
-    
-    // Get action
-    let action = '';
-    if (info.type === 'scroller') action = `↔️ ${info.direction}`;
-    else if (info.type === 'roller') action = `🔄 ${info.direction}`;
-    else if (info.type === 'zoom') action = `🔍 ${info.direction === 'in' ? '+' : '-'}`;
-    else if (info.type === '3d-zoom') action = `📐 ${info.direction === 'in' ? '+' : '-'}`;
-    else if (info.type === 'reset') action = `🔄 reset`;
-    else if (info.type === '3d-reset') action = `📐 reset`;
-    else if (info.type === 'restart') action = `⏮️ restart`;
-    else if (info.type === 'mute') action = `🔇 mute`;
-    else if (info.type === 'fast-forward') action = `⏩ ff`;
-    else if (info.type === 'fast-backward') action = `⏪ rew`;
-    else if (target.includes('navigation')) action = `📋 navigation`;
-    else return;
-    
-    // Add grouped action
-    addAction(location, action, getTimestamp());
-
-
+                // Log the button ID
+                logButton(el.id || 'unknown');
                 
-                    const dir = info.direction ? ` ${info.direction}` : '';
-                    handleButtonAction(target, info.type, info.direction || null, el);
-                    
-                    if (['zoom', '3d-zoom', 'reset', '3d-reset', 'scroller', 'roller'].includes(info.type)) {
-                        el.removeAttribute('raycastable');
-                        if(info.type.includes("scroller") || info.type.includes("roller")){
-                            setTimeout(() => el.setAttribute('raycastable', ''), 100);
-                        }else{
-                            setTimeout(() => el.setAttribute('raycastable', ''), 200);
-                        }
-                        
-                    }
-
-                    if (!el.id.includes("navigation") && !el.classList.contains('istriggered')) {
-                        el.classList.add('istriggered');
-                        const origWidth = el.getAttribute('width');
-                        const origHeight = el.getAttribute('height');
-                        el.setAttribute('width', 0.8);
-                        el.setAttribute('height', 0.8);
-                        
-                        setTimeout(() => {
-                            el.classList.remove('istriggered');
-                            el.setAttribute('width', origWidth);
-                            el.setAttribute('height', origHeight);
-                        }, 500);
-                    }
+                // Execute the action
+                handleButtonAction(target, info.type, info.direction || null, el);
+                
+                // Handle visual feedback and raycast cooldown
+                if (['zoom', '3d-zoom', 'reset', '3d-reset', 'scroller', 'roller'].includes(info.type)) {
+                    el.removeAttribute('raycastable');
+                    const delay = (info.type.includes("scroller") || info.type.includes("roller")) ? 100 : 200;
+                    setTimeout(() => el.setAttribute('raycastable', ''), delay);
                 }
+
+                // Button press animation
+                if (!el.id.includes("navigation") && !el.classList.contains('istriggered')) {
+                    el.classList.add('istriggered');
+                    const origWidth = el.getAttribute('width');
+                    const origHeight = el.getAttribute('height');
+                    el.setAttribute('width', 0.8);
+                    el.setAttribute('height', 0.8);
+                    
+                    setTimeout(() => {
+                        el.classList.remove('istriggered');
+                        el.setAttribute('width', origWidth);
+                        el.setAttribute('height', origHeight);
+                    }, 500);
+                }
+            }
+            
 
                 raycaster.addEventListener('raycaster-intersection', function(evt) {
                     evt.detail.intersections.forEach(intersection => {

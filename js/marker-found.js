@@ -130,127 +130,108 @@
 
     // Show content for specific marker value
     function showContentForMarker(value) {
-        console.log(`\n=== MARKER ${value} FOUND ===`);
-
-
-            // Send previous marker's logs
-            if (currentVisibleMarker !== null && currentVisibleMarker !== value) {
-                sendLogs();
-            }
-            addLog(`🎯 MARKER ${value} [${getTimestamp()}]`);
-            
-
-
-
-        if (currentVisibleMarker === value) {
-            console.log(`⏭️ Marker ${value} already visible, ignoring`);
-            return;
-        }
-
-        // Hide all pieces from previous marker
-        ['markerpiece_', 'centerpiece_', 'leftpiece_', 'rightpiece_'].forEach(prefix => {
-            const element = document.getElementById(prefix + currentVisibleMarker);
-            if (element) {
-                element.setAttribute('visible', 'false');
-                console.log(` ${prefix}${currentVisibleMarker} hidden`);
-            }
-        });
-        
-        stopAllNarration();
-
-        // Hide all content first
-        pauseAllVideos();
-
-        const narrationElement = document.getElementById(`narration_${value}`);
-        if (narrationElement) {
-            try {
-                narrationElement.components.sound.playSound();
-                console.log(`🔊 Playing narration for marker ${value}`);
-            } catch(e) {
-                console.warn(`Could not play narration for marker ${value}: ${e}`);
-            }
-        }
-
-        // Show surround element for this marker if it exists
-        const surroundElement = document.getElementById(`surround_${value}`);
-        if (surroundElement) {
-            surroundElement.setAttribute('visible', true);
-            console.log(`🌐 surround_${value} visible`);
-            
-            // If it's a videosphere, play it
-            if (surroundElement.tagName === 'A-VIDEOSPHERE') {
-                try {
-                    surroundElement.components.material.material.map.image.play();
-                    console.log(`▶️ Playing surround video: surround_${value}`);
-                } catch(e) {
-                    console.warn(`Could not play surround video: ${e}`);
-                }
-            }
-        }
-        
-        // Show marker piece
-        var markerPiece = document.getElementById('markerpiece_' + value);
-        if (markerPiece) {
-            markerPiece.setAttribute('visible', true);
-            console.log(`📌 markerpiece_${value}`);
-            
-            // Show marker content
-            var markerContent = markerPiece.querySelector('[id^="markerContent_"]');
-            if (markerContent) {
-                markerContent.setAttribute('visible', true);
-                
-                // Find first media element in marker content
-                var firstMarkerMedia = findFirstMediaElement(markerContent);
-                if (firstMarkerMedia) {
-                    firstMarkerMedia.setAttribute('visible', true);
-                    console.log(`  📸 ${firstMarkerMedia.id}`);
-
-                    // Play video if it's a video element
-                    if (firstMarkerMedia.tagName === 'A-VIDEO' && firstMarkerMedia.getAttribute('auto-play') === 'true') {
-                        try {
-                            firstMarkerMedia.components.material.material.map.image.play();
-                        } catch(e) {
-                            console.warn(`Could not play video: ${e}`);
-                        }
-                    }
-                    
-                    // Find and show the matching controls for the first media
-                    var mediaType = 'image';
-                    if (firstMarkerMedia.tagName === 'A-VIDEO'){
-                        mediaType = 'video';
-                    } else if (firstMarkerMedia.tagName === 'A-ENTITY' || firstMarkerMedia.hasAttribute('gltf-model')) {
-                        mediaType = '3d';
-                    }
-                    
-                    var controlsId;
-                    if (mediaType === 'image') {
-                        controlsId = 'markerControls_0';
-                    } else if (mediaType === 'video') {
-                        controlsId = 'markerVideoControls_0';
-                    } else if (mediaType === '3d') {
-                        controlsId = 'marker3dControls_0';
-                    }
-                    
-                    var markerControls = markerContent.querySelector('#' + controlsId);
-                    showElementWithChildren(markerControls, `${controlsId} (controls)`);
-                }
-            }
-            
-            // Show marker navigation if it exists
-            var markerNavigation = markerPiece.querySelector(`#markerpiece_${value}_navigation`);
-            if (markerNavigation) {
-                showElementWithChildren(markerNavigation, `markerpiece_${value}_navigation`);
-            }
-        }
-        
-        // Use unified handler for center, left, and right pieces
-        handlePiece('centerpiece', value);
-        handlePiece('leftpiece', value);
-        handlePiece('rightpiece', value);
-        
-        console.log(`=== DONE ===\n`);
-        currentVisibleMarker = value;
+    // Log the marker value
+    logMarker(value);
+    
+    if (currentVisibleMarker === value) {
+        return;
     }
+
+    // Hide all pieces from previous marker
+    ['markerpiece_', 'centerpiece_', 'leftpiece_', 'rightpiece_'].forEach(prefix => {
+        const element = document.getElementById(prefix + currentVisibleMarker);
+        if (element) {
+            element.setAttribute('visible', 'false');
+        }
+    });
+    
+    stopAllNarration();
+    pauseAllVideos();
+
+    const narrationElement = document.getElementById(`narration_${value}`);
+    if (narrationElement) {
+        try {
+            narrationElement.components.sound.playSound();
+        } catch(e) {
+            // Ignore errors
+        }
+    }
+
+    // Show surround element for this marker if it exists
+    const surroundElement = document.getElementById(`surround_${value}`);
+    if (surroundElement) {
+        surroundElement.setAttribute('visible', true);
+        if (surroundElement.tagName === 'A-VIDEOSPHERE') {
+            try {
+                surroundElement.components.material.material.map.image.play();
+            } catch(e) {
+                // Ignore errors
+            }
+        }
+    }
+    
+    // Show marker piece
+    var markerPiece = document.getElementById('markerpiece_' + value);
+    if (markerPiece) {
+        markerPiece.setAttribute('visible', true);
+        
+        var markerContent = markerPiece.querySelector('[id^="markerContent_"]');
+        if (markerContent) {
+            markerContent.setAttribute('visible', true);
+            
+            var firstMarkerMedia = findFirstMediaElement(markerContent);
+            if (firstMarkerMedia) {
+                firstMarkerMedia.setAttribute('visible', true);
+
+                if (firstMarkerMedia.tagName === 'A-VIDEO' && firstMarkerMedia.getAttribute('auto-play') === 'true') {
+                    try {
+                        firstMarkerMedia.components.material.material.map.image.play();
+                    } catch(e) {
+                        // Ignore errors
+                    }
+                }
+                
+                var mediaType = 'image';
+                if (firstMarkerMedia.tagName === 'A-VIDEO'){
+                    mediaType = 'video';
+                } else if (firstMarkerMedia.tagName === 'A-ENTITY' || firstMarkerMedia.hasAttribute('gltf-model')) {
+                    mediaType = '3d';
+                }
+                
+                var controlsId;
+                if (mediaType === 'image') {
+                    controlsId = 'markerControls_0';
+                } else if (mediaType === 'video') {
+                    controlsId = 'markerVideoControls_0';
+                } else if (mediaType === '3d') {
+                    controlsId = 'marker3dControls_0';
+                }
+                
+                var markerControls = markerContent.querySelector('#' + controlsId);
+                if (markerControls) {
+                    markerControls.setAttribute('visible', true);
+                    markerControls.querySelectorAll('*').forEach(child => {
+                        child.setAttribute('visible', true);
+                    });
+                }
+            }
+        }
+        
+        var markerNavigation = markerPiece.querySelector(`#markerpiece_${value}_navigation`);
+        if (markerNavigation) {
+            markerNavigation.setAttribute('visible', true);
+            markerNavigation.querySelectorAll('*').forEach(child => {
+                child.setAttribute('visible', true);
+            });
+        }
+    }
+    
+    handlePiece('centerpiece', value);
+    handlePiece('leftpiece', value);
+    handlePiece('rightpiece', value);
+    
+    currentVisibleMarker = value;
+}
 
         // Debounced wrapper for marker detection
     function showContentForMarkerDebounced(value) {
