@@ -4,10 +4,9 @@ const webhookUrl = atob("aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ4NjE1NDA
 // Track current marker and stats
 let currentMarker = null;
 let markerStartTime = null;
-let stats = {};
 
-// Store all summaries for file download
-let allSummaries = [];
+// Store all CSV entries for file download
+let allCSVEntries = []; // Changed from allSummaries
 let marker9Completed = false;
 let hasDownloaded = false;
 
@@ -23,66 +22,107 @@ function getTimestamp() {
     return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}.${now.getMilliseconds().toString().padStart(3,'0')}`;
 }
 
-// Extract action from button ID
+// Get full timestamp for CSV (YYYY-MM-DD HH:MM:SS)
+function getFullTimestamp() {
+    const now = new Date();
+    return `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+}
+
+// Extract action from button ID (returns specific action type)
 function getAction(buttonId) {
-    if (buttonId.includes('mute')) return 'mute';
-    if (buttonId.includes('zoom')) return 'zoom';
-    if (buttonId.includes('move') || buttonId.includes('up') || buttonId.includes('down') || buttonId.includes('left') || buttonId.includes('right')) return 'move';
-    if (buttonId.includes('rotate')) return 'rotate';
-    if (buttonId.includes('play')) return 'play';
-    if (buttonId.includes('fast-forward') || buttonId.includes('ff')) return 'fast-forward';
+    if (buttonId.includes('arrow-right') || buttonId.includes('right') && !buttonId.includes('left')) return 'arrow right';
+    if (buttonId.includes('arrow-left') || buttonId.includes('left')) return 'arrow left';
+    if (buttonId.includes('arrow-up') || buttonId.includes('up')) return 'arrow up';
+    if (buttonId.includes('arrow-down') || buttonId.includes('down')) return 'arrow down';
     if (buttonId.includes('reset')) return 'reset';
     if (buttonId.includes('navigation')) return 'navigation';
-    if (buttonId.includes('increase')) return 'increase';
-    if (buttonId.includes('decrease')) return 'decrease';
+    if (buttonId.includes('play')) return 'play';
+    if (buttonId.includes('pause')) return 'pause';
+    if (buttonId.includes('mute')) return 'mute';
+    if (buttonId.includes('zoom') || buttonId.includes('increase')) return 'zoom in';
+    if (buttonId.includes('decrease')) return 'zoom out';
+    if (buttonId.includes('rotate')) return 'rotate';
+    if (buttonId.includes('fast-forward') || buttonId.includes('ff')) return 'fast forward';
     if (buttonId.includes('backward')) return 'backward';
     if (buttonId.includes('restart')) return 'restart';
     if (buttonId.includes('marker3d')) return 'marker3d';
+    if (buttonId.includes('move')) return 'move';
     return 'other';
 }
 
-// Get piece from button ID or media ID
+// Get piece from button ID or media ID (returns side)
 function getPiece(id) {
-    if (id.includes('centerpiece')) return 'CENTERPIECE';
-    if (id.includes('leftpiece')) return 'LEFTPIECE';
-    if (id.includes('rightpiece')) return 'RIGHTPIECE';
-    if (id.includes('marker')) return 'MARKERPIECE';
+    if (id.includes('centerpiece')) return 'center';
+    if (id.includes('leftpiece')) return 'left';
+    if (id.includes('rightpiece')) return 'right';
+    if (id.includes('marker')) return 'marker';
     return null;
 }
 
-// Get current summary as string
-function getCurrentSummary() {
-    if (!currentMarker) return '';
-    
-    let output = `Marker ${currentMarker}\n`;
-    output += `Entered: ${markerStartTime}\n`;
-    output += `Exited: ${getTime()}\n`;
-    output += `----------------------------------------\n\n`;
-    
-    for (const [piece, actions] of Object.entries(stats)) {
-        output += `${piece}:\n`;
-        for (const [action, count] of Object.entries(actions)) {
-            output += `${action}: ${count}x\n`;
-        }
-        output += `\n`;
-    }
-    
-    output += `========================================\n`;
-    return output;
+// Get media type from button ID
+function getMediaType(buttonId) {
+    if (buttonId.includes('_image_') || buttonId.includes('image')) return 'image';
+    if (buttonId.includes('_video_') || buttonId.includes('video')) return 'video';
+    if (buttonId.includes('_3d_') || buttonId.includes('marker3d') || buttonId.includes('3d')) return '3d model';
+    return 'unknown';
 }
 
-// Download text file
+// Get current marker summary as CSV rows (instead of text summary)
+function getCurrentMarkerCSVRows() {
+    if (!currentMarker) return [];
+    
+    // Filter entries for current marker
+    const markerEntries = allCSVEntries.filter(entry => entry.marker === currentMarker);
+    return markerEntries;
+}
+
+// Send marker summary to Discord (CSV format for the marker)
+function sendMarkerSummary() {
+    if (!currentMarker) return;
+    
+    const markerEntries = getCurrentMarkerCSVRows();
+    if (markerEntries.length === 0) return;
+    
+    // Create summary for Discord (first few entries + stats)
+    const firstEntries = markerEntries.slice(0, 10);
+    let discordOutput = `**Marker ${currentMarker} Summary** (${markerEntries.length} interactions)\n\`\`\`csv\n`;
+    firstEntries.forEach(entry => {
+        discordOutput += `"${entry.timestamp}",${entry.action_type},${entry.side},${entry.media_type},${entry.marker}\n`;
+    });
+    if (markerEntries.length > 10) {
+        discordOutput += `... and ${markerEntries.length - 10} more interactions\n`;
+    }
+    discordOutput += `\`\`\``;
+    
+    // Send to Discord
+    fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: discordOutput.substring(0, 2000) })
+    }).catch(error => console.error(`Failed to send logs: ${error.message}`));
+    
+    console.log(`\n📊 Marker ${currentMarker} summary sent to Discord (${markerEntries.length} interactions)`);
+}
+
+// Download CSV file
 function downloadLogFile() {
-    if (allSummaries.length === 0) {
-        console.log('No summaries to download');
+    if (allCSVEntries.length === 0) {
+        console.log('No CSV entries to download');
         return;
     }
     
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    const filename = `interaction_log_${timestamp}.txt`;
-    const content = allSummaries.join('');
+    const filename = `interaction_log_${timestamp}.csv`;
     
-    const blob = new Blob([content], { type: 'text/plain' });
+    
+    // Create CSV rows
+    const rows = allCSVEntries.map(entry => 
+        `"${entry.timestamp}",${entry.action_type},${entry.side},${entry.media_type},${entry.marker}`
+    ).join('\n');
+    
+    const content = rows;
+    
+    const blob = new Blob([content], { type: 'text/csv' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.href = url;
@@ -92,27 +132,22 @@ function downloadLogFile() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    console.log(`✅ Log file downloaded: ${filename}`);
+    console.log(`✅ CSV file downloaded: ${filename} (${allCSVEntries.length} entries)`);
     hasDownloaded = true;
 }
 
-// Send marker summary to Discord AND save to file
-function sendMarkerSummary() {
-    if (!currentMarker) return;
+// Add CSV entry
+function addCSVEntry(timestamp, actionType, side, mediaType, marker) {
+    allCSVEntries.push({
+        timestamp: timestamp,
+        action_type: actionType,
+        side: side,
+        media_type: mediaType,
+        marker: marker
+    });
     
-    const summary = getCurrentSummary();
-    const discordOutput = summary.replace(/\n$/, ''); // Remove trailing newline for Discord
-    
-    // Send to Discord
-    fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: discordOutput.substring(0, 2000) })
-    }).catch(error => console.error(`Failed to send logs: ${error.message}`));
-    
-    // Save to file storage
-    allSummaries.push(summary);
-    console.log(`\n${summary}`);
+    // Also log as CSV line to console
+    console.log(`[CSV] "${timestamp}",${actionType},${side},${mediaType},${marker}`);
 }
 
 // Marker found logging
@@ -133,14 +168,13 @@ function logMarker(markerValue) {
     // Start new marker
     currentMarker = markerValue;
     markerStartTime = getTime();
-    stats = {}; // Reset stats
     
     // Log marker change
     console.log(`[${getTimestamp()}] MARKER: ${markerValue}`);
     
     // If we completed marker 9 and this is a new marker (ANY marker after 9), download
     if (!hasDownloaded && marker9Completed && currentMarker !== null) {
-        console.log(`📥 Marker ${markerValue} detected after Marker 9! Downloading log file...`);
+        console.log(`📥 Marker ${markerValue} detected after Marker 9! Downloading CSV file...`);
         setTimeout(() => {
             downloadLogFile();
         }, 100);
@@ -149,14 +183,14 @@ function logMarker(markerValue) {
 
 // Button click logging
 function logButton(buttonId) {
-    const piece = getPiece(buttonId);
+    const timestamp = getFullTimestamp();
     const action = getAction(buttonId);
+    const piece = getPiece(buttonId);
+    const mediaType = getMediaType(buttonId);
     
     // Track stats if we're in a marker
-    if (currentMarker !== null && piece && action) {
-        if (!stats[piece]) stats[piece] = {};
-        if (!stats[piece][action]) stats[piece][action] = 0;
-        stats[piece][action]++;
+    if (currentMarker !== null && piece) {
+        addCSVEntry(timestamp, action, piece, mediaType, currentMarker);
     }
     
     // Log to console
@@ -165,14 +199,14 @@ function logButton(buttonId) {
 
 // Navigation media switch logging
 function logNavigationSwitch(mediaId) {
-    const piece = getPiece(mediaId);
+    const timestamp = getFullTimestamp();
     const action = 'navigation';
+    const piece = getPiece(mediaId);
+    const mediaType = getMediaType(mediaId);
     
     // Track stats if we're in a marker
     if (currentMarker !== null && piece) {
-        if (!stats[piece]) stats[piece] = {};
-        if (!stats[piece][action]) stats[piece][action] = 0;
-        stats[piece][action]++;
+        addCSVEntry(timestamp, action, piece, mediaType, currentMarker);
     }
     
     // Log to console
@@ -181,8 +215,8 @@ function logNavigationSwitch(mediaId) {
 
 // Manual download function (exposed for console use)
 function downloadLogNow() {
-    if (allSummaries.length === 0) {
-        console.log('No summaries to download yet');
+    if (allCSVEntries.length === 0) {
+        console.log('No CSV entries to download yet');
         return;
     }
     downloadLogFile();
@@ -191,5 +225,3 @@ function downloadLogNow() {
 // Expose functions globally
 window.logNavigationSwitch = logNavigationSwitch;
 window.downloadLogNow = downloadLogNow;
-
-console.log('📝 Logging system ready. Will auto-download when ANY marker appears AFTER Marker 9');

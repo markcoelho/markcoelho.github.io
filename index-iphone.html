@@ -18,6 +18,7 @@
         <script src="js/marker-found.js"></script>
         <script src="js/navigation.js"></script>
         <script src="js/controls.js"></script>
+        <script src="js/worldrotationadjust.js"></script>
   
 
         <style>
@@ -52,7 +53,7 @@
 
 <body>
         <a-scene renderer="sortObjects: true" color="black" vr-mode-ui="enabled: true; "
-                arjs="cameraDesc: ultra wide; 
+                arjs="cameraDesc: back ultra wide; 
                 debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
 
                 <a-camera look-controls="enabled: true" far="10000">
@@ -506,6 +507,10 @@
                 </a-entity>
 
         </a-scene>
+        <div id="log" style="display: none; position: fixed;
+    bottom: 0;left:0;
+    z-index: 10000;
+    background-color: white;"> </div>
 </body>
 
 </html>

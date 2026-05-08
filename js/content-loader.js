@@ -2,11 +2,17 @@
 
 const AppContent = {
     data: null,
+
+    jsonFile: 'content.json', 
+    //jsonFile: 'contentcenter.json', 
+    //jsonFile: 'contentcenterandmarker.json', 
     
     // Load JSON content
-    async load(jsonUrl = 'content.json') {
+    async load(jsonUrl = null) {
+        const url = jsonUrl || this.jsonFile;
+
         try {
-            const response = await fetch(jsonUrl);
+            const response = await fetch(url);
             this.data = await response.json();
             console.log('Content loaded:', this.data);
             
@@ -673,7 +679,7 @@ const AppContent = {
 
 // Auto-load content when the page is ready
 document.addEventListener('DOMContentLoaded', () => {
-    AppContent.load('content.json');
+    AppContent.load();  
 });
 
 // Export (works in both browser and Node)

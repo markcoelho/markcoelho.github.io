@@ -261,6 +261,8 @@
             
             marker.addEventListener('markerFound', function() {
                 showContentForMarkerDebounced(value);
+
+                worldrotationadjust(marker);
             });
             
             marker.addEventListener('markerLost', function() {
