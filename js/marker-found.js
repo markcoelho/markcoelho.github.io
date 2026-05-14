@@ -131,7 +131,7 @@
     // Show content for specific marker value
     function showContentForMarker(value) {
     // Log the marker value
-    logMarker(value);
+    logMarkerShown(value);
     
     if (currentVisibleMarker === value) {
         return;
@@ -239,6 +239,9 @@
         if (debounceTimer) {
             clearTimeout(debounceTimer);
         }
+
+        // Log marker found immediately (physical detection)
+        logMarkerFound(value);
         
         // Set new timer
         debounceTimer = setTimeout(() => {
@@ -267,6 +270,7 @@
             
             marker.addEventListener('markerLost', function() {
                 console.log(`\n👋 Marker ${value} lost`);
+                logMarkerLost(value);
 
                  // Clear debouncer 
                 if (debounceTimer) {

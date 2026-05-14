@@ -150,18 +150,19 @@ function addCSVEntry(timestamp, actionType, side, mediaType, marker) {
     console.log(`[CSV] "${timestamp}",${actionType},${side},${mediaType},${marker}`);
 }
 
-// Marker found logging
-function logMarker(markerValue) {
+// Marker found logging (physical marker detection)
+function logMarkerFound(markerValue) {
     const previousMarker = currentMarker;
+    
+    // Add CSV entry for marker found
+    addCSVEntry(getFullTimestamp(), 'marker_found', '', '', markerValue);
     
     // Send summary for previous marker
     if (currentMarker !== null && currentMarker !== markerValue) {
         sendMarkerSummary();
-        
         // Check if previous marker was 9 and we haven't downloaded yet
         if (!hasDownloaded && parseInt(previousMarker) === 9) {
             marker9Completed = true;
-            console.log('🎯 Marker 9 completed! Will download on next marker...');
         }
     }
     
@@ -169,16 +170,30 @@ function logMarker(markerValue) {
     currentMarker = markerValue;
     markerStartTime = getTime();
     
-    // Log marker change
-    console.log(`[${getTimestamp()}] MARKER: ${markerValue}`);
-    
-    // If we completed marker 9 and this is a new marker (ANY marker after 9), download
+    // If we completed marker 9 and this is a new marker, download
     if (!hasDownloaded && marker9Completed && currentMarker !== null) {
-        console.log(`📥 Marker ${markerValue} detected after Marker 9! Downloading CSV file...`);
         setTimeout(() => {
             downloadLogFile();
         }, 100);
     }
+}
+
+// Marker found logging
+function logMarkerShown(markerValue) {
+    // Add CSV entry for marker shown
+    addCSVEntry(getFullTimestamp(), 'marker_shown', '', '', markerValue);
+    
+    // Log to console
+    console.log(`[${getTimestamp()}] MARKER SHOWN: ${markerValue}`);
+}
+
+// Marker found logging
+function logMarkerLost(markerValue) {
+    // Add CSV entry for marker lost
+    addCSVEntry(getFullTimestamp(), 'marker_lost', '', '', markerValue);
+    
+    // Log to console
+    console.log(`[${getTimestamp()}] MARKER LOST: ${markerValue}`);
 }
 
 // Button click logging
