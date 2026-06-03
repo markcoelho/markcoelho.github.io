@@ -49,7 +49,7 @@ function worldrotationadjust(markerElement) {
         const perpX = direction.z;
         const perpZ = -direction.x;
         const leftOffset = 1;
-        const cameraOffset = 1;
+        const cameraOffset = 1.3;
         
         leftTarget = {
             position: {
@@ -66,7 +66,7 @@ function worldrotationadjust(markerElement) {
         const perpX = -direction.z;
         const perpZ = direction.x;
         const rightOffset = 1;
-        const cameraOffset = 1;
+        const cameraOffset = 1.3;
         
         rightTarget = {
             position: {
