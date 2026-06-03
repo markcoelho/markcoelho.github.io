@@ -87,7 +87,7 @@ function sendMarkerSummary() {
     const firstEntries = markerEntries.slice(0, 10);
     let discordOutput = `**Marker ${currentMarker} Summary** (${markerEntries.length} interactions)\n\`\`\`csv\n`;
     firstEntries.forEach(entry => {
-        discordOutput += `"${entry.timestamp}",${entry.action_type},${entry.side},${entry.media_type},${entry.marker}\n`;
+        discordOutput += `"${entry.timestamp}",${entry.action_type},${entry.side},${entry.media_type},${entry.marker},${entry.element_id}\n`;
     });
     if (markerEntries.length > 10) {
         discordOutput += `... and ${markerEntries.length - 10} more interactions\n`;
@@ -117,7 +117,7 @@ function downloadLogFile() {
     
     // Create CSV rows
     const rows = allCSVEntries.map(entry => 
-        `"${entry.timestamp}",${entry.action_type},${entry.side},${entry.media_type},${entry.marker}`
+        `"${entry.timestamp}",${entry.action_type},${entry.side},${entry.media_type},${entry.marker},${entry.element_id}`
     ).join('\n');
     
     const content = rows;
@@ -137,13 +137,14 @@ function downloadLogFile() {
 }
 
 // Add CSV entry
-function addCSVEntry(timestamp, actionType, side, mediaType, marker) {
+function addCSVEntry(timestamp, actionType, side, mediaType, marker, elementId) {
     allCSVEntries.push({
         timestamp: timestamp,
         action_type: actionType,
         side: side,
         media_type: mediaType,
-        marker: marker
+        marker: marker,
+        element_id: elementId
     });
     
     // Also log as CSV line to console
@@ -205,7 +206,7 @@ function logButton(buttonId) {
     
     // Track stats if we're in a marker
     if (currentMarker !== null && piece) {
-        addCSVEntry(timestamp, action, piece, mediaType, currentMarker);
+        addCSVEntry(timestamp, action, piece, mediaType, currentMarker, buttonId);
     }
     
     // Log to console
@@ -221,7 +222,7 @@ function logNavigationSwitch(mediaId) {
     
     // Track stats if we're in a marker
     if (currentMarker !== null && piece) {
-        addCSVEntry(timestamp, action, piece, mediaType, currentMarker);
+        addCSVEntry(timestamp, action, piece, mediaType, currentMarker, mediaId);
     }
     
     // Log to console
