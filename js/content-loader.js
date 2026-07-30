@@ -3,9 +3,9 @@
 const AppContent = {
     data: null,
 
-    //jsonFile: 'content.json', 
+    jsonFile: 'content.json', 
     //jsonFile: 'contentcenter.json', 
-    jsonFile: 'contentcenterandmarker.json',
+    //jsonFile: 'contentcenterandmarker.json',
     //jsonFile: 'contentpt.json', 
     //jsonFile: 'contentcenterpt.json', 
     //jsonFile: 'contentcenterandmarkerpt.json', 
